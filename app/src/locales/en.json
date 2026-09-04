@@ -49,6 +49,22 @@
     "unitMl": "ml",
     "warningRate": "The chosen pace is not safely achievable with these parameters, so the goal is set to a safe limit. Consider consulting a doctor or a nutrition therapist."
   },
+  "diary": {
+    "title": "Diary",
+    "open": "Diary",
+    "summary": "Today's summary",
+    "searchPlaceholder": "Search a food",
+    "noResults": "Nothing found.",
+    "grams": "Grams (g)",
+    "add": "Add to diary",
+    "empty": "No entries yet. Search a food and add it."
+  },
+  "meal": {
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack"
+  },
   "streak": {
     "days": {
       "one": "{count} day in a row",

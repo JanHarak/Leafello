@@ -78,6 +78,14 @@ export default function HomeScreen() {
           <Text style={[styles.startText, { color: colors.onAccent }]}>{t('home.start')}</Text>
         </Pressable>
 
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/diary')}
+          style={[styles.secondaryButton, { borderColor: colors.border }]}
+        >
+          <Text style={[styles.startText, { color: colors.text }]}>{t('diary.open')}</Text>
+        </Pressable>
+
         <Text style={[styles.label, { color: colors.textFaint }]}>
           {t('language.label')}
         </Text>
@@ -167,6 +175,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.lg,
+  },
+  secondaryButton: {
+    minHeight: touchTarget,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
   },
   startText: {
     fontSize: fontSize.body,

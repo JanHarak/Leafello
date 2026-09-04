@@ -49,6 +49,22 @@
     "unitMl": "ml",
     "warningRate": "Zvolené tempo nie je pri týchto parametroch bezpečne dosiahnuteľné, cieľ je nastavený na bezpečnú hranicu. Zváž konzultáciu s lekárom alebo nutričným terapeutom."
   },
+  "diary": {
+    "title": "Denník",
+    "open": "Denník",
+    "summary": "Dnešný súhrn",
+    "searchPlaceholder": "Hľadať potravinu",
+    "noResults": "Nič sa nenašlo.",
+    "grams": "Gramáž (g)",
+    "add": "Pridať do denníka",
+    "empty": "Zatiaľ žiadny záznam. Vyhľadaj potravinu a pridaj ju."
+  },
+  "meal": {
+    "breakfast": "Raňajky",
+    "lunch": "Obed",
+    "dinner": "Večera",
+    "snack": "Desiata"
+  },
   "streak": {
     "days": {
       "one": "{count} deň v rade",
