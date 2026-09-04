@@ -11,7 +11,8 @@
     "build:packages": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint:styles": "node scripts/lint-styles.mjs",
-    "db:push": "node scripts/db-push.mjs"
+    "db:push": "node scripts/db-push.mjs",
+    "test:rls": "node supabase/tests/rls.test.mjs"
   },
   "devDependencies": {
     "pg": "^8.13.1",
