@@ -1,6 +1,13 @@
 {
   "name": "@dietapp/off-import",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Placeholder – fáze 2. Import a validace dat Open Food Facts (F-03), fixtures T-33 až T-40."
+  "description": "Normalizace a validace importu potravin z Open Food Facts (F-03). Fixtures T-33 až T-40.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  }
 }

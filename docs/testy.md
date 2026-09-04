@@ -104,7 +104,8 @@ i žízní. Hraniční hodiny jsou inkluzivní, hranice podílu je přesně 0,5.
 ## 7.4 Import potravin (off-import)
 
 Fáze 2. Stav: **čeká**. Každý řádek je fixture pro validační pipeline
-importu z Open Food Facts (pravidla F-03).
+importu z Open Food Facts (pravidla F-03). Stav: **hotovo**
+(balíček `@dietapp/off-import`).
 
 | ID | Vstupní záznam (na 100 g) | Očekáváno |
 |---|---|---|
@@ -196,12 +197,12 @@ cestou uživatele přes reálné obrazovky.
 | 7.1 Výpočet cílů | T-01–T-15, T-70–T-75 | 21 | hotovo |
 | 7.2 XP a levely | T-16–T-27 | 12 | hotovo |
 | 7.3 Nálada avatara | T-28–T-32 | 5 | hotovo |
-| 7.4 Import potravin | T-33–T-40 | 8 | čeká |
-| 7.5 RLS | T-41–T-47 | 7 | čeká (schéma a RLS nasazené, testy zbývá napsat) |
+| 7.4 Import potravin | T-33–T-40 | 8 | hotovo |
+| 7.5 RLS | T-41–T-47 | 7 | hotovo |
 | 7.6 Edge `analyze-photo` | T-48–T-56 | 9 | čeká |
 | 7.7 Deník a snapshot | T-57–T-61 | 5 | čeká |
 | 7.8 E2E | T-62–T-69 | 8 | čeká |
-| **Celkem** | | **75** | 38 hotovo |
+| **Celkem** | | **75** | 53 hotovo |
 
 Skupina T-16 až T-32 (17 akceptačních testů) je v balíčku
 `@dietapp/gamification-rules` implementována jako **52 jednotkových testů**
