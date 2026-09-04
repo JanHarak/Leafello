@@ -17,6 +17,7 @@ import {
   setLanguage,
   t,
 } from '@/i18n';
+import { useAuth } from '@/lib/auth';
 import {
   colorsFor,
   fontSize,
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const scheme = useColorScheme();
   const colors = colorsFor(scheme);
   const router = useRouter();
+  const { session, signOut } = useAuth();
   // i18n drží aktivní jazyk v modulu; tímhle překreslíme po přepnutí.
   const [, rerender] = useReducer((n: number) => n + 1, 0);
   const activeLang = getLanguage();
@@ -85,6 +87,25 @@ export default function HomeScreen() {
         >
           <Text style={[styles.startText, { color: colors.text }]}>{t('diary.open')}</Text>
         </Pressable>
+
+        {session ? (
+          <View style={styles.authRow}>
+            <Text style={[styles.authInfo, { color: colors.textFaint }]}>
+              {t('auth.signedInAs', { email: session.user.email ?? '' })}
+            </Text>
+            <Pressable accessibilityRole="button" onPress={() => signOut()}>
+              <Text style={[styles.authAction, { color: colors.accent }]}>{t('auth.signOut')}</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/login')}
+            style={[styles.secondaryButton, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.startText, { color: colors.text }]}>{t('auth.signIn')}</Text>
+          </Pressable>
+        )}
 
         <Text style={[styles.label, { color: colors.textFaint }]}>
           {t('language.label')}
@@ -187,6 +208,21 @@ const styles = StyleSheet.create({
   startText: {
     fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
+  },
+  authRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  authInfo: {
+    fontSize: fontSize.caption,
+    flexShrink: 1,
+  },
+  authAction: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.medium,
   },
   label: {
     marginTop: spacing.lg,

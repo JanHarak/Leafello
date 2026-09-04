@@ -65,6 +65,19 @@
     "dinner": "Dinner",
     "snack": "Snack"
   },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Sign in to save your goal and diary.",
+    "google": "Sign in with Google",
+    "or": "or",
+    "emailPlaceholder": "you@email.com",
+    "sendLink": "Send sign-in link",
+    "linkSent": "Link sent. Check your e-mail.",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in: {email}",
+    "invalidEmail": "Enter a valid e-mail."
+  },
   "streak": {
     "days": {
       "one": "{count} day in a row",

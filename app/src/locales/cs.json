@@ -65,6 +65,19 @@
     "dinner": "Večeře",
     "snack": "Svačina"
   },
+  "auth": {
+    "title": "Přihlášení",
+    "subtitle": "Přihlas se pro uložení cíle a deníku.",
+    "google": "Přihlásit přes Google",
+    "or": "nebo",
+    "emailPlaceholder": "tvuj@email.cz",
+    "sendLink": "Poslat přihlašovací odkaz",
+    "linkSent": "Odkaz odeslán. Zkontroluj e-mail.",
+    "signIn": "Přihlásit se",
+    "signOut": "Odhlásit",
+    "signedInAs": "Přihlášen: {email}",
+    "invalidEmail": "Zadej platný e-mail."
+  },
   "streak": {
     "days": {
       "one": "{count} den v řadě",

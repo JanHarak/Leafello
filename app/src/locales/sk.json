@@ -65,6 +65,19 @@
     "dinner": "Večera",
     "snack": "Desiata"
   },
+  "auth": {
+    "title": "Prihlásenie",
+    "subtitle": "Prihlás sa pre uloženie cieľa a denníka.",
+    "google": "Prihlásiť cez Google",
+    "or": "alebo",
+    "emailPlaceholder": "tvoj@email.sk",
+    "sendLink": "Poslať prihlasovací odkaz",
+    "linkSent": "Odkaz odoslaný. Skontroluj e-mail.",
+    "signIn": "Prihlásiť sa",
+    "signOut": "Odhlásiť",
+    "signedInAs": "Prihlásený: {email}",
+    "invalidEmail": "Zadaj platný e-mail."
+  },
   "streak": {
     "days": {
       "one": "{count} deň v rade",
