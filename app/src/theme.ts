@@ -1,0 +1,115 @@
+/**
+ * Design tokeny – JEDINÝ zdroj barev, mezer a velikostí písma.
+ *
+ * Pravidlo 8 z CLAUDE.md: žádná barva, mezera ani velikost písma zapsaná
+ * přímo v komponentě. Všechno se bere odsud. Kontroluje `npm run lint:styles`.
+ *
+ * Pravidlo 6: barva nehodnotí jídlo. Paleta je záměrně neutrální, žádná
+ * zelená pro „dobré" a červená pro „špatné". `accent` je značková barva,
+ * `notice` je klidná informativní barva (např. upozornění „tempo není
+ * bezpečné" z F-06), ne poplach.
+ */
+
+/** Syrové hodnoty. Barvy se pojmenovávají jen tady, dál se používají role. */
+const raw = {
+  ink900: '#141a1f',
+  ink700: '#3a4550',
+  ink500: '#657079',
+  ink300: '#aab3bb',
+  paper0: '#ffffff',
+  paper50: '#f6f8fa',
+  paper100: '#eef1f4',
+  paper800: '#1b2127',
+  paper900: '#11161b',
+  line: '#dde3e8',
+  lineDark: '#2a323a',
+  accent: '#2f7dd1',
+  accentDark: '#5aa0e6',
+  notice: '#8a6d1f',
+  noticeBg: '#fbf3d9',
+} as const;
+
+export interface ThemeColors {
+  background: string;
+  surface: string;
+  surfaceElevated: string;
+  border: string;
+  text: string;
+  textMuted: string;
+  textFaint: string;
+  accent: string;
+  onAccent: string;
+  notice: string;
+  noticeBackground: string;
+}
+
+export const lightColors: ThemeColors = {
+  background: raw.paper50,
+  surface: raw.paper0,
+  surfaceElevated: raw.paper100,
+  border: raw.line,
+  text: raw.ink900,
+  textMuted: raw.ink700,
+  textFaint: raw.ink500,
+  accent: raw.accent,
+  onAccent: raw.paper0,
+  notice: raw.notice,
+  noticeBackground: raw.noticeBg,
+};
+
+export const darkColors: ThemeColors = {
+  background: raw.paper900,
+  surface: raw.paper800,
+  surfaceElevated: '#222a31',
+  border: raw.lineDark,
+  text: raw.paper0,
+  textMuted: raw.ink300,
+  textFaint: raw.ink500,
+  accent: raw.accentDark,
+  onAccent: raw.paper900,
+  notice: '#e3c766',
+  noticeBackground: '#3a3212',
+};
+
+/** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+} as const;
+
+export const radius = {
+  sm: 8,
+  md: 12,
+  lg: 20,
+  pill: 999,
+} as const;
+
+export const fontSize = {
+  caption: 13,
+  body: 16,
+  subtitle: 20,
+  title: 28,
+} as const;
+
+export const fontWeight = {
+  regular: '400',
+  medium: '600',
+  bold: '700',
+} as const;
+
+/** N-05 přístupnost: minimální velikost cíle dotyku 44 px. */
+export const touchTarget = 44;
+
+export type ColorScheme = 'light' | 'dark';
+
+/**
+ * Vybere paletu podle schématu. Přijímá i `null`/`undefined`/`'unspecified'`
+ * z `useColorScheme`, cokoliv jiného než `'dark'` je světlý režim.
+ */
+export function colorsFor(scheme: string | null | undefined): ThemeColors {
+  return scheme === 'dark' ? darkColors : lightColors;
+}

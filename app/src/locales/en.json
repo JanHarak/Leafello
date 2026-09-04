@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "Weight-loss diary"
+  },
+  "home": {
+    "title": "Welcome",
+    "subtitle": "Skeleton of the hybrid food and weight-loss diary app.",
+    "stackNote": "Runs from one codebase on iOS, Android and the web (Expo + React Native + react-native-web).",
+    "phaseNote": "Skeleton for now. Features arrive phase by phase per docs/zadani.md."
+  },
+  "streak": {
+    "days": {
+      "one": "{count} day in a row",
+      "other": "{count} days in a row"
+    }
+  },
+  "attribution": {
+    "off": "Food data © Open Food Facts contributors, ODbL license."
+  },
+  "language": {
+    "label": "Language"
+  }
+}

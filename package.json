@@ -1,0 +1,25 @@
+{
+  "name": "dietapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hybridní aplikace pro deník jídel a hubnutí (Expo + Supabase + Gemini). Monorepo.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "build:packages": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint:styles": "node scripts/lint-styles.mjs",
+    "db:push": "node scripts/db-push.mjs"
+  },
+  "devDependencies": {
+    "pg": "^8.13.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.115.0"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "Denník chudnutia"
+  },
+  "home": {
+    "title": "Vitaj",
+    "subtitle": "Skeleton hybridnej aplikácie pre denník jedál a chudnutie.",
+    "stackNote": "Beží z rovnakého kódu na iOS, Androide aj webe (Expo + React Native + react-native-web).",
+    "phaseNote": "Zatiaľ len kostra. Funkcie sa doplnia po fázach podľa docs/zadani.md."
+  },
+  "streak": {
+    "days": {
+      "one": "{count} deň v rade",
+      "few": "{count} dni v rade",
+      "many": "{count} dňa v rade",
+      "other": "{count} dní v rade"
+    }
+  },
+  "attribution": {
+    "off": "Údaje o potravinách © Open Food Facts contributors, licencia ODbL."
+  },
+  "language": {
+    "label": "Jazyk"
+  }
+}

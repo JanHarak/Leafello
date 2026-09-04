@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build výstupy
+dist/
+coverage/
+
+# Expo / Metro
+.expo/
+web-build/
+*.tsbuildinfo
+
+# Prostředí a tajemství (N-08: nikdy nekomitovat klíče)
+.env
+.env.*
+!.env.example
+
+# Supabase lokální stav
+supabase/.branches/
+supabase/.temp/
+
+# OS
+.DS_Store
+Thumbs.db

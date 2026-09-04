@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Avatar: oslava">
+  <!-- jiskry (za level nebo odznak, ne za splnění kalorického cíle) -->
+  <path d="M40 60 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 Z" fill="#e3c766"/>
+  <path d="M198 46 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 Z" fill="#e3c766"/>
+  <path d="M206 118 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z" fill="#5aa0e6"/>
+  <!-- výhonek -->
+  <path d="M120 46 C120 32 130 25 141 28 C134 39 129 45 120 52 Z" fill="#5aa0e6"/>
+  <line x1="120" y1="50" x2="120" y2="68" stroke="#2f7dd1" stroke-width="4" stroke-linecap="round"/>
+  <!-- ruce nahoru -->
+  <path d="M66 128 Q46 104 56 84" fill="none" stroke="#2f7dd1" stroke-width="8" stroke-linecap="round"/>
+  <path d="M174 128 Q194 104 184 84" fill="none" stroke="#2f7dd1" stroke-width="8" stroke-linecap="round"/>
+  <!-- nožky -->
+  <ellipse cx="98" cy="200" rx="16" ry="10" fill="#2f7dd1"/>
+  <ellipse cx="142" cy="200" rx="16" ry="10" fill="#2f7dd1"/>
+  <!-- tělo -->
+  <circle cx="120" cy="134" r="64" fill="#cfe3f5" stroke="#2f7dd1" stroke-width="5"/>
+  <!-- tvářičky -->
+  <circle cx="88" cy="144" r="10" fill="#f6c9c0"/>
+  <circle cx="152" cy="144" r="10" fill="#f6c9c0"/>
+  <!-- veselé oči -->
+  <path d="M96 126 Q102 116 108 126" fill="none" stroke="#141a1f" stroke-width="5" stroke-linecap="round"/>
+  <path d="M132 126 Q138 116 144 126" fill="none" stroke="#141a1f" stroke-width="5" stroke-linecap="round"/>
+  <!-- otevřený úsměv -->
+  <path d="M102 146 Q120 172 138 146 Z" fill="#141a1f"/>
+  <path d="M110 152 Q120 160 130 152" fill="#f6c9c0"/>
+</svg>

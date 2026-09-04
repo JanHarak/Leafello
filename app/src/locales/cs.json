@@ -1,0 +1,25 @@
+{
+  "app": {
+    "name": "Deník hubnutí"
+  },
+  "home": {
+    "title": "Vítej",
+    "subtitle": "Skeleton hybridní aplikace pro deník jídel a hubnutí.",
+    "stackNote": "Běží ze stejného kódu na iOS, Androidu i webu (Expo + React Native + react-native-web).",
+    "phaseNote": "Zatím jen kostra. Funkce se doplní po fázích podle docs/zadani.md."
+  },
+  "streak": {
+    "days": {
+      "one": "{count} den v řadě",
+      "few": "{count} dny v řadě",
+      "many": "{count} dne v řadě",
+      "other": "{count} dní v řadě"
+    }
+  },
+  "attribution": {
+    "off": "Data o potravinách © Open Food Facts contributors, licence ODbL."
+  },
+  "language": {
+    "label": "Jazyk"
+  }
+}
