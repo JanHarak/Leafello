@@ -158,12 +158,15 @@ fotoanalýzy se **nikdy** neuloží do deníku automaticky.
 
 ## 7.7 Deník a snapshot
 
-Fáze 2 (T-57 až T-59, T-61), fáze 5 (T-60). Stav: **částečně** –
-výpočty T-57, T-60, T-61 hotové (`@dietapp/diary`), T-58 ověřen proti DB.
-**T-59 čeká na rozhodnutí:** naráží na rozpor v zadání mezi
-`on delete set null` a constraintem `num_nonnulls(food_id, recipe_id) = 1`.
-Ověřuje neměnnost historie: denní součty se počítají ze `snapshot`, ne
-joinem na aktuální `foods`.
+Fáze 2 (T-57 až T-59, T-61), fáze 5 (T-60). Stav: **hotovo** – výpočty
+T-57, T-60, T-61 v `@dietapp/diary`, T-58 a T-59 ověřeny proti DB
+(`npm run test:snapshot`). Ověřuje neměnnost historie: denní součty se
+počítají ze `snapshot`, ne joinem na aktuální `foods`.
+
+Poznámka: T-59 odhalil rozpor v zadání – `on delete set null` versus
+`num_nonnulls(food_id, recipe_id) = 1`. Vyřešeno migrací `0002`, která
+constraint uvolnila na `<= 1` (snapshot je zdroj pravdy, záznam bez
+reference je validní).
 
 | ID | Scénář | Očekáváno |
 |---|---|---|
@@ -203,9 +206,9 @@ cestou uživatele přes reálné obrazovky.
 | 7.4 Import potravin | T-33–T-40 | 8 | hotovo |
 | 7.5 RLS | T-41–T-47 | 7 | hotovo |
 | 7.6 Edge `analyze-photo` | T-48–T-56 | 9 | čeká |
-| 7.7 Deník a snapshot | T-57–T-61 | 5 | částečně (T-59 čeká na rozhodnutí) |
+| 7.7 Deník a snapshot | T-57–T-61 | 5 | hotovo |
 | 7.8 E2E | T-62–T-69 | 8 | čeká |
-| **Celkem** | | **75** | 57 hotovo |
+| **Celkem** | | **75** | 58 hotovo |
 
 Skupina T-16 až T-32 (17 akceptačních testů) je v balíčku
 `@dietapp/gamification-rules` implementována jako **52 jednotkových testů**
