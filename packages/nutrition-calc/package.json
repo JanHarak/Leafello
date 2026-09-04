@@ -1,0 +1,13 @@
+{
+  "name": "@dietapp/nutrition-calc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Výživové výpočty: BMR, TDEE, kalorický cíl s bezpečnostními limity, makra, pitný cíl. Test-first (F-06, testy T-01 až T-15 a T-70 až T-75).",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  }
+}
