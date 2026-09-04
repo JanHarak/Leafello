@@ -139,8 +139,9 @@ nezapíše cizí data. „Uživatel A" a „uživatel B" jsou dva různé účty
 
 ## 7.6 Edge Function `analyze-photo` (gemini-edge-fn)
 
-Fáze 4. Stav: **čeká**. Kontraktní testy s mockem Gemini. Výsledek
-fotoanalýzy se **nikdy** neuloží do deníku automaticky.
+Fáze 4. Stav: **hotovo** (logika v `@dietapp/analyze-photo`, Deno handler
+v `supabase/functions/analyze-photo/`). Kontraktní testy s mockem Gemini.
+Výsledek fotoanalýzy se **nikdy** neuloží do deníku automaticky.
 
 | ID | Scénář | Očekáváno |
 |---|---|---|
@@ -205,10 +206,10 @@ cestou uživatele přes reálné obrazovky.
 | 7.3 Nálada avatara | T-28–T-32 | 5 | hotovo |
 | 7.4 Import potravin | T-33–T-40 | 8 | hotovo |
 | 7.5 RLS | T-41–T-47 | 7 | hotovo |
-| 7.6 Edge `analyze-photo` | T-48–T-56 | 9 | čeká |
+| 7.6 Edge `analyze-photo` | T-48–T-56 | 9 | hotovo |
 | 7.7 Deník a snapshot | T-57–T-61 | 5 | hotovo |
 | 7.8 E2E | T-62–T-69 | 8 | čeká |
-| **Celkem** | | **75** | 58 hotovo |
+| **Celkem** | | **75** | 67 hotovo |
 
 Skupina T-16 až T-32 (17 akceptačních testů) je v balíčku
 `@dietapp/gamification-rules` implementována jako **52 jednotkových testů**

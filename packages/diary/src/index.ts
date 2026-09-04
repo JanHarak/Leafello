@@ -78,16 +78,13 @@ export interface DailyTotals {
  * databázový pohled `v_daily_totals`.
  */
 export function dailyTotals(snapshots: Array<Partial<Nutrition>>): DailyTotals {
-  const sum = snapshots.reduce(
-    (acc, s) => {
-      acc.kcal += s.kcal ?? 0;
-      acc.protein += s.protein ?? 0;
-      acc.carbs += s.carbs ?? 0;
-      acc.fat += s.fat ?? 0;
-      return acc;
-    },
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-  );
+  const sum = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  for (const s of snapshots) {
+    sum.kcal += s.kcal ?? 0;
+    sum.protein += s.protein ?? 0;
+    sum.carbs += s.carbs ?? 0;
+    sum.fat += s.fat ?? 0;
+  }
   return {
     kcal: Math.round(sum.kcal),
     protein: Math.round(sum.protein),

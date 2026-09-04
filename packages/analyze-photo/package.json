@@ -1,0 +1,13 @@
+{
+  "name": "@dietapp/analyze-photo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rozhodovací logika Edge Function analyze-photo: parsování odpovědi Gemini, filtrování, rate limit, retry, autorizace. Fáze 4, testy T-48 až T-56.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  }
+}
