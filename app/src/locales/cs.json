@@ -6,7 +6,48 @@
     "title": "Vítej",
     "subtitle": "Skeleton hybridní aplikace pro deník jídel a hubnutí.",
     "stackNote": "Běží ze stejného kódu na iOS, Androidu i webu (Expo + React Native + react-native-web).",
-    "phaseNote": "Zatím jen kostra. Funkce se doplní po fázích podle docs/zadani.md."
+    "phaseNote": "Zatím jen kostra. Funkce se doplní po fázích podle docs/zadani.md.",
+    "start": "Nastavit cíl"
+  },
+  "onboarding": {
+    "title": "Pojďme nastavit tvůj cíl",
+    "subtitle": "Pár údajů a spočítáme denní příjem a makra.",
+    "sex": "Pohlaví",
+    "male": "Muž",
+    "female": "Žena",
+    "birthDate": "Datum narození",
+    "birthDatePlaceholder": "RRRR-MM-DD",
+    "height": "Výška (cm)",
+    "weight": "Aktuální váha (kg)",
+    "targetWeight": "Cílová váha (kg)",
+    "activity": "Úroveň aktivity",
+    "rate": "Tempo (kg/týden)",
+    "submit": "Spočítat cíl",
+    "recalculate": "Změnit údaje",
+    "errorRequired": "Vyplň prosím všechna pole.",
+    "errorBirthDate": "Zadej platné datum narození ve formátu RRRR-MM-DD.",
+    "errorHeight": "Výška musí být mezi 100 a 250 cm.",
+    "errorRate": "Tempo může být nejvýše 1 kg za týden.",
+    "errorTargetWeight": "Cílová váha je příliš nízká. Nejnižší přijatelná je {weight} kg."
+  },
+  "activity": {
+    "sedentary": "Převážně sedím",
+    "light": "Lehká aktivita 1–3× týdně",
+    "moderate": "Cvičím 3–5× týdně",
+    "high": "Cvičím 6–7× týdně",
+    "very_high": "Fyzická práce nebo denně tvrdý trénink"
+  },
+  "goal": {
+    "title": "Tvůj denní cíl",
+    "kcal": "Kalorie",
+    "protein": "Bílkoviny",
+    "carbs": "Sacharidy",
+    "fat": "Tuky",
+    "water": "Pití",
+    "unitKcal": "kcal",
+    "unitG": "g",
+    "unitMl": "ml",
+    "warningRate": "Zvolené tempo není při těchto parametrech bezpečně dosažitelné, cíl je nastavený na bezpečnou hranici. Zvaž konzultaci s lékařem nebo nutričním terapeutem."
   },
   "streak": {
     "days": {

@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useReducer } from 'react';
 import {
   Pressable,
@@ -28,6 +29,7 @@ import {
 export default function HomeScreen() {
   const scheme = useColorScheme();
   const colors = colorsFor(scheme);
+  const router = useRouter();
   // i18n drží aktivní jazyk v modulu; tímhle překreslíme po přepnutí.
   const [, rerender] = useReducer((n: number) => n + 1, 0);
   const activeLang = getLanguage();
@@ -67,6 +69,14 @@ export default function HomeScreen() {
             {plural('streak.days', 3)}
           </Text>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/onboarding')}
+          style={[styles.startButton, { backgroundColor: colors.accent }]}
+        >
+          <Text style={[styles.startText, { color: colors.onAccent }]}>{t('home.start')}</Text>
+        </Pressable>
 
         <Text style={[styles.label, { color: colors.textFaint }]}>
           {t('language.label')}
@@ -150,6 +160,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     fontWeight: fontWeight.medium,
     marginTop: spacing.xs,
+  },
+  startButton: {
+    minHeight: touchTarget,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+  },
+  startText: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
   },
   label: {
     marginTop: spacing.lg,

@@ -8,6 +8,15 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@dietapp/nutrition-calc": [
+        "../packages/nutrition-calc/src"
+      ],
+      "@dietapp/gamification-rules": [
+        "../packages/gamification-rules/src"
+      ],
+      "@dietapp/diary": [
+        "../packages/diary/src"
       ]
     }
   },

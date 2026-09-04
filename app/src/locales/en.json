@@ -6,7 +6,48 @@
     "title": "Welcome",
     "subtitle": "Skeleton of the hybrid food and weight-loss diary app.",
     "stackNote": "Runs from one codebase on iOS, Android and the web (Expo + React Native + react-native-web).",
-    "phaseNote": "Skeleton for now. Features arrive phase by phase per docs/zadani.md."
+    "phaseNote": "Skeleton for now. Features arrive phase by phase per docs/zadani.md.",
+    "start": "Set your goal"
+  },
+  "onboarding": {
+    "title": "Let's set your goal",
+    "subtitle": "A few details and we'll compute your daily intake and macros.",
+    "sex": "Sex",
+    "male": "Male",
+    "female": "Female",
+    "birthDate": "Date of birth",
+    "birthDatePlaceholder": "YYYY-MM-DD",
+    "height": "Height (cm)",
+    "weight": "Current weight (kg)",
+    "targetWeight": "Target weight (kg)",
+    "activity": "Activity level",
+    "rate": "Pace (kg/week)",
+    "submit": "Calculate goal",
+    "recalculate": "Change details",
+    "errorRequired": "Please fill in all fields.",
+    "errorBirthDate": "Enter a valid date of birth as YYYY-MM-DD.",
+    "errorHeight": "Height must be between 100 and 250 cm.",
+    "errorRate": "Pace can be at most 1 kg per week.",
+    "errorTargetWeight": "Target weight is too low. The lowest acceptable is {weight} kg."
+  },
+  "activity": {
+    "sedentary": "Mostly sitting",
+    "light": "Light activity 1–3× a week",
+    "moderate": "Exercise 3–5× a week",
+    "high": "Exercise 6–7× a week",
+    "very_high": "Physical job or hard daily training"
+  },
+  "goal": {
+    "title": "Your daily goal",
+    "kcal": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "water": "Water",
+    "unitKcal": "kcal",
+    "unitG": "g",
+    "unitMl": "ml",
+    "warningRate": "The chosen pace is not safely achievable with these parameters, so the goal is set to a safe limit. Consider consulting a doctor or a nutrition therapist."
   },
   "streak": {
     "days": {
