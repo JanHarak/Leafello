@@ -70,6 +70,24 @@
     "dinner": "Dinner",
     "snack": "Snack"
   },
+  "water": {
+    "title": "Water",
+    "open": "Water",
+    "add": "Add",
+    "custom": "Custom (ml)",
+    "today": "Today",
+    "goalSuffix": "of {goal} ml"
+  },
+  "weight": {
+    "title": "Weight",
+    "open": "Weight",
+    "placeholder": "Weight (kg)",
+    "save": "Save weight",
+    "saved": "Saved.",
+    "average": "7-day average",
+    "empty": "No weight entries yet.",
+    "unitKg": "kg"
+  },
   "auth": {
     "title": "Sign in",
     "subtitle": "Sign in to save your goal and diary.",

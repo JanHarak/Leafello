@@ -70,6 +70,24 @@
     "dinner": "Večera",
     "snack": "Desiata"
   },
+  "water": {
+    "title": "Pitný režim",
+    "open": "Voda",
+    "add": "Pridať",
+    "custom": "Vlastné (ml)",
+    "today": "Dnes vypité",
+    "goalSuffix": "z {goal} ml"
+  },
+  "weight": {
+    "title": "Váha",
+    "open": "Váha",
+    "placeholder": "Váha (kg)",
+    "save": "Uložiť váhu",
+    "saved": "Uložené.",
+    "average": "7-dňový priemer",
+    "empty": "Zatiaľ žiadny záznam váhy.",
+    "unitKg": "kg"
+  },
   "auth": {
     "title": "Prihlásenie",
     "subtitle": "Prihlás sa pre uloženie cieľa a denníka.",

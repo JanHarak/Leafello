@@ -20,7 +20,7 @@ import {
   t,
 } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { getActiveGoal, listTodayEntries, type GoalRow } from '@/lib/db';
+import { getActiveGoal, getTodayWaterMl, listTodayEntries, type GoalRow } from '@/lib/db';
 import {
   colorsFor,
   fontSize,
@@ -49,6 +49,7 @@ export default function HomeScreen() {
 
   const [goal, setGoal] = useState<GoalRow | null>(null);
   const [consumed, setConsumed] = useState<Consumed | null>(null);
+  const [waterMl, setWaterMl] = useState(0);
 
   // Načti cíl a dnešní příjem vždy, když je obrazovka aktivní (i po návratu
   // z deníku, ať se čísla aktualizují).
@@ -65,9 +66,11 @@ export default function HomeScreen() {
           const g = await getActiveGoal();
           const entries = await listTodayEntries();
           const totals = dailyTotals(entries.map((e) => e.snapshot));
+          const water = await getTodayWaterMl();
           if (active) {
             setGoal(g);
             setConsumed({ kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat });
+            setWaterMl(water);
           }
         } catch {
           // ticho: dashboard je doplněk, chyby zápisu řeší příslušné obrazovky
@@ -98,7 +101,7 @@ export default function HomeScreen() {
         </Text>
 
         {session && goal && consumed ? (
-          <TodayCard goal={goal} consumed={consumed} colors={colors} />
+          <TodayCard goal={goal} consumed={consumed} waterMl={waterMl} colors={colors} />
         ) : session && !goal ? (
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.body, { color: colors.textMuted }]}>{t('home.setGoalFirst')}</Text>
@@ -138,6 +141,23 @@ export default function HomeScreen() {
         >
           <Text style={[styles.startText, { color: colors.text }]}>{t('diary.open')}</Text>
         </Pressable>
+
+        <View style={styles.navRow}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/water')}
+            style={[styles.navButton, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.startText, { color: colors.text }]}>{t('water.open')}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/weight')}
+            style={[styles.navButton, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.startText, { color: colors.text }]}>{t('weight.open')}</Text>
+          </Pressable>
+        </View>
 
         {session ? (
           <View style={styles.authRow}>
@@ -202,7 +222,7 @@ export default function HomeScreen() {
   );
 }
 
-function TodayCard({ goal, consumed, colors }: { goal: GoalRow; consumed: Consumed; colors: ThemeColors }) {
+function TodayCard({ goal, consumed, waterMl, colors }: { goal: GoalRow; consumed: Consumed; waterMl: number; colors: ThemeColors }) {
   const pct = goal.kcal_target > 0 ? Math.min(1, consumed.kcal / goal.kcal_target) : 0;
   const remaining = Math.max(0, goal.kcal_target - consumed.kcal);
   return (
@@ -225,6 +245,9 @@ function TodayCard({ goal, consumed, colors }: { goal: GoalRow; consumed: Consum
         <MacroCol label={t('goal.carbs')} value={consumed.carbs} target={goal.carbs_g} colors={colors} />
         <MacroCol label={t('goal.fat')} value={consumed.fat} target={goal.fat_g} colors={colors} />
       </View>
+      <Text style={[styles.waterLine, { color: colors.textMuted }]}>
+        {t('goal.water')}: {waterMl} / {goal.water_ml} {t('goal.unitMl')}
+      </Text>
     </View>
   );
 }
@@ -281,6 +304,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     paddingTop: spacing.sm,
+  },
+  waterLine: {
+    fontSize: fontSize.body,
+    paddingTop: spacing.xs,
+  },
+  navRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  navButton: {
+    flex: 1,
+    minHeight: touchTarget,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     padding: spacing.xl,

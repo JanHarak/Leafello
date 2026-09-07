@@ -114,3 +114,52 @@ export async function addDiaryEntry(userId: string, meal: MealType, grams: numbe
   });
   if (error) throw error;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Pitný režim (F-08)                                                          */
+/* -------------------------------------------------------------------------- */
+
+export async function addWater(userId: string, ml: number): Promise<void> {
+  const { error } = await supabase.from('water_logs').insert({ user_id: userId, ml });
+  if (error) throw error;
+}
+
+/** Součet vypité vody dnes v ml. */
+export async function getTodayWaterMl(): Promise<number> {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('ml')
+    .gte('logged_at', start.toISOString());
+  if (error) throw error;
+  return (data ?? []).reduce((sum, r) => sum + (r.ml as number), 0);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Váha (F-07)                                                                 */
+/* -------------------------------------------------------------------------- */
+
+export interface WeightRow {
+  logged_on: string;
+  weight_kg: number;
+}
+
+/** Jeden záznam na den, přepisovatelný. */
+export async function upsertWeight(userId: string, weightKg: number, loggedOn?: string): Promise<void> {
+  const logged_on = loggedOn ?? new Date().toISOString().slice(0, 10);
+  const { error } = await supabase
+    .from('weight_logs')
+    .upsert({ user_id: userId, logged_on, weight_kg: weightKg }, { onConflict: 'user_id,logged_on' });
+  if (error) throw error;
+}
+
+export async function listWeights(limitDays = 60): Promise<WeightRow[]> {
+  const { data, error } = await supabase
+    .from('weight_logs')
+    .select('logged_on, weight_kg')
+    .order('logged_on', { ascending: true })
+    .limit(limitDays);
+  if (error) throw error;
+  return (data ?? []).map((r) => ({ logged_on: r.logged_on as string, weight_kg: Number(r.weight_kg) }));
+}
