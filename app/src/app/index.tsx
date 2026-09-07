@@ -387,6 +387,16 @@ export default function HomeScreen() {
 
         <View style={styles.spacer} />
 
+        <View style={styles.legalRow}>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
+            <Text style={[styles.legalLink, { color: colors.accent }]}>{t('legal.privacy')}</Text>
+          </Pressable>
+          <Text style={[styles.legalDot, { color: colors.textFaint }]}>·</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
+            <Text style={[styles.legalLink, { color: colors.accent }]}>{t('legal.terms')}</Text>
+          </Pressable>
+        </View>
+
         {/* N-07 / F-03: viditelná atribuce ODbL. */}
         <Text style={[styles.attribution, { color: colors.textFaint }]}>
           {t('attribution.off')}
@@ -670,5 +680,19 @@ const styles = StyleSheet.create({
   attribution: {
     fontSize: fontSize.caption,
     textAlign: 'center',
+  },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  legalLink: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.medium,
+  },
+  legalDot: {
+    fontSize: fontSize.caption,
   },
 });

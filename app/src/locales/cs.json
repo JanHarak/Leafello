@@ -167,6 +167,10 @@
     "helpName": "Anabell – kontaktní centrum pro poruchy příjmu potravy",
     "helpAction": "Otevřít anabell.cz"
   },
+  "legal": {
+    "privacy": "Zásady ochrany údajů",
+    "terms": "Podmínky používání"
+  },
   "level": {
     "label": "Level {n}"
   },

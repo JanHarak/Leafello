@@ -165,6 +165,10 @@
     "helpName": "Anabell – eating disorders support centre (CZ)",
     "helpAction": "Open anabell.cz"
   },
+  "legal": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use"
+  },
   "level": {
     "label": "Level {n}"
   },
