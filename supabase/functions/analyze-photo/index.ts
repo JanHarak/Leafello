@@ -18,7 +18,7 @@ import {
   DEFAULT_DAILY_LIMIT,
   analyzePhoto,
   type GeminiResponse,
-} from '../../../packages/analyze-photo/src/index.ts';
+} from '../_shared/analyze.ts';
 
 const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.0-flash';
 const DAILY_LIMIT = Number(Deno.env.get('PHOTO_DAILY_LIMIT') ?? DEFAULT_DAILY_LIMIT);
