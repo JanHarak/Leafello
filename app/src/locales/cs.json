@@ -123,6 +123,17 @@
   "attribution": {
     "off": "Data o potravinách © Open Food Facts contributors, licence ODbL."
   },
+  "recipes": {
+    "title": "Recepty",
+    "open": "Recepty",
+    "name": "Název receptu",
+    "servings": "Počet porcí",
+    "ingredients": "Ingredience",
+    "perPortion": "Na porci",
+    "logPortion": "Zapsat 1 porci do deníku",
+    "empty": "Přidej ingredience a spočítáme výživu na porci.",
+    "logged": "Zapsáno do deníku."
+  },
   "reminders": {
     "title": "Připomínky",
     "open": "Připomínky",

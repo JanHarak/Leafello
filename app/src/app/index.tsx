@@ -317,6 +317,13 @@ export default function HomeScreen() {
           >
             <Text style={[styles.startText, { color: colors.text }]}>{t('reminders.open')}</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/recipes')}
+            style={[styles.navButton, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.startText, { color: colors.text }]}>{t('recipes.open')}</Text>
+          </Pressable>
         </View>
 
         {session ? (
@@ -544,11 +551,13 @@ const styles = StyleSheet.create({
   },
   navRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     marginTop: spacing.sm,
   },
   navButton: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '45%',
     minHeight: touchTarget,
     borderRadius: radius.pill,
     borderWidth: 1,

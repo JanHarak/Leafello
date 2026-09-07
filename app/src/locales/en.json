@@ -121,6 +121,17 @@
   "attribution": {
     "off": "Food data © Open Food Facts contributors, ODbL license."
   },
+  "recipes": {
+    "title": "Recipes",
+    "open": "Recipes",
+    "name": "Recipe name",
+    "servings": "Servings",
+    "ingredients": "Ingredients",
+    "perPortion": "Per portion",
+    "logPortion": "Log 1 portion to diary",
+    "empty": "Add ingredients and we'll compute the per-portion nutrition.",
+    "logged": "Logged to diary."
+  },
   "reminders": {
     "title": "Reminders",
     "open": "Reminders",
