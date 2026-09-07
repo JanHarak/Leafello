@@ -32,6 +32,7 @@ export default function Diary() {
   const [selected, setSelected] = useState<SampleFood | null>(null);
   const [grams, setGrams] = useState('100');
   const [meal, setMeal] = useState<MealType>('breakfast');
+  const [dbError, setDbError] = useState<string | null>(null);
 
   async function reload() {
     const rows = await listTodayEntries();
@@ -54,8 +55,14 @@ export default function Diary() {
 
   // Přihlášený uživatel: načti dnešní záznamy z DB. Odhlášený: lokální stav.
   useEffect(() => {
-    if (session) reload().catch(() => {});
-    else setEntries([]);
+    if (session) {
+      reload().catch((e) => {
+        console.error('Načtení deníku selhalo:', e);
+        setDbError(e instanceof Error ? e.message : String(e));
+      });
+    } else {
+      setEntries([]);
+    }
   }, [session]);
 
   const results = useMemo(() => {
@@ -84,8 +91,10 @@ export default function Diary() {
           fat: snapshot.fat,
         });
         await reload();
-      } catch {
-        // necháme UI beze změny; chyby zápisu se doladí později
+        setDbError(null);
+      } catch (e) {
+        console.error('Zápis do deníku selhal:', e);
+        setDbError(e instanceof Error ? e.message : String(e));
       }
     } else {
       setEntries((prev) => [
@@ -126,6 +135,8 @@ export default function Diary() {
           placeholderTextColor={colors.textFaint}
           style={s.search}
         />
+
+        {dbError && <Text style={s.error}>{dbError}</Text>}
 
         {query.trim().length > 0 && results.length === 0 && !selected && (
           <Text style={s.muted}>{t('diary.noResults')}</Text>
@@ -216,6 +227,7 @@ const styles = (c: ThemeColors) =>
     macroRow: { flexDirection: 'row', gap: spacing.sm, borderTopWidth: 1, borderTopColor: c.border, paddingTop: spacing.md },
     search: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     muted: { color: c.textFaint, fontSize: fontSize.body },
+    error: { color: c.notice, backgroundColor: c.noticeBackground, padding: spacing.md, borderRadius: radius.md, fontSize: fontSize.body },
     resultRow: { minHeight: touchTarget, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface },
     resultName: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },
     resultKcal: { color: c.textFaint, fontSize: fontSize.caption },

@@ -52,6 +52,7 @@ export default function Onboarding() {
   const [goal, setGoal] = useState<GoalResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   async function compute() {
     const heightCm = Number(height);
@@ -72,6 +73,7 @@ export default function Onboarding() {
       setGoal(result);
       setError(null);
       setSaved(false);
+      setSaveError(null);
       // Uložit do účtu, pokud je uživatel přihlášený.
       if (session) {
         try {
@@ -89,8 +91,10 @@ export default function Onboarding() {
             },
           );
           setSaved(true);
-        } catch {
-          setSaved(false);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error('saveProfileAndGoal selhalo:', err);
+          setSaveError(msg);
         }
       }
     } catch (e) {
@@ -133,6 +137,7 @@ export default function Onboarding() {
           )}
 
           {saved && <Text style={s.saved}>{t('goal.saved')}</Text>}
+          {saveError && <Text style={s.error}>{saveError}</Text>}
 
           <Pressable style={s.secondaryButton} onPress={() => setGoal(null)}>
             <Text style={s.secondaryButtonText}>{t('onboarding.recalculate')}</Text>
