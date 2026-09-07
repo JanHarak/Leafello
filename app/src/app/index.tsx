@@ -11,7 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { dailyTotals } from '@dietapp/diary';
+import { isActionable, moodFor, type Mood } from '@dietapp/gamification-rules';
 
+import { Avatar } from '@/components/Avatar';
 import {
   LANGUAGES,
   getLanguage,
@@ -50,6 +52,7 @@ export default function HomeScreen() {
   const [goal, setGoal] = useState<GoalRow | null>(null);
   const [consumed, setConsumed] = useState<Consumed | null>(null);
   const [waterMl, setWaterMl] = useState(0);
+  const [entriesToday, setEntriesToday] = useState(0);
 
   // Načti cíl a dnešní příjem vždy, když je obrazovka aktivní (i po návratu
   // z deníku, ať se čísla aktualizují).
@@ -71,6 +74,7 @@ export default function HomeScreen() {
             setGoal(g);
             setConsumed({ kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat });
             setWaterMl(water);
+            setEntriesToday(entries.length);
           }
         } catch {
           // ticho: dashboard je doplněk, chyby zápisu řeší příslušné obrazovky
@@ -87,6 +91,24 @@ export default function HomeScreen() {
     rerender();
   }
 
+  // Nálada avatara z pravidel gamification-rules. Herní mechanika se má skrýt
+  // při aktivní eskalaci z nutrition-analyst (zatím placeholder, proto vždy).
+  const mood: Mood | null =
+    session && goal && consumed
+      ? moodFor({
+          entriesToday,
+          waterRatio: goal.water_ml > 0 ? waterMl / goal.water_ml : 1,
+          kcalRatio: goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 1,
+          justCelebrated: false,
+          hour: new Date().getHours(),
+        })
+      : null;
+
+  function onAvatarAction(m: Mood) {
+    if (m === 'thirsty') router.push('/water');
+    else router.push('/diary');
+  }
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -99,6 +121,24 @@ export default function HomeScreen() {
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           {t('home.subtitle')}
         </Text>
+
+        {mood && (
+          <View style={styles.avatarBlock}>
+            <Avatar mood={mood} />
+            <Text style={[styles.avatarCaption, { color: colors.textMuted }]}>{t(`avatar.mood.${mood}`)}</Text>
+            {isActionable(mood) && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => onAvatarAction(mood)}
+                style={[styles.avatarAction, { backgroundColor: colors.accent }]}
+              >
+                <Text style={[styles.startText, { color: colors.onAccent }]}>
+                  {mood === 'thirsty' ? t('avatar.actionWater') : t('avatar.actionLog')}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        )}
 
         {session && goal && consumed ? (
           <TodayCard goal={goal} consumed={consumed} waterMl={waterMl} colors={colors} />
@@ -308,6 +348,22 @@ const styles = StyleSheet.create({
   waterLine: {
     fontSize: fontSize.body,
     paddingTop: spacing.xs,
+  },
+  avatarBlock: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  avatarCaption: {
+    fontSize: fontSize.body,
+    textAlign: 'center',
+  },
+  avatarAction: {
+    minHeight: touchTarget,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navRow: {
     flexDirection: 'row',

@@ -88,6 +88,17 @@
     "empty": "Zatiaľ žiadny záznam váhy.",
     "unitKg": "kg"
   },
+  "avatar": {
+    "actionWater": "Pridať vodu",
+    "actionLog": "Zapísať jedlo",
+    "mood": {
+      "happy": "Dnes máš zapísané.",
+      "sleepy": "Zatiaľ nič zapísané.",
+      "thirsty": "Čas sa napiť.",
+      "hungry": "Nezabudni si zapísať jedlo.",
+      "celebrating": "Niečo sa ti podarilo!"
+    }
+  },
   "auth": {
     "title": "Prihlásenie",
     "subtitle": "Prihlás sa pre uloženie cieľa a denníka.",

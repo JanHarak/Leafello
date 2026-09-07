@@ -88,6 +88,17 @@
     "empty": "No weight entries yet.",
     "unitKg": "kg"
   },
+  "avatar": {
+    "actionWater": "Add water",
+    "actionLog": "Log a meal",
+    "mood": {
+      "happy": "You've logged today.",
+      "sleepy": "Nothing logged yet.",
+      "thirsty": "Time for a drink.",
+      "hungry": "Don't forget to log a meal.",
+      "celebrating": "Nice, you did it!"
+    }
+  },
   "auth": {
     "title": "Sign in",
     "subtitle": "Sign in to save your goal and diary.",
