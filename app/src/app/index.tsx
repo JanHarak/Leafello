@@ -310,6 +310,13 @@ export default function HomeScreen() {
           >
             <Text style={[styles.startText, { color: colors.text }]}>{t('weight.open')}</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/reminders')}
+            style={[styles.navButton, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.startText, { color: colors.text }]}>{t('reminders.open')}</Text>
+          </Pressable>
         </View>
 
         {session ? (

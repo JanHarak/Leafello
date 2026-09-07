@@ -123,6 +123,20 @@
   "attribution": {
     "off": "Údaje o potravinách © Open Food Facts contributors, licencia ODbL."
   },
+  "reminders": {
+    "title": "Pripomienky",
+    "open": "Pripomienky",
+    "intro": "Rozvrh pitia po fázach a hlavné jedlá. Spolu najviac 8 upozornení denne.",
+    "enable": "Zapnúť pripomienky",
+    "disable": "Vypnúť pripomienky",
+    "enabled": "Pripomienky sú zapnuté.",
+    "webNote": "Na webe je toto len náhľad rozvrhu. Notifikácie sa plánujú v mobilnej aplikácii.",
+    "denied": "Bez povolenia notifikácií ich nemožno naplánovať.",
+    "water": "Pitie",
+    "meals": "Jedlo",
+    "waterBody": "Čas sa napiť (~{ml} ml)",
+    "mealBody": "Čas na jedlo: {meal}"
+  },
   "escalation": {
     "title": "Skúsme to inak",
     "body": "Podľa tvojich dát to teraz vyzerá na dlhodobo nízky príjem. Na toto táto aplikácia nie je ten správny nástroj. Nie si v tom sám a pomoc existuje.",

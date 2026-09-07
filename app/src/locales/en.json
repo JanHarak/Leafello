@@ -121,6 +121,20 @@
   "attribution": {
     "off": "Food data © Open Food Facts contributors, ODbL license."
   },
+  "reminders": {
+    "title": "Reminders",
+    "open": "Reminders",
+    "intro": "Phased hydration schedule and main meals. At most 8 notifications a day.",
+    "enable": "Turn on reminders",
+    "disable": "Turn off reminders",
+    "enabled": "Reminders are on.",
+    "webNote": "On the web this is only a preview. Notifications are scheduled in the mobile app.",
+    "denied": "Without notification permission they can't be scheduled.",
+    "water": "Water",
+    "meals": "Meals",
+    "waterBody": "Time to drink (~{ml} ml)",
+    "mealBody": "Time to eat: {meal}"
+  },
   "escalation": {
     "title": "Let's take a different approach",
     "body": "Your recent data suggests a sustained low intake. This app isn't the right tool for that. You're not alone and help is available.",

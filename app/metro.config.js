@@ -24,6 +24,7 @@ config.resolver.extraNodeModules = {
   '@dietapp/off-import': path.resolve(repoRoot, 'packages/off-import'),
   '@dietapp/analyze-photo': path.resolve(repoRoot, 'packages/analyze-photo'),
   '@dietapp/nutrition-analyst': path.resolve(repoRoot, 'packages/nutrition-analyst'),
+  '@dietapp/reminders': path.resolve(repoRoot, 'packages/reminders'),
 };
 
 module.exports = config;

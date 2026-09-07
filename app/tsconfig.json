@@ -20,6 +20,9 @@
       ],
       "@dietapp/nutrition-analyst": [
         "../packages/nutrition-analyst/src"
+      ],
+      "@dietapp/reminders": [
+        "../packages/reminders/src"
       ]
     }
   },
