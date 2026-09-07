@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useReducer, useState } from 'react';
 import {
@@ -11,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { dailyTotals } from '@dietapp/diary';
+import { detectEscalation } from '@dietapp/nutrition-analyst';
 import {
   applyLoggedDay,
   awardsForDay,
@@ -36,6 +38,9 @@ import { useAuth } from '@/lib/auth';
 import {
   getActiveGoal,
   getAvatarState,
+  getLatestWeightKg,
+  getProfileHeightCm,
+  getRecentDailyKcal,
   getTodayWaterMl,
   hasWeighedToday,
   listTodayEntries,
@@ -76,6 +81,7 @@ export default function HomeScreen() {
   const [levelPct, setLevelPct] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
   const [celebrated, setCelebrated] = useState(false);
+  const [escalated, setEscalated] = useState(false);
 
   // Načti cíl a dnešní příjem vždy, když je obrazovka aktivní (i po návratu
   // z deníku, ať se čísla aktualizují).
@@ -141,6 +147,27 @@ export default function HomeScreen() {
             }
           }
 
+          // Bezpečnostní eskalace (nutrition-analyst 8.1).
+          let escalate = false;
+          try {
+            const heightCm = await getProfileHeightCm();
+            const weightKg = await getLatestWeightKg();
+            const bmi = heightCm && weightKg ? weightKg / Math.pow(heightCm / 100, 2) : null;
+            const recent = await getRecentDailyKcal(5);
+            const kcalByDate = new Map(recent.map((r) => [r.date, r.kcal]));
+            const ratios: (number | null)[] = [];
+            for (let i = 4; i >= 0; i -= 1) {
+              const d = new Date();
+              d.setDate(d.getDate() - i);
+              const key = d.toISOString().slice(0, 10);
+              const kcal = kcalByDate.get(key);
+              ratios.push(kcal != null && g && g.kcal_target > 0 ? kcal / g.kcal_target : null);
+            }
+            escalate = detectEscalation({ bmi, recentDailyKcalRatios: ratios }).escalated;
+          } catch {
+            escalate = false;
+          }
+
           if (active) {
             setGoal(g);
             setConsumed({ kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat });
@@ -151,6 +178,7 @@ export default function HomeScreen() {
             setLevelPct(prog.progress);
             setStreakDays(st.streak_days);
             setCelebrated(leveledUp);
+            setEscalated(escalate);
           }
         } catch {
           // ticho: dashboard je doplněk, chyby zápisu řeší příslušné obrazovky
@@ -198,7 +226,7 @@ export default function HomeScreen() {
           {t('home.subtitle')}
         </Text>
 
-        {mood && (
+        {!escalated && mood && (
           <View style={styles.avatarBlock}>
             <Avatar mood={mood} />
             <Text style={[styles.avatarCaption, { color: colors.textMuted }]}>{t(`avatar.mood.${mood}`)}</Text>
@@ -223,7 +251,9 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {session && goal && consumed ? (
+        {escalated ? (
+          <EscalationCard colors={colors} />
+        ) : session && goal && consumed ? (
           <TodayCard goal={goal} consumed={consumed} waterMl={waterMl} colors={colors} />
         ) : session && !goal ? (
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -345,6 +375,23 @@ export default function HomeScreen() {
   );
 }
 
+function EscalationCard({ colors }: { colors: ThemeColors }) {
+  return (
+    <View style={[styles.escalation, { backgroundColor: colors.noticeBackground, borderColor: colors.notice }]}>
+      <Text style={[styles.escalationTitle, { color: colors.text }]}>{t('escalation.title')}</Text>
+      <Text style={[styles.escalationBody, { color: colors.text }]}>{t('escalation.body')}</Text>
+      <Text style={[styles.escalationHelp, { color: colors.textMuted }]}>{t('escalation.helpName')}</Text>
+      <Pressable
+        accessibilityRole="button"
+        style={[styles.escalationAction, { backgroundColor: colors.accent }]}
+        onPress={() => Linking.openURL('https://www.anabell.cz')}
+      >
+        <Text style={[styles.startText, { color: colors.onAccent }]}>{t('escalation.helpAction')}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function TodayCard({ goal, consumed, waterMl, colors }: { goal: GoalRow; consumed: Consumed; waterMl: number; colors: ThemeColors }) {
   const pct = goal.kcal_target > 0 ? Math.min(1, consumed.kcal / goal.kcal_target) : 0;
   const remaining = Math.max(0, goal.kcal_target - consumed.kcal);
@@ -431,6 +478,32 @@ const styles = StyleSheet.create({
   waterLine: {
     fontSize: fontSize.body,
     paddingTop: spacing.xs,
+  },
+  escalation: {
+    marginTop: spacing.md,
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  escalationTitle: {
+    fontSize: fontSize.subtitle,
+    fontWeight: fontWeight.bold,
+  },
+  escalationBody: {
+    fontSize: fontSize.body,
+    lineHeight: fontSize.body * 1.5,
+  },
+  escalationHelp: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.medium,
+  },
+  escalationAction: {
+    minHeight: touchTarget,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
   },
   avatarBlock: {
     alignItems: 'center',

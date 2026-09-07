@@ -204,3 +204,37 @@ export async function saveAvatarState(userId: string, state: AvatarStateRow): Pr
     .upsert({ user_id: userId, ...state }, { onConflict: 'user_id' });
   if (error) throw error;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Vstupy pro eskalaci (nutrition-analyst, 8.1)                                 */
+/* -------------------------------------------------------------------------- */
+
+/** Denní kcal za posledních `days` dní (jen dny se zápisem, z v_daily_totals). */
+export async function getRecentDailyKcal(days = 5): Promise<{ date: string; kcal: number }[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - (days - 1));
+  const { data, error } = await supabase
+    .from('v_daily_totals')
+    .select('entry_date, kcal')
+    .gte('entry_date', since.toISOString().slice(0, 10))
+    .order('entry_date', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({ date: r.entry_date as string, kcal: Number(r.kcal) }));
+}
+
+export async function getProfileHeightCm(): Promise<number | null> {
+  const { data, error } = await supabase.from('profiles').select('height_cm').maybeSingle();
+  if (error) throw error;
+  return data?.height_cm != null ? Number(data.height_cm) : null;
+}
+
+export async function getLatestWeightKg(): Promise<number | null> {
+  const { data, error } = await supabase
+    .from('weight_logs')
+    .select('weight_kg, logged_on')
+    .order('logged_on', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.weight_kg != null ? Number(data.weight_kg) : null;
+}

@@ -121,6 +121,12 @@
   "attribution": {
     "off": "Food data © Open Food Facts contributors, ODbL license."
   },
+  "escalation": {
+    "title": "Let's take a different approach",
+    "body": "Your recent data suggests a sustained low intake. This app isn't the right tool for that. You're not alone and help is available.",
+    "helpName": "Anabell – eating disorders support centre (CZ)",
+    "helpAction": "Open anabell.cz"
+  },
   "level": {
     "label": "Level {n}"
   },

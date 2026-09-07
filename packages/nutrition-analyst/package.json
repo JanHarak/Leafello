@@ -1,6 +1,13 @@
 {
   "name": "@dietapp/nutrition-analyst",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Placeholder – fáze 5. Interpretace dat uživatele, mantinely formulací, detekce rizikového vzorce a eskalace (sekce 8.1)."
+  "description": "Interpretace dat uživatele a bezpečnostní mantinely: detekce rizikového vzorce a eskalace (zadání 8.1).",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  }
 }

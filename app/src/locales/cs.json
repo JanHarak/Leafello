@@ -123,6 +123,12 @@
   "attribution": {
     "off": "Data o potravinách © Open Food Facts contributors, licence ODbL."
   },
+  "escalation": {
+    "title": "Zkusme to jinak",
+    "body": "Podle tvých dat to teď vypadá na dlouhodobě nízký příjem. Na tohle není tahle aplikace ten správný nástroj. Nejsi v tom sám a pomoc existuje.",
+    "helpName": "Anabell – kontaktní centrum pro poruchy příjmu potravy",
+    "helpAction": "Otevřít anabell.cz"
+  },
   "level": {
     "label": "Level {n}"
   },

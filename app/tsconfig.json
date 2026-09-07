@@ -17,6 +17,9 @@
       ],
       "@dietapp/diary": [
         "../packages/diary/src"
+      ],
+      "@dietapp/nutrition-analyst": [
+        "../packages/nutrition-analyst/src"
       ]
     }
   },
