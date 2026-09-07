@@ -163,3 +163,44 @@ export async function listWeights(limitDays = 60): Promise<WeightRow[]> {
   if (error) throw error;
   return (data ?? []).map((r) => ({ logged_on: r.logged_on as string, weight_kg: Number(r.weight_kg) }));
 }
+
+/** Zda si uživatel dnes zapsal váhu (pro XP odměnu). */
+export async function hasWeighedToday(): Promise<boolean> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('weight_logs')
+    .select('logged_on')
+    .eq('logged_on', today)
+    .maybeSingle();
+  if (error) throw error;
+  return !!data;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Herní stav – XP, level, série (fáze 6)                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface AvatarStateRow {
+  level: number;
+  xp: number;
+  streak_days: number;
+  streak_saves_left: number;
+  streak_month: string | null;
+  last_active_on: string | null;
+}
+
+export async function getAvatarState(): Promise<AvatarStateRow | null> {
+  const { data, error } = await supabase
+    .from('avatar_state')
+    .select('level, xp, streak_days, streak_saves_left, streak_month, last_active_on')
+    .maybeSingle();
+  if (error) throw error;
+  return (data as AvatarStateRow | null) ?? null;
+}
+
+export async function saveAvatarState(userId: string, state: AvatarStateRow): Promise<void> {
+  const { error } = await supabase
+    .from('avatar_state')
+    .upsert({ user_id: userId, ...state }, { onConflict: 'user_id' });
+  if (error) throw error;
+}

@@ -123,6 +123,9 @@
   "attribution": {
     "off": "Data o potravinách © Open Food Facts contributors, licence ODbL."
   },
+  "level": {
+    "label": "Level {n}"
+  },
   "language": {
     "label": "Jazyk"
   }

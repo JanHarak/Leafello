@@ -11,7 +11,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { dailyTotals } from '@dietapp/diary';
-import { isActionable, moodFor, type Mood } from '@dietapp/gamification-rules';
+import {
+  applyLoggedDay,
+  awardsForDay,
+  isActionable,
+  levelForXp,
+  levelProgress,
+  moodFor,
+  totalXp,
+  MIN_MEALS_FOR_LOGGED_DAY,
+  type Mood,
+  type StreakState,
+} from '@dietapp/gamification-rules';
 
 import { Avatar } from '@/components/Avatar';
 import {
@@ -22,7 +33,15 @@ import {
   t,
 } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { getActiveGoal, getTodayWaterMl, listTodayEntries, type GoalRow } from '@/lib/db';
+import {
+  getActiveGoal,
+  getAvatarState,
+  getTodayWaterMl,
+  hasWeighedToday,
+  listTodayEntries,
+  saveAvatarState,
+  type GoalRow,
+} from '@/lib/db';
 import {
   colorsFor,
   fontSize,
@@ -53,6 +72,10 @@ export default function HomeScreen() {
   const [consumed, setConsumed] = useState<Consumed | null>(null);
   const [waterMl, setWaterMl] = useState(0);
   const [entriesToday, setEntriesToday] = useState(0);
+  const [level, setLevel] = useState(0);
+  const [levelPct, setLevelPct] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [celebrated, setCelebrated] = useState(false);
 
   // Načti cíl a dnešní příjem vždy, když je obrazovka aktivní (i po návratu
   // z deníku, ať se čísla aktualizují).
@@ -70,11 +93,64 @@ export default function HomeScreen() {
           const entries = await listTodayEntries();
           const totals = dailyTotals(entries.map((e) => e.snapshot));
           const water = await getTodayWaterMl();
+
+          // Herní stav: XP, level a série. Přidělení je idempotentní přes den
+          // (applyLoggedDay se stejným dnem vrátí 'unchanged').
+          const st = (await getAvatarState()) ?? {
+            level: 0,
+            xp: 0,
+            streak_days: 0,
+            streak_saves_left: 1,
+            streak_month: null,
+            last_active_on: null,
+          };
+          let leveledUp = false;
+          const today = new Date().toISOString().slice(0, 10);
+          if (entries.length >= MIN_MEALS_FOR_LOGGED_DAY) {
+            const streak: StreakState = {
+              streakDays: st.streak_days,
+              lastLoggedOn: st.last_active_on,
+              savesLeft: st.streak_saves_left,
+              savesMonth: st.streak_month ? st.streak_month.slice(0, 7) : null,
+              savesUsedTotal: 0,
+            };
+            const res = applyLoggedDay(streak, today);
+            if (res.outcome !== 'unchanged') {
+              const weighed = await hasWeighedToday();
+              const awards = awardsForDay({
+                mealsLogged: entries.length,
+                waterGoalMet: g ? water >= g.water_ml : false,
+                weighedIn: weighed,
+                recipesCreated: 0,
+                streakDays: res.state.streakDays,
+              });
+              const newXp = st.xp + totalXp(awards);
+              const newLevel = levelForXp(newXp);
+              leveledUp = newLevel > st.level;
+              await saveAvatarState(session.user.id, {
+                level: newLevel,
+                xp: newXp,
+                streak_days: res.state.streakDays,
+                streak_saves_left: res.state.savesLeft,
+                streak_month: res.state.savesMonth ? `${res.state.savesMonth}-01` : null,
+                last_active_on: today,
+              });
+              st.xp = newXp;
+              st.level = newLevel;
+              st.streak_days = res.state.streakDays;
+            }
+          }
+
           if (active) {
             setGoal(g);
             setConsumed({ kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat });
             setWaterMl(water);
             setEntriesToday(entries.length);
+            const prog = levelProgress(st.xp);
+            setLevel(prog.level);
+            setLevelPct(prog.progress);
+            setStreakDays(st.streak_days);
+            setCelebrated(leveledUp);
           }
         } catch {
           // ticho: dashboard je doplněk, chyby zápisu řeší příslušné obrazovky
@@ -99,7 +175,7 @@ export default function HomeScreen() {
           entriesToday,
           waterRatio: goal.water_ml > 0 ? waterMl / goal.water_ml : 1,
           kcalRatio: goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 1,
-          justCelebrated: false,
+          justCelebrated: celebrated,
           hour: new Date().getHours(),
         })
       : null;
@@ -126,6 +202,13 @@ export default function HomeScreen() {
           <View style={styles.avatarBlock}>
             <Avatar mood={mood} />
             <Text style={[styles.avatarCaption, { color: colors.textMuted }]}>{t(`avatar.mood.${mood}`)}</Text>
+            <Text style={[styles.levelText, { color: colors.text }]}>
+              {t('level.label', { n: level })}
+              {streakDays > 0 ? `  ·  ${plural('streak.days', streakDays)}` : ''}
+            </Text>
+            <View style={[styles.levelBar, { backgroundColor: colors.surfaceElevated }]}>
+              <View style={[styles.levelBarFill, { backgroundColor: colors.accent, width: `${levelPct * 100}%` as `${number}%` }]} />
+            </View>
             {isActionable(mood) && (
               <Pressable
                 accessibilityRole="button"
@@ -357,6 +440,20 @@ const styles = StyleSheet.create({
   avatarCaption: {
     fontSize: fontSize.body,
     textAlign: 'center',
+  },
+  levelText: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
+  },
+  levelBar: {
+    height: 6,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+    alignSelf: 'stretch',
+  },
+  levelBarFill: {
+    height: 6,
+    borderRadius: radius.pill,
   },
   avatarAction: {
     minHeight: touchTarget,
