@@ -7,7 +7,11 @@
     "subtitle": "Skeleton of the hybrid food and weight-loss diary app.",
     "stackNote": "Runs from one codebase on iOS, Android and the web (Expo + React Native + react-native-web).",
     "phaseNote": "Skeleton for now. Features arrive phase by phase per docs/zadani.md.",
-    "start": "Set your goal"
+    "start": "Set your goal",
+    "today": "Today",
+    "remaining": "{n} kcal left",
+    "goalReached": "Goal reached",
+    "setGoalFirst": "Set your goal to see how today is going."
   },
   "onboarding": {
     "title": "Let's set your goal",

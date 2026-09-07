@@ -7,7 +7,11 @@
     "subtitle": "Skeleton hybridnej aplikácie pre denník jedál a chudnutie.",
     "stackNote": "Beží z rovnakého kódu na iOS, Androide aj webe (Expo + React Native + react-native-web).",
     "phaseNote": "Zatiaľ len kostra. Funkcie sa doplnia po fázach podľa docs/zadani.md.",
-    "start": "Nastaviť cieľ"
+    "start": "Nastaviť cieľ",
+    "today": "Dnes",
+    "remaining": "Zostáva {n} kcal",
+    "goalReached": "Cieľ naplnený",
+    "setGoalFirst": "Nastav si cieľ a uvidíš, ako na tom dnes si."
   },
   "onboarding": {
     "title": "Poďme nastaviť tvoj cieľ",

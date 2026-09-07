@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useReducer } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useReducer, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { dailyTotals } from '@dietapp/diary';
+
 import {
   LANGUAGES,
   getLanguage,
@@ -18,6 +20,7 @@ import {
   t,
 } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { getActiveGoal, listTodayEntries, type GoalRow } from '@/lib/db';
 import {
   colorsFor,
   fontSize,
@@ -25,7 +28,15 @@ import {
   radius,
   spacing,
   touchTarget,
+  type ThemeColors,
 } from '@/theme';
+
+interface Consumed {
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
 
 export default function HomeScreen() {
   const scheme = useColorScheme();
@@ -35,6 +46,38 @@ export default function HomeScreen() {
   // i18n drží aktivní jazyk v modulu; tímhle překreslíme po přepnutí.
   const [, rerender] = useReducer((n: number) => n + 1, 0);
   const activeLang = getLanguage();
+
+  const [goal, setGoal] = useState<GoalRow | null>(null);
+  const [consumed, setConsumed] = useState<Consumed | null>(null);
+
+  // Načti cíl a dnešní příjem vždy, když je obrazovka aktivní (i po návratu
+  // z deníku, ať se čísla aktualizují).
+  useFocusEffect(
+    useCallback(() => {
+      if (!session) {
+        setGoal(null);
+        setConsumed(null);
+        return;
+      }
+      let active = true;
+      (async () => {
+        try {
+          const g = await getActiveGoal();
+          const entries = await listTodayEntries();
+          const totals = dailyTotals(entries.map((e) => e.snapshot));
+          if (active) {
+            setGoal(g);
+            setConsumed({ kcal: totals.kcal, protein: totals.protein, carbs: totals.carbs, fat: totals.fat });
+          }
+        } catch {
+          // ticho: dashboard je doplněk, chyby zápisu řeší příslušné obrazovky
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }, [session]),
+  );
 
   function switchLanguage(code: string) {
     setLanguage(code);
@@ -54,23 +97,31 @@ export default function HomeScreen() {
           {t('home.subtitle')}
         </Text>
 
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.body, { color: colors.text }]}>
-            {t('home.stackNote')}
-          </Text>
-          <Text style={[styles.body, { color: colors.textMuted }]}>
-            {t('home.phaseNote')}
-          </Text>
-          {/* Ukázka CLDR plurálu z i18n. */}
-          <Text style={[styles.streak, { color: colors.accent }]}>
-            {plural('streak.days', 3)}
-          </Text>
-        </View>
+        {session && goal && consumed ? (
+          <TodayCard goal={goal} consumed={consumed} colors={colors} />
+        ) : session && !goal ? (
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.body, { color: colors.textMuted }]}>{t('home.setGoalFirst')}</Text>
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.body, { color: colors.text }]}>
+              {t('home.stackNote')}
+            </Text>
+            <Text style={[styles.body, { color: colors.textMuted }]}>
+              {t('home.phaseNote')}
+            </Text>
+            {/* Ukázka CLDR plurálu z i18n. */}
+            <Text style={[styles.streak, { color: colors.accent }]}>
+              {plural('streak.days', 3)}
+            </Text>
+          </View>
+        )}
 
         <Pressable
           accessibilityRole="button"
@@ -151,9 +202,85 @@ export default function HomeScreen() {
   );
 }
 
+function TodayCard({ goal, consumed, colors }: { goal: GoalRow; consumed: Consumed; colors: ThemeColors }) {
+  const pct = goal.kcal_target > 0 ? Math.min(1, consumed.kcal / goal.kcal_target) : 0;
+  const remaining = Math.max(0, goal.kcal_target - consumed.kcal);
+  return (
+    <View style={[styles.today, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Text style={[styles.todayLabel, { color: colors.textFaint }]}>{t('home.today')}</Text>
+      <Text style={[styles.todayKcal, { color: colors.text }]}>
+        {consumed.kcal}{' '}
+        <Text style={[styles.todayTarget, { color: colors.textFaint }]}>
+          / {goal.kcal_target} {t('goal.unitKcal')}
+        </Text>
+      </Text>
+      <View style={[styles.bar, { backgroundColor: colors.surfaceElevated }]}>
+        <View style={[styles.barFill, { backgroundColor: colors.accent, width: `${pct * 100}%` as `${number}%` }]} />
+      </View>
+      <Text style={[styles.remaining, { color: colors.textMuted }]}>
+        {consumed.kcal >= goal.kcal_target ? t('home.goalReached') : t('home.remaining', { n: remaining })}
+      </Text>
+      <View style={styles.todayMacros}>
+        <MacroCol label={t('goal.protein')} value={consumed.protein} target={goal.protein_g} colors={colors} />
+        <MacroCol label={t('goal.carbs')} value={consumed.carbs} target={goal.carbs_g} colors={colors} />
+        <MacroCol label={t('goal.fat')} value={consumed.fat} target={goal.fat_g} colors={colors} />
+      </View>
+    </View>
+  );
+}
+
+function MacroCol({ label, value, target, colors }: { label: string; value: number; target: number; colors: ThemeColors }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{label}</Text>
+      <Text style={{ color: colors.text, fontSize: fontSize.body, fontWeight: fontWeight.bold }}>
+        {value} / {target} {t('goal.unitG')}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
+  },
+  today: {
+    marginTop: spacing.md,
+    padding: spacing.xl,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  todayLabel: {
+    fontSize: fontSize.caption,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: fontWeight.medium,
+  },
+  todayKcal: {
+    fontSize: 36,
+    fontWeight: fontWeight.bold,
+  },
+  todayTarget: {
+    fontSize: fontSize.subtitle,
+    fontWeight: fontWeight.regular,
+  },
+  bar: {
+    height: 8,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: 8,
+    borderRadius: radius.pill,
+  },
+  remaining: {
+    fontSize: fontSize.body,
+  },
+  todayMacros: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
   },
   content: {
     padding: spacing.xl,
