@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +7,8 @@ import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
 
 import { SAMPLE_FOODS, type SampleFood } from '@/data/sampleFoods';
 import { t } from '@/i18n';
+import { useAuth } from '@/lib/auth';
+import { addDiaryEntry, listTodayEntries } from '@/lib/db';
 import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -24,11 +26,37 @@ export default function Diary() {
   const colors = colorsFor(useColorScheme());
   const s = styles(colors);
 
+  const { session } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<SampleFood | null>(null);
   const [grams, setGrams] = useState('100');
   const [meal, setMeal] = useState<MealType>('breakfast');
+
+  async function reload() {
+    const rows = await listTodayEntries();
+    setEntries(
+      rows.map((r) => ({
+        id: r.id,
+        foodName: r.snapshot.name,
+        grams: r.grams,
+        meal: r.meal,
+        snapshot: {
+          kcal: r.snapshot.kcal,
+          protein: r.snapshot.protein,
+          carbs: r.snapshot.carbs,
+          fat: r.snapshot.fat,
+          fiber: 0,
+        },
+      })),
+    );
+  }
+
+  // Přihlášený uživatel: načti dnešní záznamy z DB. Odhlášený: lokální stav.
+  useEffect(() => {
+    if (session) reload().catch(() => {});
+    else setEntries([]);
+  }, [session]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -38,7 +66,7 @@ export default function Diary() {
 
   const totals = useMemo(() => dailyTotals(entries.map((e) => e.snapshot)), [entries]);
 
-  function addEntry() {
+  async function addEntry() {
     if (!selected) return;
     const g = Number(grams);
     if (Number.isNaN(g) || g <= 0) return;
@@ -46,10 +74,25 @@ export default function Diary() {
       { kcal: selected.kcal, protein: selected.protein, carbs: selected.carbs, fat: selected.fat },
       g,
     );
-    setEntries((prev) => [
-      ...prev,
-      { id: `${selected.id}-${Date.now()}`, foodName: selected.name, grams: g, meal, snapshot },
-    ]);
+    if (session) {
+      try {
+        await addDiaryEntry(session.user.id, meal, g, {
+          name: selected.name,
+          kcal: snapshot.kcal,
+          protein: snapshot.protein,
+          carbs: snapshot.carbs,
+          fat: snapshot.fat,
+        });
+        await reload();
+      } catch {
+        // necháme UI beze změny; chyby zápisu se doladí později
+      }
+    } else {
+      setEntries((prev) => [
+        ...prev,
+        { id: `${selected.id}-${Date.now()}`, foodName: selected.name, grams: g, meal, snapshot },
+      ]);
+    }
     setSelected(null);
     setGrams('100');
     setQuery('');

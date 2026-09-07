@@ -47,6 +47,7 @@
     "unitKcal": "kcal",
     "unitG": "g",
     "unitMl": "ml",
+    "saved": "Uloženo do tvého účtu.",
     "warningRate": "Zvolené tempo není při těchto parametrech bezpečně dosažitelné, cíl je nastavený na bezpečnou hranici. Zvaž konzultaci s lékařem nebo nutričním terapeutem."
   },
   "diary": {

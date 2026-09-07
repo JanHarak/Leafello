@@ -47,6 +47,7 @@
     "unitKcal": "kcal",
     "unitG": "g",
     "unitMl": "ml",
+    "saved": "Saved to your account.",
     "warningRate": "The chosen pace is not safely achievable with these parameters, so the goal is set to a safe limit. Consider consulting a doctor or a nutrition therapist."
   },
   "diary": {

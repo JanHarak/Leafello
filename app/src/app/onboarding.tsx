@@ -20,6 +20,8 @@ import {
 } from '@dietapp/nutrition-calc';
 
 import { t } from '@/i18n';
+import { useAuth } from '@/lib/auth';
+import { saveProfileAndGoal } from '@/lib/db';
 import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'high', 'very_high'];
@@ -46,10 +48,12 @@ export default function Onboarding() {
   const [activity, setActivity] = useState<ActivityLevel>('sedentary');
   const [rate, setRate] = useState(0.5);
 
+  const { session } = useAuth();
   const [goal, setGoal] = useState<GoalResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
-  function compute() {
+  async function compute() {
     const heightCm = Number(height);
     const weightKg = Number(weight);
     const targetKg = Number(targetWeight);
@@ -64,8 +68,31 @@ export default function Onboarding() {
       assertTargetWeight(targetKg, heightCm);
       const kc = kcalTarget({ tdee: tdee(base, activity), ratePerWeek: rate, sex });
       const m = macros({ kcalTarget: kc.kcalTarget, weightKg });
-      setGoal({ kcalTarget: kc.kcalTarget, warning: kc.warning, ...m, water: waterMl(weightKg) });
+      const result: GoalResult = { kcalTarget: kc.kcalTarget, warning: kc.warning, ...m, water: waterMl(weightKg) };
+      setGoal(result);
       setError(null);
+      setSaved(false);
+      // Uložit do účtu, pokud je uživatel přihlášený.
+      if (session) {
+        try {
+          await saveProfileAndGoal(
+            session.user.id,
+            { sex, birthDate, heightCm, activity },
+            {
+              targetWeightKg: targetKg,
+              ratePerWeek: rate,
+              kcalTarget: result.kcalTarget,
+              proteinG: result.proteinG,
+              carbsG: result.carbsG,
+              fatG: result.fatG,
+              waterMl: result.water,
+            },
+          );
+          setSaved(true);
+        } catch {
+          setSaved(false);
+        }
+      }
     } catch (e) {
       setGoal(null);
       if (e instanceof InvalidBirthDate) setError(t('onboarding.errorBirthDate'));
@@ -104,6 +131,8 @@ export default function Onboarding() {
               <Text style={s.noticeText}>{t('goal.warningRate')}</Text>
             </View>
           )}
+
+          {saved && <Text style={s.saved}>{t('goal.saved')}</Text>}
 
           <Pressable style={s.secondaryButton} onPress={() => setGoal(null)}>
             <Text style={s.secondaryButtonText}>{t('onboarding.recalculate')}</Text>
@@ -219,4 +248,5 @@ const styles = (c: ThemeColors) =>
     waterValue: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     notice: { backgroundColor: c.noticeBackground, borderRadius: radius.md, padding: spacing.lg, marginTop: spacing.lg },
     noticeText: { color: c.notice, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
+    saved: { color: c.accent, fontSize: fontSize.body, fontWeight: fontWeight.medium, textAlign: 'center', marginTop: spacing.md },
   });
