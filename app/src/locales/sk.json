@@ -123,6 +123,19 @@
   "attribution": {
     "off": "Údaje o potravinách © Open Food Facts contributors, licencia ODbL."
   },
+  "photo": {
+    "title": "Fotka jedla",
+    "open": "Fotka",
+    "pick": "Vybrať fotku",
+    "analyzing": "Analyzujem…",
+    "estimate": "Ide o odhad, nie meranie. Pred uložením skontroluj a uprav.",
+    "notFood": "Na fotke nevidím jedlo.",
+    "failed": "Analýza sa nepodarila, skús to prosím znova.",
+    "rateLimited": "Dnešný limit fotoanalýz je vyčerpaný.",
+    "lowConfidence": "nízka istota",
+    "logSelected": "Zapísať vybrané do denníka",
+    "logged": "Zapísané do denníka."
+  },
   "recipes": {
     "title": "Recepty",
     "open": "Recepty",

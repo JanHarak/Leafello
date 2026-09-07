@@ -121,6 +121,19 @@
   "attribution": {
     "off": "Food data © Open Food Facts contributors, ODbL license."
   },
+  "photo": {
+    "title": "Meal photo",
+    "open": "Photo",
+    "pick": "Pick a photo",
+    "analyzing": "Analyzing…",
+    "estimate": "This is an estimate, not a measurement. Check and adjust before saving.",
+    "notFood": "I can't see food in this photo.",
+    "failed": "Analysis failed, please try again.",
+    "rateLimited": "Today's photo analysis limit is reached.",
+    "lowConfidence": "low confidence",
+    "logSelected": "Log selected to diary",
+    "logged": "Logged to diary."
+  },
   "recipes": {
     "title": "Recipes",
     "open": "Recipes",
