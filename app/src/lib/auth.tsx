@@ -30,11 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      console.log('[auth] initial session:', data.session?.user?.email ?? 'none', error ? 'error: ' + error.message : '');
       setSession(data.session);
       setLoading(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
+      console.log('[auth] change:', event, next?.user?.email ?? 'none');
       setSession(next);
     });
     return () => sub.subscription.unsubscribe();
