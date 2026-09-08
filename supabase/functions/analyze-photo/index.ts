@@ -96,14 +96,23 @@ Deno.serve(async (req: Request) => {
     usedToday = count ?? 0;
   }
 
+  console.log(
+    `[analyze-photo] start model=${GEMINI_MODEL} keyLen=${geminiKey?.length ?? 0} ` +
+      `userId=${userId ? 'ano' : 'ne'} usedToday=${usedToday} path=${storagePath}`,
+  );
+
   // Volání Gemini: stáhne fotku ze Storage a pošle ji jako inline data.
   const callGemini = async (): Promise<GeminiResponse> => {
     const { data: file, error } = await admin.storage.from('meal-photos').download(storagePath);
-    if (error || !file) return { status: 500, text: 'download_failed' };
+    if (error || !file) {
+      console.error('[analyze-photo] download_failed', storagePath, error?.message ?? '');
+      return { status: 500, text: 'download_failed' };
+    }
     const bytes = new Uint8Array(await file.arrayBuffer());
     let binary = '';
     for (const b of bytes) binary += String.fromCharCode(b);
     const base64 = btoa(binary);
+    console.log(`[analyze-photo] fotka stažena, ${bytes.length} B`);
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
     const res = await fetch(url, {
@@ -121,8 +130,31 @@ Deno.serve(async (req: Request) => {
         generationConfig: { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
       }),
     });
-    const json = await res.json().catch(() => null);
-    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    const bodyText = await res.text();
+    let json: unknown = null;
+    try {
+      json = JSON.parse(bodyText);
+    } catch {
+      // ponecháme null, níže se zaloguje surový text
+    }
+
+    if (!res.ok) {
+      // Chyba od Gemini (neplatný klíč, špatný model, kvóta): zaloguj a
+      // propiš stručně do raw, ať je příčina vidět i v odpovědi.
+      console.error(`[analyze-photo] Gemini HTTP ${res.status}: ${bodyText.slice(0, 800)}`);
+      const g = json as { error?: { message?: string; status?: string } } | null;
+      const detail = g?.error?.message ?? bodyText.slice(0, 300);
+      return { status: res.status, text: `Gemini ${res.status}: ${detail}` };
+    }
+
+    const g = json as
+      | { candidates?: { content?: { parts?: { text?: string }[] } }[] }
+      | null;
+    const text = g?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (text === '') {
+      console.error(`[analyze-photo] prázdná odpověď Gemini (200): ${bodyText.slice(0, 800)}`);
+    }
     return { status: res.status, text };
   };
 
@@ -130,6 +162,7 @@ Deno.serve(async (req: Request) => {
     { storagePath, userId, hasJwt, usedToday, limit: DAILY_LIMIT },
     { callGemini },
   );
+  console.log(`[analyze-photo] výsledek status=${result.body.status ?? result.body.error ?? '?'} http=${result.httpStatus}`);
 
   // Zaznamenej analýzu (nikdy neukládej do deníku – to potvrzuje uživatel).
   if (userId && (result.body.status === 'done' || result.body.status === 'failed')) {
