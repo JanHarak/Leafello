@@ -286,6 +286,31 @@ export async function listRecipes(): Promise<SavedRecipe[]> {
   });
 }
 
+/**
+ * Přepíše existující recept: aktualizuje název a počet porcí a nahradí
+ * ingredience (smaže staré, vloží nové). RLS pustí jen vlastníka receptu.
+ */
+export async function updateRecipe(
+  recipeId: string,
+  name: string,
+  servings: number,
+  ingredients: { foodId: string; grams: number }[],
+): Promise<void> {
+  if (ingredients.length === 0) throw new Error('Recept nemá žádné ingredience.');
+  const { error: upErr } = await supabase
+    .from('recipes')
+    .update({ name: name.trim().slice(0, 200), servings })
+    .eq('id', recipeId);
+  if (upErr) throw upErr;
+
+  const { error: delErr } = await supabase.from('recipe_ingredients').delete().eq('recipe_id', recipeId);
+  if (delErr) throw delErr;
+
+  const rows = ingredients.map((i) => ({ recipe_id: recipeId, food_id: i.foodId, grams: i.grams }));
+  const { error: insErr } = await supabase.from('recipe_ingredients').insert(rows);
+  if (insErr) throw insErr;
+}
+
 /** Smaže recept uživatele (ingredience zmizí kaskádou). */
 export async function deleteRecipe(recipeId: string): Promise<void> {
   const { error } = await supabase.from('recipes').delete().eq('id', recipeId);

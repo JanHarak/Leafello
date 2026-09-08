@@ -46,7 +46,7 @@ const RESPONSE_SCHEMA = {
           carbs_100g: { type: 'number' },
           fat_100g: { type: 'number' },
         },
-        required: ['name', 'estimated_grams'],
+        required: ['name', 'estimated_grams', 'kcal_100g', 'protein_100g', 'carbs_100g', 'fat_100g'],
       },
     },
     not_food: { type: 'boolean' },
@@ -54,6 +54,14 @@ const RESPONSE_SCHEMA = {
   },
   required: ['items', 'not_food'],
 };
+
+const PROMPT =
+  'Jsi výživový asistent. Na fotce rozpoznej jednotlivé potraviny nebo pokrmy. ' +
+  'Pro KAŽDOU položku vrať: name (název česky), estimated_grams (odhad hmotnosti ' +
+  'porce na fotce v gramech) a výživové hodnoty na 100 g: kcal_100g, protein_100g, ' +
+  'carbs_100g, fat_100g. Hodnoty na 100 g odhadni podle typického složení dané ' +
+  'potraviny (nenech je nulové) a confidence v rozsahu 0 až 1. Pokud na fotce ' +
+  'žádné jídlo není, vrať not_food=true a prázdné items.';
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -122,7 +130,7 @@ Deno.serve(async (req: Request) => {
         contents: [
           {
             parts: [
-              { text: 'Rozpoznej jídlo na fotce a odhadni gramáž a výživové hodnoty.' },
+              { text: PROMPT },
               { inline_data: { mime_type: 'image/jpeg', data: base64 } },
             ],
           },

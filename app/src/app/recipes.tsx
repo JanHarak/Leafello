@@ -14,6 +14,7 @@ import {
   listRecipes,
   saveRecipe,
   searchFoods,
+  updateRecipe,
   type SavedRecipe,
 } from '@/lib/db';
 import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
@@ -58,7 +59,7 @@ export default function Recipes() {
   // Uložené recepty
   const [saved, setSaved] = useState<SavedRecipe[]>([]);
   const [currentRecipeId, setCurrentRecipeId] = useState<string | null>(null);
-  const [savedMsg, setSavedMsg] = useState(false);
+  const [savedMsg, setSavedMsg] = useState<'created' | 'updated' | null>(null);
 
   // Vlastní potravina (F-03)
   const [creating, setCreating] = useState(false);
@@ -142,11 +143,11 @@ export default function Recipes() {
     );
   }, [ingredients, servingsNum]);
 
-  // Jakákoli úprava odpojí recept od uložené verze (Uložit vytvoří nový).
+  // Úprava jen zruší hlášky; vazba na uložený recept (currentRecipeId) zůstává,
+  // takže „Uložit změny" ho přepíše. Nový recept se založí přes „Nový recept".
   function markDirty() {
     setLogged(false);
-    setSavedMsg(false);
-    setCurrentRecipeId(null);
+    setSavedMsg(null);
   }
 
   function addIngredient() {
@@ -234,7 +235,7 @@ export default function Recipes() {
     setQuery('');
     setCurrentRecipeId(r.id);
     setLogged(false);
-    setSavedMsg(false);
+    setSavedMsg(null);
   }
 
   function newRecipe() {
@@ -245,7 +246,7 @@ export default function Recipes() {
     setQuery('');
     setCurrentRecipeId(null);
     setLogged(false);
-    setSavedMsg(false);
+    setSavedMsg(null);
   }
 
   const canSave = !!session && name.trim() !== '' && ingredients.length > 0 && ingredients.every((i) => !!i.food.foodId);
@@ -265,11 +266,34 @@ export default function Recipes() {
         ingredients.map((i) => ({ foodId: i.food.foodId as string, grams: i.grams })),
       );
       setCurrentRecipeId(id);
-      setSavedMsg(true);
+      setSavedMsg('created');
       setError(null);
       loadRecipes();
     } catch (e) {
       console.error('Uložení receptu selhalo:', e);
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function updateCurrentRecipe() {
+    if (!session || !currentRecipeId) return;
+    if (name.trim() === '') {
+      setError(t('recipes.errorName'));
+      return;
+    }
+    if (!ingredients.every((i) => i.food.foodId)) return;
+    try {
+      await updateRecipe(
+        currentRecipeId,
+        name,
+        servingsNum,
+        ingredients.map((i) => ({ foodId: i.food.foodId as string, grams: i.grams })),
+      );
+      setSavedMsg('updated');
+      setError(null);
+      loadRecipes();
+    } catch (e) {
+      console.error('Úprava receptu selhala:', e);
       setError(e instanceof Error ? e.message : String(e));
     }
   }
@@ -341,7 +365,7 @@ export default function Recipes() {
           </>
         )}
 
-        <TextInput value={name} onChangeText={(v) => { setName(v); setSavedMsg(false); }} placeholder={t('recipes.name')} placeholderTextColor={colors.textFaint} style={s.input} />
+        <TextInput value={name} onChangeText={(v) => { setName(v); setSavedMsg(null); }} placeholder={t('recipes.name')} placeholderTextColor={colors.textFaint} style={s.input} />
         <View style={s.servingsRow}>
           <Text style={s.fieldLabel}>{t('recipes.servings')}</Text>
           <TextInput value={servings} onChangeText={(v) => { setServings(v); markDirty(); }} keyboardType="numeric" style={[s.input, s.servingsInput]} />
@@ -456,10 +480,14 @@ export default function Recipes() {
 
             {session && (
               <>
-                <Pressable style={[s.saveButton, !canSave && s.buttonDisabled]} onPress={saveCurrentRecipe} disabled={!canSave}>
-                  <Text style={s.saveText}>{t('recipes.save')}</Text>
+                <Pressable
+                  style={[s.saveButton, !canSave && s.buttonDisabled]}
+                  onPress={currentRecipeId ? updateCurrentRecipe : saveCurrentRecipe}
+                  disabled={!canSave}
+                >
+                  <Text style={s.saveText}>{currentRecipeId ? t('recipes.update') : t('recipes.save')}</Text>
                 </Pressable>
-                {savedMsg && <Text style={s.logged}>{t('recipes.saved')}</Text>}
+                {savedMsg && <Text style={s.logged}>{savedMsg === 'updated' ? t('recipes.updated') : t('recipes.saved')}</Text>}
                 <Pressable style={s.logButton} onPress={logPortion}>
                   <Text style={s.logText}>{t('recipes.logPortion')}</Text>
                 </Pressable>

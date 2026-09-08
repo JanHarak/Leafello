@@ -149,7 +149,9 @@
     "saved": "Recipe saved.",
     "savedList": "Saved recipes",
     "errorName": "Enter a recipe name.",
-    "newRecipe": "New recipe"
+    "newRecipe": "New recipe",
+    "update": "Save changes",
+    "updated": "Changes saved."
   },
   "reminders": {
     "title": "Reminders",

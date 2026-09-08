@@ -151,7 +151,9 @@
     "saved": "Recept uložený.",
     "savedList": "Uložené recepty",
     "errorName": "Zadaj názov receptu.",
-    "newRecipe": "Nový recept"
+    "newRecipe": "Nový recept",
+    "update": "Uložiť zmeny",
+    "updated": "Zmeny uložené."
   },
   "reminders": {
     "title": "Pripomienky",

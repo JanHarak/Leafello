@@ -188,6 +188,9 @@ export default function Photo() {
                           style={s.gramsInput}
                         />
                         <Text style={s.gramsUnit}>g</Text>
+                        <Text style={s.itemKcal}>
+                          {Math.round(((it.kcal_100g ?? 0) * (Number(grams[i]) || 0)) / 100)} {t('goal.unitKcal')}
+                        </Text>
                       </View>
                     </Pressable>
                   );
@@ -235,6 +238,7 @@ const styles = (c: ThemeColors) =>
     gramsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     gramsInput: { width: 90, minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.background, fontSize: fontSize.body },
     gramsUnit: { color: c.textMuted, fontSize: fontSize.body },
+    itemKcal: { color: c.textFaint, fontSize: fontSize.body, marginLeft: 'auto' },
     mealRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     mealChip: { minHeight: touchTarget, paddingHorizontal: spacing.md, justifyContent: 'center', borderRadius: radius.md, borderWidth: 1 },
     logButton: { minHeight: touchTarget, backgroundColor: c.accent, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', marginTop: spacing.sm },
