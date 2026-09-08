@@ -169,6 +169,25 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Use"
   },
+  "account": {
+    "title": "Account & data",
+    "open": "Account & data",
+    "needSignIn": "Sign in to manage your account and data.",
+    "exportTitle": "Data export",
+    "exportDesc": "Download a copy of all your personal data as JSON.",
+    "exportButton": "Download my data",
+    "exporting": "Preparing export…",
+    "exportDone": "Export ready: {count} records.",
+    "exportShareTitle": "My data export",
+    "deleteTitle": "Delete account",
+    "deleteDesc": "Permanently deletes your account and all data. This cannot be undone.",
+    "deleteButton": "Delete account",
+    "deleteConfirmQuestion": "Really delete your account? Data will be gone for good.",
+    "deleteConfirm": "Yes, delete my account",
+    "deleting": "Deleting account…",
+    "cancel": "Cancel",
+    "error": "Something went wrong, please try again."
+  },
   "level": {
     "label": "Level {n}"
   },

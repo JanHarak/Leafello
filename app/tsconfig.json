@@ -23,6 +23,9 @@
       ],
       "@dietapp/reminders": [
         "../packages/reminders/src"
+      ],
+      "@dietapp/gdpr": [
+        "../packages/gdpr/src"
       ]
     }
   },

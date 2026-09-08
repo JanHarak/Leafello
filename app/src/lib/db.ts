@@ -2,6 +2,13 @@
  * Datová vrstva nad Supabase: profil, cíl a deník. Všechno je chráněné RLS
  * (uživatel vidí a zapisuje jen svá data), klient posílá JWT automaticky.
  */
+import {
+  TABLE_SPECS,
+  buildExport,
+  exportOrder,
+  type ExportDocument,
+} from '@dietapp/gdpr';
+
 import { supabase } from './supabase';
 
 export type Sex = 'male' | 'female';
@@ -237,4 +244,61 @@ export async function getLatestWeightKg(): Promise<number | null> {
     .maybeSingle();
   if (error) throw error;
   return data?.weight_kg != null ? Number(data.weight_kg) : null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* GDPR – export dat (N-06) a smazání účtu                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Stáhne všechna osobní data přihlášeného uživatele přes RLS (žádné zvýšené
+ * oprávnění). Tabulky vázané na rodiče (např. recipe_ingredients) se omezí na
+ * potomky vlastních záznamů, aby export neobsahoval cizí ani veřejná data.
+ * Rodiče se načítají dřív než potomci (viz exportOrder), takže jsou po ruce
+ * jejich id.
+ */
+export async function exportMyData(userId: string, email?: string): Promise<ExportDocument> {
+  const rows: Record<string, unknown[]> = {};
+  const parentIds: Record<string, string[]> = {};
+
+  for (const table of exportOrder()) {
+    const spec = TABLE_SPECS.find((s) => s.table === table)!;
+    if (spec.ownerColumn) {
+      const { data, error } = await supabase.from(table).select('*').eq(spec.ownerColumn, userId);
+      if (error) throw error;
+      const list = (data ?? []) as Array<{ id?: string }>;
+      rows[table] = list;
+      parentIds[table] = list.map((r) => r.id).filter((v): v is string => typeof v === 'string');
+    } else if (spec.parent) {
+      const ids = parentIds[spec.parent.table] ?? [];
+      if (ids.length === 0) {
+        rows[table] = [];
+        continue;
+      }
+      const { data, error } = await supabase.from(table).select('*').in(spec.parent.fk, ids);
+      if (error) throw error;
+      rows[table] = (data ?? []) as unknown[];
+    }
+  }
+
+  return buildExport({ userId, email, generatedAt: new Date().toISOString() }, rows);
+}
+
+export interface DeleteAccountResult {
+  status: string;
+  deleted?: Record<string, number>;
+}
+
+/**
+ * Zavolá Edge Function `delete-account`, která se service_role klíčem smaže
+ * účet i všechna data. Po úspěchu se klient odhlásí. Nevratná operace –
+ * potvrzení řeší obrazovka.
+ */
+export async function deleteAccount(): Promise<DeleteAccountResult> {
+  const { data, error } = await supabase.functions.invoke<DeleteAccountResult>('delete-account', {
+    method: 'POST',
+  });
+  if (error) throw error;
+  await supabase.auth.signOut();
+  return data ?? { status: 'deleted' };
 }

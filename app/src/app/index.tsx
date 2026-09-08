@@ -334,14 +334,23 @@ export default function HomeScreen() {
         </View>
 
         {session ? (
-          <View style={styles.authRow}>
-            <Text style={[styles.authInfo, { color: colors.textFaint }]}>
-              {t('auth.signedInAs', { email: session.user.email ?? '' })}
-            </Text>
-            <Pressable accessibilityRole="button" onPress={() => signOut()}>
-              <Text style={[styles.authAction, { color: colors.accent }]}>{t('auth.signOut')}</Text>
+          <>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/account')}
+              style={[styles.secondaryButton, { borderColor: colors.border }]}
+            >
+              <Text style={[styles.startText, { color: colors.text }]}>{t('account.open')}</Text>
             </Pressable>
-          </View>
+            <View style={styles.authRow}>
+              <Text style={[styles.authInfo, { color: colors.textFaint }]}>
+                {t('auth.signedInAs', { email: session.user.email ?? '' })}
+              </Text>
+              <Pressable accessibilityRole="button" onPress={() => signOut()}>
+                <Text style={[styles.authAction, { color: colors.accent }]}>{t('auth.signOut')}</Text>
+              </Pressable>
+            </View>
+          </>
         ) : (
           <Pressable
             accessibilityRole="button"

@@ -171,6 +171,25 @@
     "privacy": "Zásady ochrany údajů",
     "terms": "Podmínky používání"
   },
+  "account": {
+    "title": "Účet a data",
+    "open": "Účet a data",
+    "needSignIn": "Přihlas se pro správu účtu a dat.",
+    "exportTitle": "Export dat",
+    "exportDesc": "Stáhni si kopii všech svých osobních dat ve formátu JSON.",
+    "exportButton": "Stáhnout moje data",
+    "exporting": "Připravuji export…",
+    "exportDone": "Export hotový: {count} záznamů.",
+    "exportShareTitle": "Můj export dat",
+    "deleteTitle": "Smazání účtu",
+    "deleteDesc": "Trvale smaže tvůj účet a všechna data. Tuto akci nelze vrátit zpět.",
+    "deleteButton": "Smazat účet",
+    "deleteConfirmQuestion": "Opravdu smazat účet? Data zmizí nenávratně.",
+    "deleteConfirm": "Ano, smazat účet",
+    "deleting": "Mažu účet…",
+    "cancel": "Zrušit",
+    "error": "Něco se nepovedlo, zkus to prosím znovu."
+  },
   "level": {
     "label": "Level {n}"
   },
