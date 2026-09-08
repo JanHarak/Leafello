@@ -213,7 +213,9 @@
     "deleteConfirm": "Ano, smazat účet",
     "deleting": "Mažu účet…",
     "cancel": "Zrušit",
-    "error": "Něco se nepovedlo, zkus to prosím znovu."
+    "error": "Něco se nepovedlo, zkus to prosím znovu.",
+    "changeIcon": "Změnit ikonu",
+    "iconBusy": "Nahrávám…"
   },
   "level": {
     "label": "Level {n}"
@@ -256,7 +258,11 @@
     "aiTitle": "Návrh výživového poradce",
     "aiApply": "Vložit do dne",
     "aiError": "Návrh se nepovedl, zkus to znovu.",
-    "aiNeedGoal": "Nejdřív si nastav cíl v onboardingu."
+    "aiNeedGoal": "Nejdřív si nastav cíl v onboardingu.",
+    "allergies": "Alergie / intolerance (volitelné)",
+    "available": "Dostupné suroviny (volitelné)",
+    "aiRegenerate": "Přegenerovat",
+    "aiHint": "Odškrtni, co ti nesedí, pak vlož vybrané do dne."
   },
   "common": {
     "back": "Zpět",

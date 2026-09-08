@@ -210,7 +210,9 @@
     "deleteConfirm": "Yes, delete my account",
     "deleting": "Deleting account…",
     "cancel": "Cancel",
-    "error": "Something went wrong, please try again."
+    "error": "Something went wrong, please try again.",
+    "changeIcon": "Change icon",
+    "iconBusy": "Uploading…"
   },
   "level": {
     "label": "Level {n}"
@@ -253,7 +255,11 @@
     "aiTitle": "Nutrition advisor suggestion",
     "aiApply": "Add to day",
     "aiError": "Suggestion failed, try again.",
-    "aiNeedGoal": "Set your goal in onboarding first."
+    "aiNeedGoal": "Set your goal in onboarding first.",
+    "allergies": "Allergies / intolerances (optional)",
+    "available": "Available ingredients (optional)",
+    "aiRegenerate": "Regenerate",
+    "aiHint": "Untick what does not fit, then add selected to the day."
   },
   "common": {
     "back": "Back",

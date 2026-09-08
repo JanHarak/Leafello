@@ -1,4 +1,6 @@
 import { Image } from 'expo-image';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
@@ -8,6 +10,7 @@ import { LANGUAGES, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { deleteAccount, exportMyData } from '@/lib/db';
 import { useLocale } from '@/lib/locale';
+import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
@@ -35,11 +38,44 @@ export default function Account() {
   const { lang, setLang } = useLocale();
   const router = useRouter();
 
+  const [iconBusy, setIconBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function onChangeIcon() {
+    if (!session || iconBusy) return;
+    try {
+      if (Platform.OS !== 'web') {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) return;
+      }
+      const picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
+      if (picked.canceled) return;
+      setIconBusy(true);
+      setError(null);
+      const manip = await ImageManipulator.manipulateAsync(picked.assets[0].uri, [{ resize: { width: 256 } }], {
+        compress: 0.85,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
+      const uid = session.user.id;
+      const path = `${uid}/avatar-${Date.now()}.jpg`;
+      const resp = await fetch(manip.uri);
+      const blob = await resp.blob();
+      const up = await supabase.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+      if (up.error) throw up.error;
+      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+      const { error: uerr } = await supabase.auth.updateUser({ data: { custom_avatar: pub.publicUrl } });
+      if (uerr) throw uerr;
+    } catch (e) {
+      console.error('Změna ikony selhala:', e);
+      setError(t('account.error'));
+    } finally {
+      setIconBusy(false);
+    }
+  }
 
   async function onExport() {
     if (!session || exporting) return;
@@ -85,8 +121,8 @@ export default function Account() {
           <>
             <View style={s.profileCard}>
               {(() => {
-                const meta = session.user.user_metadata as { avatar_url?: string; picture?: string; full_name?: string; name?: string } | undefined;
-                const avatarUrl = meta?.avatar_url ?? meta?.picture ?? null;
+                const meta = session.user.user_metadata as { custom_avatar?: string; avatar_url?: string; picture?: string; full_name?: string; name?: string } | undefined;
+                const avatarUrl = meta?.custom_avatar ?? meta?.avatar_url ?? meta?.picture ?? null;
                 const name = meta?.full_name ?? meta?.name ?? null;
                 return (
                   <>
@@ -97,9 +133,12 @@ export default function Account() {
                         <Text style={s.profileInitial}>{(name ?? session.user.email ?? '?').slice(0, 1).toUpperCase()}</Text>
                       </View>
                     )}
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, gap: spacing.xs }}>
                       {name && <Text style={s.profileName}>{name}</Text>}
                       <Text style={s.profileEmail}>{session.user.email ?? ''}</Text>
+                      <Pressable onPress={onChangeIcon} accessibilityRole="button" disabled={iconBusy}>
+                        <Text style={s.changeIcon}>{iconBusy ? t('account.iconBusy') : t('account.changeIcon')}</Text>
+                      </Pressable>
                     </View>
                   </>
                 );
@@ -187,6 +226,7 @@ const styles = (c: ThemeColors) =>
     profileInitial: { color: c.onAccent, fontSize: fontSize.title, fontWeight: fontWeight.bold },
     profileName: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     profileEmail: { color: c.textMuted, fontSize: fontSize.body },
+    changeIcon: { color: c.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
     langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     langButton: { minHeight: touchTarget, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1 },
     signOut: { minHeight: touchTarget, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },

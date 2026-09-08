@@ -630,8 +630,11 @@ export interface DaySuggestion {
 const MEAL_SET: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 /** Zavolá výživového poradce (Gemini) a vrátí návrh jídelníčku na jeden den. */
-export async function suggestDay(): Promise<DaySuggestion> {
-  const { data, error } = await supabase.functions.invoke('suggest-plan', { method: 'POST' });
+export async function suggestDay(opts?: { allergies?: string; available?: string }): Promise<DaySuggestion> {
+  const { data, error } = await supabase.functions.invoke('suggest-plan', {
+    method: 'POST',
+    body: { allergies: opts?.allergies ?? '', available: opts?.available ?? '' },
+  });
   if (error) throw error;
   const d = data as { status?: string; error?: string; meals?: unknown[]; notes?: string };
   if (!d || d.status !== 'done' || !Array.isArray(d.meals)) throw new Error(d?.error ?? 'failed');

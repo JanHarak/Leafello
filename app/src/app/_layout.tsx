@@ -128,8 +128,8 @@ function Header() {
   const pathname = usePathname();
   const title = titleForPath(pathname);
   // Profilová fotka z Google OAuth (user_metadata.avatar_url / picture).
-  const meta = session?.user.user_metadata as { avatar_url?: string; picture?: string } | undefined;
-  const avatarUrl = meta?.avatar_url ?? meta?.picture ?? null;
+  const meta = session?.user.user_metadata as { custom_avatar?: string; avatar_url?: string; picture?: string } | undefined;
+  const avatarUrl = meta?.custom_avatar ?? meta?.avatar_url ?? meta?.picture ?? null;
 
   return (
     <View

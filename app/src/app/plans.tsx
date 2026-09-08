@@ -1,3 +1,4 @@
+import Feather from '@expo/vector-icons/Feather';
 import { recipePerPortion } from '@dietapp/diary';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -123,6 +124,9 @@ export default function Plans() {
   const [transferredMsg, setTransferredMsg] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState<DaySuggestion | null>(null);
   const [suggestBusy, setSuggestBusy] = useState(false);
+  const [allergies, setAllergies] = useState('');
+  const [available, setAvailable] = useState('');
+  const [deselected, setDeselected] = useState<Set<string>>(new Set());
 
   const loadPlans = useCallback(() => {
     if (!session) {
@@ -274,9 +278,10 @@ export default function Plans() {
     if (!plan || suggestBusy) return;
     setSuggestBusy(true);
     setSuggestion(null);
+    setDeselected(new Set());
     setError(null);
     try {
-      setSuggestion(await suggestDay());
+      setSuggestion(await suggestDay({ allergies, available }));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg === 'no_goal' ? t('plans.aiNeedGoal') : t('plans.aiError'));
@@ -285,13 +290,27 @@ export default function Plans() {
     }
   }
 
+  const itemKey = (mi: number, ii: number) => `${mi}-${ii}`;
+  function toggleItem(mi: number, ii: number) {
+    setDeselected((prev) => {
+      const next = new Set(prev);
+      const k = itemKey(mi, ii);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  }
+
   // Vloží AI návrh do vybraného dne: každou položku uloží jako vlastní
   // potravinu a přidá do plánu. Nic se neděje bez tohoto potvrzení.
   async function applySuggestion() {
     if (!session || !plan || !selectedDate || !suggestion) return;
     try {
-      for (const m of suggestion.meals) {
-        for (const it of m.items) {
+      for (let mi = 0; mi < suggestion.meals.length; mi += 1) {
+        const m = suggestion.meals[mi];
+        for (let ii = 0; ii < m.items.length; ii += 1) {
+          if (deselected.has(itemKey(mi, ii))) continue;
+          const it = m.items[ii];
           const food = await createUserFood(session.user.id, {
             name: it.name,
             kcal_100g: it.kcal_100g,
@@ -431,20 +450,29 @@ export default function Plans() {
 
                 {/* AI návrh jídelníčku na den */}
                 <View style={s.card}>
+                  <Text style={s.cardTitle}>{t('plans.aiTitle')}</Text>
+                  <TextInput value={allergies} onChangeText={setAllergies} placeholder={t('plans.allergies')} placeholderTextColor={colors.textFaint} style={s.input} />
+                  <TextInput value={available} onChangeText={setAvailable} placeholder={t('plans.available')} placeholderTextColor={colors.textFaint} style={s.input} />
                   <Pressable style={[s.primary, suggestBusy && { opacity: 0.6 }]} onPress={onSuggest} disabled={suggestBusy}>
-                    <Text style={s.primaryText}>{suggestBusy ? t('plans.aiBusy') : t('plans.aiSuggest')}</Text>
+                    <Text style={s.primaryText}>{suggestBusy ? t('plans.aiBusy') : suggestion ? t('plans.aiRegenerate') : t('plans.aiSuggest')}</Text>
                   </Pressable>
                   {suggestion && (
                     <View style={s.suggestBox}>
-                      <Text style={s.cardTitle}>{t('plans.aiTitle')}</Text>
+                      <Text style={s.muted}>{t('plans.aiHint')}</Text>
                       {suggestion.meals.map((m, mi) => (
                         <View key={mi} style={s.mealGroup}>
                           <Text style={s.mealHeader}>{t(`meal.${m.meal}`)}</Text>
-                          {m.items.map((it, ii) => (
-                            <Text key={ii} style={s.itemMeta}>
-                              {it.name} · {it.grams} g · {Math.round((it.kcal_100g * it.grams) / 100)} {t('goal.unitKcal')}
-                            </Text>
-                          ))}
+                          {m.items.map((it, ii) => {
+                            const off = deselected.has(itemKey(mi, ii));
+                            return (
+                              <Pressable key={ii} style={s.suggestItem} onPress={() => toggleItem(mi, ii)} accessibilityRole="checkbox" accessibilityState={{ checked: !off }}>
+                                <Feather name={off ? 'square' : 'check-square'} size={20} color={off ? colors.textFaint : colors.accent} />
+                                <Text style={[s.itemMeta, off && s.itemOff]} numberOfLines={1}>
+                                  {it.name} · {it.grams} g · {Math.round((it.kcal_100g * it.grams) / 100)} {t('goal.unitKcal')}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
                         </View>
                       ))}
                       {suggestion.notes ? <Text style={s.muted}>{suggestion.notes}</Text> : null}
@@ -538,6 +566,8 @@ const styles = (c: ThemeColors) =>
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
     suggestBox: { gap: spacing.sm, marginTop: spacing.sm },
+    suggestItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget, paddingVertical: spacing.xs },
+    itemOff: { textDecorationLine: 'line-through', color: c.textFaint },
     input: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },
     weeksRow: { flexDirection: 'row', gap: spacing.sm },

@@ -72,6 +72,16 @@ Deno.serve(async (req: Request) => {
   const userId = userData?.user?.id ?? '';
   if (!userId) return json(401, { error: 'unauthorized' });
 
+  let allergies = '';
+  let available = '';
+  try {
+    const body = await req.json();
+    allergies = String(body?.allergies ?? '').slice(0, 500);
+    available = String(body?.available ?? '').slice(0, 500);
+  } catch {
+    // bez těla – návrh bez omezení
+  }
+
   const admin = createClient(supabaseUrl, serviceKey);
   const { data: goal } = await admin
     .from('goals')
@@ -90,7 +100,9 @@ Deno.serve(async (req: Request) => {
     'protein_100g, carbs_100g, fat_100g). Součet dne ať se blíží zadanému cíli. Používej běžné a ' +
     'dostupné potraviny. Nikdy nedoporučuj hladovění ani extrémní omezování, drž se zadaného ' +
     'cíle a nesnižuj ho, a nehodnoť postavu ani hmotnost uživatele. V poli notes uveď jednu ' +
-    'krátkou větu s tipem.';
+    'krátkou větu s tipem.' +
+    (allergies.trim() ? ` Vynech potraviny, na které je uživatel alergický nebo je netoleruje: ${allergies.trim()}.` : '') +
+    (available.trim() ? ` Pokud to jde, upřednostni tyto dostupné suroviny: ${available.trim()}.` : '');
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
   const res = await fetch(url, {
