@@ -144,7 +144,12 @@
     "perPortion": "Per portion",
     "logPortion": "Log 1 portion to diary",
     "empty": "Add ingredients and we'll compute the per-portion nutrition.",
-    "logged": "Logged to diary."
+    "logged": "Logged to diary.",
+    "save": "Save recipe",
+    "saved": "Recipe saved.",
+    "savedList": "Saved recipes",
+    "errorName": "Enter a recipe name.",
+    "newRecipe": "New recipe"
   },
   "reminders": {
     "title": "Reminders",

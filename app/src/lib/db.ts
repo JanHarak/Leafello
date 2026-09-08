@@ -118,6 +118,7 @@ export async function addDiaryEntry(
   grams: number,
   snapshot: DiarySnapshot,
   foodId?: string,
+  recipeId?: string,
 ): Promise<void> {
   const { error } = await supabase.from('diary_entries').insert({
     user_id: userId,
@@ -125,6 +126,7 @@ export async function addDiaryEntry(
     grams,
     snapshot,
     ...(foodId ? { food_id: foodId } : {}),
+    ...(recipeId ? { recipe_id: recipeId } : {}),
   });
   if (error) throw error;
 }
@@ -200,6 +202,94 @@ export async function searchFoods(q: string, limit = 20): Promise<FoodRow[]> {
   const { data, error } = await supabase.rpc('search_foods', { q: query, lim: limit });
   if (error) throw error;
   return (data ?? []).map((r: Record<string, unknown>) => mapFoodRow(r));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Recepty (F-11): uložení a znovupoužití                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface SavedRecipeIngredient {
+  foodId: string;
+  name: string;
+  grams: number;
+  kcal_100g: number;
+  protein_100g: number;
+  carbs_100g: number;
+  fat_100g: number;
+}
+
+export interface SavedRecipe {
+  id: string;
+  name: string;
+  servings: number;
+  ingredients: SavedRecipeIngredient[];
+}
+
+/**
+ * Uloží recept přihlášeného uživatele: řádek v recipes (owner_id=self) a jeho
+ * ingredience do recipe_ingredients. Každá ingredience musí odkazovat na
+ * existující potravinu (food_id, cizí klíč), takže jde uložit jen recepty
+ * složené z potravin z databáze (OFF nebo vlastní). Vrací id receptu.
+ */
+export async function saveRecipe(
+  userId: string,
+  name: string,
+  servings: number,
+  ingredients: { foodId: string; grams: number }[],
+): Promise<string> {
+  if (ingredients.length === 0) throw new Error('Recept nemá žádné ingredience.');
+  const { data: recipe, error: recipeErr } = await supabase
+    .from('recipes')
+    .insert({ owner_id: userId, name: name.trim().slice(0, 200), servings, source: 'user' })
+    .select('id')
+    .single();
+  if (recipeErr) throw recipeErr;
+  const recipeId = (recipe as { id: string }).id;
+
+  const rows = ingredients.map((i) => ({ recipe_id: recipeId, food_id: i.foodId, grams: i.grams }));
+  const { error: ingErr } = await supabase.from('recipe_ingredients').insert(rows);
+  if (ingErr) throw ingErr;
+  return recipeId;
+}
+
+/** Načte recepty uživatele včetně ingrediencí a výživy potravin (pro přepočet na porci). */
+export async function listRecipes(): Promise<SavedRecipe[]> {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select(
+      'id, name, servings, recipe_ingredients(grams, food_id, foods(name, kcal_100g, protein_100g, carbs_100g, fat_100g))',
+    )
+    .order('id', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r: Record<string, unknown>) => {
+    const ings = Array.isArray(r.recipe_ingredients) ? r.recipe_ingredients : [];
+    return {
+      id: String(r.id),
+      name: String(r.name),
+      servings: Number(r.servings),
+      ingredients: ings
+        .map((ing: Record<string, unknown>) => {
+          const food = (Array.isArray(ing.foods) ? ing.foods[0] : ing.foods) as Record<string, unknown> | null;
+          if (!food || ing.food_id == null) return null;
+          return {
+            foodId: String(ing.food_id),
+            name: String(food.name),
+            grams: Number(ing.grams),
+            kcal_100g: Number(food.kcal_100g),
+            protein_100g: Number(food.protein_100g),
+            carbs_100g: Number(food.carbs_100g),
+            fat_100g: Number(food.fat_100g),
+          } as SavedRecipeIngredient;
+        })
+        .filter((x): x is SavedRecipeIngredient => x !== null),
+    };
+  });
+}
+
+/** Smaže recept uživatele (ingredience zmizí kaskádou). */
+export async function deleteRecipe(recipeId: string): Promise<void> {
+  const { error } = await supabase.from('recipes').delete().eq('id', recipeId);
+  if (error) throw error;
 }
 
 /* -------------------------------------------------------------------------- */

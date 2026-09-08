@@ -146,7 +146,12 @@
     "perPortion": "Na porciu",
     "logPortion": "Zapísať 1 porciu do denníka",
     "empty": "Pridaj ingrediencie a vypočítame výživu na porciu.",
-    "logged": "Zapísané do denníka."
+    "logged": "Zapísané do denníka.",
+    "save": "Uložiť recept",
+    "saved": "Recept uložený.",
+    "savedList": "Uložené recepty",
+    "errorName": "Zadaj názov receptu.",
+    "newRecipe": "Nový recept"
   },
   "reminders": {
     "title": "Pripomienky",
