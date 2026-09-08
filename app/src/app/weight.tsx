@@ -99,9 +99,13 @@ export default function Weight() {
   const month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  // Osa Y: ~5 kg pod cílovou váhou až ~5 kg nad zadanou (onboardingovou) váhou.
+  // Zaokrouhleno na 5 kg kvůli čistým popiskům. baseline = nejstarší (zadaná) váha.
   const baseline = rows.length ? rows[0].weight_kg : (targetKg ?? 80);
-  const yMin = Math.round(baseline - 10);
-  const yMax = Math.round(baseline + 10);
+  const lo = targetKg != null ? Math.min(targetKg, baseline) : baseline;
+  const hi = targetKg != null ? Math.max(targetKg, baseline) : baseline;
+  const yMin = Math.floor((lo - 5) / 5) * 5;
+  const yMax = Math.ceil((hi + 5) / 5) * 5;
   const points = rows
     .filter((r) => r.logged_on.startsWith(monthPrefix))
     .map((r) => ({ day: Number(r.logged_on.slice(8, 10)), kg: r.weight_kg }));
