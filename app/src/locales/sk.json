@@ -62,7 +62,8 @@
     "noResults": "Nič sa nenašlo.",
     "grams": "Gramáž (g)",
     "add": "Pridať do denníka",
-    "empty": "Zatiaľ žiadny záznam. Vyhľadaj potravinu a pridaj ju."
+    "empty": "Zatiaľ žiadny záznam. Vyhľadaj potravinu a pridaj ju.",
+    "searching": "Hľadám…"
   },
   "meal": {
     "breakfast": "Raňajky",

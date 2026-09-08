@@ -16,6 +16,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint:styles": "node scripts/lint-styles.mjs",
     "db:push": "node scripts/db-push.mjs",
+    "import:off": "node scripts/import-off.mjs",
     "test:rls": "node supabase/tests/rls.test.mjs",
     "test:snapshot": "node supabase/tests/snapshot.test.mjs",
     "test:db": "npm run test:rls && npm run test:snapshot"

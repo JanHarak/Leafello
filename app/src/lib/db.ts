@@ -112,14 +112,58 @@ export async function listTodayEntries(): Promise<DiaryEntryRow[]> {
  * Přidá záznam do deníku. Ukázkové potraviny nejsou v tabulce foods, proto
  * food_id zůstává null a výživa i název jsou ve `snapshot` (zdroj pravdy).
  */
-export async function addDiaryEntry(userId: string, meal: MealType, grams: number, snapshot: DiarySnapshot): Promise<void> {
+export async function addDiaryEntry(
+  userId: string,
+  meal: MealType,
+  grams: number,
+  snapshot: DiarySnapshot,
+  foodId?: string,
+): Promise<void> {
   const { error } = await supabase.from('diary_entries').insert({
     user_id: userId,
     meal,
     grams,
     snapshot,
+    ...(foodId ? { food_id: foodId } : {}),
   });
   if (error) throw error;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Vyhledávání potravin (F-04)                                                 */
+/* -------------------------------------------------------------------------- */
+
+export interface FoodRow {
+  id: string;
+  name: string;
+  brand: string | null;
+  kcal_100g: number;
+  protein_100g: number;
+  carbs_100g: number;
+  fat_100g: number;
+  fiber_100g: number | null;
+}
+
+/**
+ * Vyhledá potraviny v tabulce foods přes RPC search_foods (full-text +
+ * fuzzy fallback, řazení podle F-04). RLS vrátí jen potraviny se source='off'
+ * nebo vlastní. Číselné sloupce chodí z PostgREST jako string, převádíme je.
+ */
+export async function searchFoods(q: string, limit = 20): Promise<FoodRow[]> {
+  const query = q.trim();
+  if (query.length < 2) return [];
+  const { data, error } = await supabase.rpc('search_foods', { q: query, lim: limit });
+  if (error) throw error;
+  return (data ?? []).map((r: Record<string, unknown>) => ({
+    id: String(r.id),
+    name: String(r.name),
+    brand: r.brand != null ? String(r.brand) : null,
+    kcal_100g: Number(r.kcal_100g),
+    protein_100g: Number(r.protein_100g),
+    carbs_100g: Number(r.carbs_100g),
+    fat_100g: Number(r.fat_100g),
+    fiber_100g: r.fiber_100g != null ? Number(r.fiber_100g) : null,
+  }));
 }
 
 /* -------------------------------------------------------------------------- */

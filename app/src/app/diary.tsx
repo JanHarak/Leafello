@@ -5,10 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
 
-import { SAMPLE_FOODS, type SampleFood } from '@/data/sampleFoods';
+import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { addDiaryEntry, listTodayEntries } from '@/lib/db';
+import { addDiaryEntry, listTodayEntries, searchFoods } from '@/lib/db';
 import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -22,6 +22,18 @@ interface Entry {
   snapshot: Nutrition;
 }
 
+/** Sjednocený tvar výsledku hledání: hodnoty na 100 g. foodId mají jen potraviny z DB. */
+interface Candidate {
+  id: string;
+  foodId?: string;
+  name: string;
+  brand?: string | null;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export default function Diary() {
   const colors = colorsFor(useColorScheme());
   const s = styles(colors);
@@ -29,7 +41,9 @@ export default function Diary() {
   const { session } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<SampleFood | null>(null);
+  const [results, setResults] = useState<Candidate[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<Candidate | null>(null);
   const [grams, setGrams] = useState('100');
   const [meal, setMeal] = useState<MealType>('breakfast');
   const [dbError, setDbError] = useState<string | null>(null);
@@ -65,11 +79,55 @@ export default function Diary() {
     }
   }, [session]);
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return SAMPLE_FOODS.filter((f) => f.name.toLowerCase().includes(q)).slice(0, 6);
-  }, [query]);
+  // Hledání: přihlášený uživatel v DB (F-04, s debounce), odhlášený v ukázkách.
+  useEffect(() => {
+    const q = query.trim();
+    if (selected || q.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+    if (!session) {
+      const ql = q.toLowerCase();
+      setResults(
+        SAMPLE_FOODS.filter((f) => f.name.toLowerCase().includes(ql))
+          .slice(0, 8)
+          .map((f) => ({ id: f.id, name: f.name, kcal: f.kcal, protein: f.protein, carbs: f.carbs, fat: f.fat })),
+      );
+      return;
+    }
+    let cancelled = false;
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const rows = await searchFoods(q, 20);
+        if (cancelled) return;
+        setResults(
+          rows.map((r) => ({
+            id: r.id,
+            foodId: r.id,
+            name: r.name,
+            brand: r.brand,
+            kcal: r.kcal_100g,
+            protein: r.protein_100g,
+            carbs: r.carbs_100g,
+            fat: r.fat_100g,
+          })),
+        );
+      } catch (e) {
+        if (!cancelled) {
+          console.error('Hledání potravin selhalo:', e);
+          setDbError(e instanceof Error ? e.message : String(e));
+        }
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query, selected, session]);
 
   const totals = useMemo(() => dailyTotals(entries.map((e) => e.snapshot)), [entries]);
 
@@ -83,13 +141,19 @@ export default function Diary() {
     );
     if (session) {
       try {
-        await addDiaryEntry(session.user.id, meal, g, {
-          name: selected.name,
-          kcal: snapshot.kcal,
-          protein: snapshot.protein,
-          carbs: snapshot.carbs,
-          fat: snapshot.fat,
-        });
+        await addDiaryEntry(
+          session.user.id,
+          meal,
+          g,
+          {
+            name: selected.name,
+            kcal: snapshot.kcal,
+            protein: snapshot.protein,
+            carbs: snapshot.carbs,
+            fat: snapshot.fat,
+          },
+          selected.foodId,
+        );
         await reload();
         setDbError(null);
       } catch (e) {
@@ -138,15 +202,20 @@ export default function Diary() {
 
         {dbError && <Text style={s.error}>{dbError}</Text>}
 
-        {query.trim().length > 0 && results.length === 0 && !selected && (
+        {searching && <Text style={s.muted}>{t('diary.searching')}</Text>}
+
+        {query.trim().length >= 2 && !searching && results.length === 0 && !selected && (
           <Text style={s.muted}>{t('diary.noResults')}</Text>
         )}
 
         {!selected &&
           results.map((f) => (
             <Pressable key={f.id} style={s.resultRow} onPress={() => setSelected(f)}>
-              <Text style={s.resultName}>{f.name}</Text>
-              <Text style={s.resultKcal}>{f.kcal} {t('goal.unitKcal')}/100 g</Text>
+              <View style={s.resultInfo}>
+                <Text style={s.resultName} numberOfLines={1}>{f.name}</Text>
+                {f.brand ? <Text style={s.resultBrand} numberOfLines={1}>{f.brand}</Text> : null}
+              </View>
+              <Text style={s.resultKcal}>{Math.round(f.kcal)} {t('goal.unitKcal')}/100 g</Text>
             </Pressable>
           ))}
 
@@ -228,9 +297,11 @@ const styles = (c: ThemeColors) =>
     search: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     muted: { color: c.textFaint, fontSize: fontSize.body },
     error: { color: c.notice, backgroundColor: c.noticeBackground, padding: spacing.md, borderRadius: radius.md, fontSize: fontSize.body },
-    resultRow: { minHeight: touchTarget, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface },
+    resultRow: { minHeight: touchTarget, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface },
+    resultInfo: { flex: 1 },
     resultName: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },
-    resultKcal: { color: c.textFaint, fontSize: fontSize.caption },
+    resultBrand: { color: c.textFaint, fontSize: fontSize.caption },
+    resultKcal: { color: c.textFaint, fontSize: fontSize.caption, flexShrink: 0 },
     addCard: { backgroundColor: c.surface, borderColor: c.accent, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     addTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },

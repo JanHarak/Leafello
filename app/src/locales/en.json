@@ -62,7 +62,8 @@
     "noResults": "Nothing found.",
     "grams": "Grams (g)",
     "add": "Add to diary",
-    "empty": "No entries yet. Search a food and add it."
+    "empty": "No entries yet. Search a food and add it.",
+    "searching": "Searching…"
   },
   "meal": {
     "breakfast": "Breakfast",
