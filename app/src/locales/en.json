@@ -230,5 +230,8 @@
     "errorDate": "Enter a date as YYYY-MM-DD.",
     "noItems": "No items.",
     "back": "Back to plans"
+  },
+  "common": {
+    "back": "Back"
   }
 }

@@ -21,6 +21,7 @@ import {
 
 import { Avatar } from '@/components/Avatar';
 import { ProgressRing } from '@/components/ProgressRing';
+import { Tooltip } from '@/components/Tooltip';
 import { plural, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { NAV_ITEMS } from '@/lib/nav';
@@ -181,7 +182,7 @@ export default function HomeScreen() {
       {/* Postavička a stav */}
       {!escalated && mood && (
         <View style={s.hero}>
-          <Avatar mood={mood} />
+          <Avatar mood={mood} size={200} />
           <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
           <Text style={s.level}>
             {t('level.label', { n: level })}
@@ -248,18 +249,12 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Ikonové akční dlaždice */}
+      {/* Ikonové akční dlaždice s popiskem při najetí */}
       <View style={s.tiles}>
         {NAV_ITEMS.map((item) => (
-          <Pressable
-            key={String(item.route)}
-            accessibilityRole="button"
-            accessibilityLabel={t(item.labelKey)}
-            onPress={() => router.push(item.route)}
-            style={s.tile}
-          >
+          <Tooltip key={String(item.route)} label={t(item.labelKey)} onPress={() => router.push(item.route)} style={s.tile}>
             <Feather name={item.icon} size={26} color={colors.accent} />
-          </Pressable>
+          </Tooltip>
         ))}
       </View>
     </ScrollView>
@@ -283,9 +278,9 @@ function Ring({
 }) {
   return (
     <View style={{ alignItems: 'center', gap: spacing.xs }}>
-      <ProgressRing progress={progress} color={colors.accent} trackColor={colors.surfaceElevated} size={150} strokeWidth={13}>
-        {icon && <Feather name={icon} size={18} color={colors.accent} style={{ marginBottom: 2 }} />}
-        <Text style={{ color: colors.text, fontSize: fontSize.title, fontWeight: fontWeight.bold }}>{value}</Text>
+      <ProgressRing progress={progress} color={colors.accent} trackColor={colors.surfaceElevated} size={200} strokeWidth={18}>
+        {icon && <Feather name={icon} size={22} color={colors.accent} style={{ marginBottom: 2 }} />}
+        <Text style={{ color: colors.text, fontSize: 40, fontWeight: fontWeight.bold }}>{value}</Text>
         <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{unit}</Text>
       </ProgressRing>
       <Text style={{ color: colors.textMuted, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium }}>
@@ -330,7 +325,7 @@ const styles = (c: ThemeColors) =>
     levelBarFill: { height: 6, borderRadius: radius.pill, backgroundColor: c.accent },
     heroAction: { minHeight: touchTarget, paddingHorizontal: spacing.xl, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
     heroActionText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    rings: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxl, justifyContent: 'center' },
+    rings: { flexDirection: 'row', flexWrap: 'wrap', gap: 72, justifyContent: 'center' },
     macros: { flexDirection: 'row', gap: spacing.sm, alignSelf: 'center', width: '100%', maxWidth: 420 },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'center', marginTop: spacing.sm },
     tile: { width: 64, height: 64, borderRadius: radius.lg, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' },

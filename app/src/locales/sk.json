@@ -232,5 +232,8 @@
     "errorDate": "Zadaj dátum vo formáte RRRR-MM-DD.",
     "noItems": "Žiadne položky.",
     "back": "Späť na plány"
+  },
+  "common": {
+    "back": "Späť"
   }
 }

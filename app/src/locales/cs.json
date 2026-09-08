@@ -11,7 +11,8 @@
     "today": "Dnešek",
     "remaining": "Zbývá {n} kcal",
     "goalReached": "Cíl naplněn",
-    "setGoalFirst": "Nastav si cíl a uvidíš, jak na tom dnes jsi."
+    "setGoalFirst": "Nastav si cíl a uvidíš, jak na tom dnes jsi.",
+    "foodLabel":"Jídlo"
   },
   "onboarding": {
     "title": "Pojďme nastavit tvůj cíl",
@@ -232,5 +233,8 @@
     "errorDate": "Zadej datum ve formátu RRRR-MM-DD.",
     "noItems": "Žádné položky.",
     "back": "Zpět na plány"
+  },
+  "common": {
+    "back": "Zpět"
   }
 }

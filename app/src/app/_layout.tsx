@@ -2,9 +2,10 @@ import Feather from '@expo/vector-icons/Feather';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Tooltip } from '@/components/Tooltip';
 import { t } from '@/i18n';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { LocaleProvider, useLocale } from '@/lib/locale';
@@ -12,6 +13,10 @@ import { NAV_ITEMS } from '@/lib/nav';
 import { ThemeProvider, useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget } from '@/theme';
 import '@/global.css';
+
+// react-native-web umí CSS přechody; na nativu se ignorují (mobil řešíme později).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const WIDTH_TRANSITION: any = Platform.OS === 'web' ? { transitionProperty: 'width', transitionDuration: '180ms', transitionTimingFunction: 'ease' } : null;
 
 const RAIL_COLLAPSED = 64;
 const RAIL_EXPANDED = 210;
@@ -42,14 +47,18 @@ function Rail() {
     <View
       onPointerEnter={() => setExpanded(true)}
       onPointerLeave={() => setExpanded(false)}
-      style={{
-        width: expanded ? RAIL_EXPANDED : RAIL_COLLAPSED,
-        backgroundColor: colors.surface,
-        borderRightWidth: 1,
-        borderRightColor: colors.border,
-        paddingVertical: spacing.md,
-        gap: spacing.xs,
-      }}
+      style={[
+        {
+          width: expanded ? RAIL_EXPANDED : RAIL_COLLAPSED,
+          backgroundColor: colors.surface,
+          borderRightWidth: 1,
+          borderRightColor: colors.border,
+          paddingVertical: spacing.md,
+          gap: spacing.xs,
+          overflow: 'hidden',
+        },
+        WIDTH_TRANSITION,
+      ]}
     >
       {items.map((item) => {
         const active = pathname === item.route;
@@ -188,6 +197,14 @@ function Shell() {
   // Konzumace jazyka tady zajistí překreslení obsahu po přepnutí jazyka.
   useLocale();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const pathname = usePathname();
+  const showBack = pathname !== '/' && pathname !== '';
+
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.push('/');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
@@ -196,7 +213,20 @@ function Shell() {
         <Rail />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <View style={{ flex: 1, width: '100%', maxWidth: CONTENT_MAX_WIDTH }}>
-            <Slot />
+            {showBack && (
+              <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: 'flex-start' }}>
+                <Tooltip
+                  label={t('common.back')}
+                  onPress={goBack}
+                  style={{ width: touchTarget, height: touchTarget, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Feather name="arrow-left" size={20} color={colors.text} />
+                </Tooltip>
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Slot />
+            </View>
           </View>
         </View>
       </View>
