@@ -39,6 +39,7 @@ export default function Reminders() {
   const [enabled, setEnabled] = useState(false);
   const [channel, setChannel] = useState<ReminderChannel>('email');
   const [times, setTimes] = useState<ReminderTimes>(DEFAULT_REMINDER_TIMES);
+  const [editing, setEditing] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
   const CHANNELS: { key: ReminderChannel; label: string }[] = [
@@ -140,6 +141,7 @@ export default function Reminders() {
     setTimes(clean);
     try {
       await setReminderTimes(session.user.id, clean);
+      setEditing(false);
       setNote(t('reminders.timesSaved'));
     } catch (e) {
       setNote(e instanceof Error ? e.message : String(e));
@@ -186,30 +188,25 @@ export default function Reminders() {
 
         {note && <Text style={s.note}>{note}</Text>}
 
-        {/* Nastavení časů */}
-        <Text style={s.section}>{t('reminders.timesTitle')}</Text>
-        <View style={s.timeRow}>
-          <Text style={s.timeLabel}>{t('reminders.waterFrom')}</Text>
-          <TextInput value={String(times.waterStart)} onChangeText={(v) => setTime('waterStart', Number(v) || 0)} keyboardType="numeric" style={s.timeInput} />
-          <Text style={s.timeLabel}>{t('reminders.waterTo')}</Text>
-          <TextInput value={String(times.waterEnd)} onChangeText={(v) => setTime('waterEnd', Number(v) || 0)} keyboardType="numeric" style={s.timeInput} />
+        {/* Rozvrh – ve výchozím stavu jen náhled; editaci zapne tlačítko Upravit */}
+        <View style={s.scheduleHeader}>
+          <Text style={s.sectionInline}>{t('reminders.timesTitle')}</Text>
+          {Platform.OS === 'web' && (
+            <Pressable onPress={() => setEditing((e) => !e)} accessibilityRole="button">
+              <Text style={s.editLink}>{editing ? t('common.done') : t('common.edit')}</Text>
+            </Pressable>
+          )}
         </View>
-        {(['breakfast', 'lunch', 'dinner'] as MealKey[]).map((k) => (
-          <View key={k} style={s.timeRow}>
-            <Text style={s.timeLabel}>{t(`meal.${k}`)}</Text>
-            <TextInput value={times[k]} onChangeText={(v) => setTime(k, v)} placeholder="HH:MM" placeholderTextColor={colors.textFaint} style={s.timeInput} />
-          </View>
-        ))}
-        <View style={s.timeRow}>
-          <Text style={s.timeLabel}>{t('reminders.weighTitle')}</Text>
-          <TextInput value={times.weigh} onChangeText={(v) => setTime('weigh', v)} placeholder="HH:MM" placeholderTextColor={colors.textFaint} style={s.timeInput} />
-        </View>
-        <Pressable style={s.saveTimes} onPress={saveTimes}>
-          <Text style={s.saveTimesText}>{t('reminders.saveTimes')}</Text>
-        </Pressable>
 
-        {/* Náhled rozvrhu */}
         <Text style={s.section}>{t('reminders.water')}</Text>
+        {editing && (
+          <View style={s.timeRow}>
+            <Text style={s.timeLabel}>{t('reminders.waterFrom')}</Text>
+            <TextInput value={String(times.waterStart)} onChangeText={(v) => setTime('waterStart', Number(v) || 0)} keyboardType="numeric" style={s.timeInput} />
+            <Text style={s.timeLabel}>{t('reminders.waterTo')}</Text>
+            <TextInput value={String(times.waterEnd)} onChangeText={(v) => setTime('waterEnd', Number(v) || 0)} keyboardType="numeric" style={s.timeInput} />
+          </View>
+        )}
         {water.map((p, i) => (
           <View key={`w${i}`} style={s.row}>
             <Text style={s.time}>{fmt(p.hour, p.minute)}</Text>
@@ -220,17 +217,31 @@ export default function Reminders() {
         <Text style={s.section}>{t('reminders.meals')}</Text>
         {meals.map((m) => (
           <View key={m.key} style={s.row}>
-            <Text style={s.time}>{fmt(m.hour, m.minute)}</Text>
+            {editing ? (
+              <TextInput value={times[m.key]} onChangeText={(v) => setTime(m.key, v)} placeholder="HH:MM" placeholderTextColor={colors.textFaint} style={s.rowInput} />
+            ) : (
+              <Text style={s.time}>{fmt(m.hour, m.minute)}</Text>
+            )}
             <Text style={s.detail}>{t(`meal.${m.key}`)}</Text>
           </View>
         ))}
 
         <Text style={s.section}>{t('reminders.weighTitle')}</Text>
         <View style={s.row}>
-          <Text style={s.time}>{fmt(weigh.hour, weigh.minute)}</Text>
+          {editing ? (
+            <TextInput value={times.weigh} onChangeText={(v) => setTime('weigh', v)} placeholder="HH:MM" placeholderTextColor={colors.textFaint} style={s.rowInput} />
+          ) : (
+            <Text style={s.time}>{fmt(weigh.hour, weigh.minute)}</Text>
+          )}
           <Text style={s.detail}>{t('reminders.weighInfo')}</Text>
         </View>
         <Text style={s.intro}>{t('reminders.weighBody')}</Text>
+
+        {editing && (
+          <Pressable style={s.saveTimes} onPress={saveTimes}>
+            <Text style={s.saveTimesText}>{t('reminders.saveTimes')}</Text>
+          </Pressable>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -248,6 +259,10 @@ const styles = (c: ThemeColors) =>
     channelChip: { minHeight: touchTarget, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1 },
     note: { color: c.notice, backgroundColor: c.noticeBackground, padding: spacing.md, borderRadius: radius.md, fontSize: fontSize.body },
     section: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium, marginTop: spacing.lg },
+    sectionInline: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
+    scheduleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.lg },
+    editLink: { color: c.accent, fontSize: fontSize.body, fontWeight: fontWeight.medium },
+    rowInput: { minHeight: touchTarget, width: 90, borderWidth: 1, borderColor: c.accent, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     timeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
     timeLabel: { color: c.textMuted, fontSize: fontSize.body, minWidth: 90 },
     timeInput: { minHeight: touchTarget, width: 90, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },

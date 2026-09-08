@@ -30,7 +30,7 @@ export function Tooltip({
         onPress={onPress}
         onHoverIn={() => setHover(true)}
         onHoverOut={() => setHover(false)}
-        style={style}
+        style={[style, hover && { backgroundColor: colors.hover }]}
       >
         {children}
       </Pressable>

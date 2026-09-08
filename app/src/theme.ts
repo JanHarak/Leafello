@@ -41,6 +41,9 @@ const raw = {
   macroCarbsDark: '#e7b451',
   macroFat: '#b6699a',
   macroFatDark: '#d68cbb',
+  // Jemné zvýraznění při najetí myší (hover) – decentní tón odvozený od accentu.
+  hover: '#eaf2fb',
+  hoverDark: '#243244',
 } as const;
 
 export interface ThemeColors {
@@ -60,6 +63,7 @@ export interface ThemeColors {
   macroProtein: string;
   macroCarbs: string;
   macroFat: string;
+  hover: string;
 }
 
 export const lightColors: ThemeColors = {
@@ -79,6 +83,7 @@ export const lightColors: ThemeColors = {
   macroProtein: raw.macroProtein,
   macroCarbs: raw.macroCarbs,
   macroFat: raw.macroFat,
+  hover: raw.hover,
 };
 
 export const darkColors: ThemeColors = {
@@ -98,6 +103,7 @@ export const darkColors: ThemeColors = {
   macroProtein: raw.macroProteinDark,
   macroCarbs: raw.macroCarbsDark,
   macroFat: raw.macroFatDark,
+  hover: raw.hoverDark,
 };
 
 /** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */
