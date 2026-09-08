@@ -244,7 +244,13 @@
     "noItems": "No items.",
     "back": "Back to plans",
     "aboutTitle": "How meal plans work",
-    "aboutBody": "A plan is a menu for 1 to 4 weeks ahead. Create a plan, assign foods or saved recipes to each day and meal (breakfast, lunch, dinner, snack). When the day comes, the „Transfer day to diary“ button logs the whole planned day in one tap. Nothing is logged automatically – the plan is just a template you confirm."
+    "aboutBody": "A plan is a menu for 1 to 4 weeks ahead. Create a plan, assign foods or saved recipes to each day and meal (breakfast, lunch, dinner, snack). When the day comes, the „Transfer day to diary“ button logs the whole planned day in one tap. Nothing is logged automatically – the plan is just a template you confirm.",
+    "aiSuggest": "Suggest day (AI)",
+    "aiBusy": "Suggesting…",
+    "aiTitle": "Nutrition advisor suggestion",
+    "aiApply": "Add to day",
+    "aiError": "Suggestion failed, try again.",
+    "aiNeedGoal": "Set your goal in onboarding first."
   },
   "common": {
     "back": "Back",

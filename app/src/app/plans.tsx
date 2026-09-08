@@ -10,12 +10,15 @@ import {
   addDiaryEntry,
   addMealPlanItem,
   createMealPlan,
+  createUserFood,
   deleteMealPlan,
   deleteMealPlanItem,
   getMealPlanItems,
   listMealPlans,
   listRecipes,
   searchFoods,
+  suggestDay,
+  type DaySuggestion,
   type MealPlanItem,
   type MealPlanRow,
   type SavedRecipe,
@@ -118,6 +121,8 @@ export default function Plans() {
   const [selRecipe, setSelRecipe] = useState<SavedRecipe | null>(null);
   const [addServings, setAddServings] = useState('1');
   const [transferredMsg, setTransferredMsg] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<DaySuggestion | null>(null);
+  const [suggestBusy, setSuggestBusy] = useState(false);
 
   const loadPlans = useCallback(() => {
     if (!session) {
@@ -265,6 +270,45 @@ export default function Plans() {
     }
   }
 
+  async function onSuggest() {
+    if (!plan || suggestBusy) return;
+    setSuggestBusy(true);
+    setSuggestion(null);
+    setError(null);
+    try {
+      setSuggestion(await suggestDay());
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg === 'no_goal' ? t('plans.aiNeedGoal') : t('plans.aiError'));
+    } finally {
+      setSuggestBusy(false);
+    }
+  }
+
+  // Vloží AI návrh do vybraného dne: každou položku uloží jako vlastní
+  // potravinu a přidá do plánu. Nic se neděje bez tohoto potvrzení.
+  async function applySuggestion() {
+    if (!session || !plan || !selectedDate || !suggestion) return;
+    try {
+      for (const m of suggestion.meals) {
+        for (const it of m.items) {
+          const food = await createUserFood(session.user.id, {
+            name: it.name,
+            kcal_100g: it.kcal_100g,
+            protein_100g: it.protein_100g,
+            carbs_100g: it.carbs_100g,
+            fat_100g: it.fat_100g,
+          });
+          await addMealPlanItem(plan.id, { planDate: selectedDate, meal: m.meal, foodId: food.id, grams: it.grams });
+        }
+      }
+      setSuggestion(null);
+      loadItems(plan.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
@@ -385,6 +429,32 @@ export default function Plans() {
                   );
                 })()}
 
+                {/* AI návrh jídelníčku na den */}
+                <View style={s.card}>
+                  <Pressable style={[s.primary, suggestBusy && { opacity: 0.6 }]} onPress={onSuggest} disabled={suggestBusy}>
+                    <Text style={s.primaryText}>{suggestBusy ? t('plans.aiBusy') : t('plans.aiSuggest')}</Text>
+                  </Pressable>
+                  {suggestion && (
+                    <View style={s.suggestBox}>
+                      <Text style={s.cardTitle}>{t('plans.aiTitle')}</Text>
+                      {suggestion.meals.map((m, mi) => (
+                        <View key={mi} style={s.mealGroup}>
+                          <Text style={s.mealHeader}>{t(`meal.${m.meal}`)}</Text>
+                          {m.items.map((it, ii) => (
+                            <Text key={ii} style={s.itemMeta}>
+                              {it.name} · {it.grams} g · {Math.round((it.kcal_100g * it.grams) / 100)} {t('goal.unitKcal')}
+                            </Text>
+                          ))}
+                        </View>
+                      ))}
+                      {suggestion.notes ? <Text style={s.muted}>{suggestion.notes}</Text> : null}
+                      <Pressable style={s.transfer} onPress={applySuggestion}>
+                        <Text style={s.transferText}>{t('plans.aiApply')}</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+
                 {/* Přidání položky */}
                 <View style={s.card}>
                   <Text style={s.cardTitle}>{t('plans.addItem')}</Text>
@@ -467,6 +537,7 @@ const styles = (c: ThemeColors) =>
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.sm },
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
+    suggestBox: { gap: spacing.sm, marginTop: spacing.sm },
     input: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },
     weeksRow: { flexDirection: 'row', gap: spacing.sm },

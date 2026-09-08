@@ -607,6 +607,50 @@ export async function deleteMealPlanItem(itemId: string): Promise<void> {
 }
 
 /* -------------------------------------------------------------------------- */
+/* AI návrh jídelníčku na den (suggest-plan)                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface SuggestedItem {
+  name: string;
+  grams: number;
+  kcal_100g: number;
+  protein_100g: number;
+  carbs_100g: number;
+  fat_100g: number;
+}
+export interface SuggestedMeal {
+  meal: MealType;
+  items: SuggestedItem[];
+}
+export interface DaySuggestion {
+  meals: SuggestedMeal[];
+  notes?: string;
+}
+
+const MEAL_SET: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+/** Zavolá výživového poradce (Gemini) a vrátí návrh jídelníčku na jeden den. */
+export async function suggestDay(): Promise<DaySuggestion> {
+  const { data, error } = await supabase.functions.invoke('suggest-plan', { method: 'POST' });
+  if (error) throw error;
+  const d = data as { status?: string; error?: string; meals?: unknown[]; notes?: string };
+  if (!d || d.status !== 'done' || !Array.isArray(d.meals)) throw new Error(d?.error ?? 'failed');
+  const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const meals: SuggestedMeal[] = (d.meals as Record<string, unknown>[]).map((m) => ({
+    meal: MEAL_SET.includes(m.meal as MealType) ? (m.meal as MealType) : 'snack',
+    items: (Array.isArray(m.items) ? (m.items as Record<string, unknown>[]) : []).map((it) => ({
+      name: String(it.name ?? '').slice(0, 200),
+      grams: num(it.grams) || 100,
+      kcal_100g: Math.min(900, Math.max(0, num(it.kcal_100g))),
+      protein_100g: num(it.protein_100g),
+      carbs_100g: num(it.carbs_100g),
+      fat_100g: num(it.fat_100g),
+    })),
+  }));
+  return { meals, notes: typeof d.notes === 'string' ? d.notes : undefined };
+}
+
+/* -------------------------------------------------------------------------- */
 /* GDPR – export dat (N-06) a smazání účtu                                     */
 /* -------------------------------------------------------------------------- */
 

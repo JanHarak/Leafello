@@ -247,7 +247,13 @@
     "noItems": "Žádné položky.",
     "back": "Zpět na plány",
     "aboutTitle": "Jak fungují plány jídel",
-    "aboutBody": "Plán je jídelníček na 1 až 4 týdny dopředu. Vytvoříš plán, k jednotlivým dnům a jídlům (snídaně, oběd, večeře, svačina) přiřadíš potraviny nebo uložené recepty. Až daný den nastane, tlačítkem „Přenést den do deníku“ si celý naplánovaný den jedním klikem zapíšeš. Nic se nezapisuje samo – plán je jen předpis, který potvrzuješ ty."
+    "aboutBody": "Plán je jídelníček na 1 až 4 týdny dopředu. Vytvoříš plán, k jednotlivým dnům a jídlům (snídaně, oběd, večeře, svačina) přiřadíš potraviny nebo uložené recepty. Až daný den nastane, tlačítkem „Přenést den do deníku“ si celý naplánovaný den jedním klikem zapíšeš. Nic se nezapisuje samo – plán je jen předpis, který potvrzuješ ty.",
+    "aiSuggest": "Navrhnout den (AI)",
+    "aiBusy": "Navrhuji…",
+    "aiTitle": "Návrh výživového poradce",
+    "aiApply": "Vložit do dne",
+    "aiError": "Návrh se nepovedl, zkus to znovu.",
+    "aiNeedGoal": "Nejdřív si nastav cíl v onboardingu."
   },
   "common": {
     "back": "Zpět",

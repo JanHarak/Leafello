@@ -246,7 +246,13 @@
     "noItems": "Žiadne položky.",
     "back": "Späť na plány",
     "aboutTitle": "Ako fungujú plány jedál",
-    "aboutBody": "Plán je jedálniček na 1 až 4 týždne dopredu. Vytvoríš plán, k jednotlivým dňom a jedlám (raňajky, obed, večera, desiata) priradíš potraviny alebo uložené recepty. Keď daný deň nastane, tlačidlom „Preniesť deň do denníka“ si celý naplánovaný deň jedným klikom zapíšeš. Nič sa nezapisuje samo – plán je len predpis, ktorý potvrdzuješ ty."
+    "aboutBody": "Plán je jedálniček na 1 až 4 týždne dopredu. Vytvoríš plán, k jednotlivým dňom a jedlám (raňajky, obed, večera, desiata) priradíš potraviny alebo uložené recepty. Keď daný deň nastane, tlačidlom „Preniesť deň do denníka“ si celý naplánovaný deň jedným klikom zapíšeš. Nič sa nezapisuje samo – plán je len predpis, ktorý potvrdzuješ ty.",
+    "aiSuggest": "Navrhnúť deň (AI)",
+    "aiBusy": "Navrhujem…",
+    "aiTitle": "Návrh výživového poradcu",
+    "aiApply": "Vložiť do dňa",
+    "aiError": "Návrh sa nepodaril, skús to znova.",
+    "aiNeedGoal": "Najprv si nastav cieľ v onboardingu."
   },
   "common": {
     "back": "Späť",
