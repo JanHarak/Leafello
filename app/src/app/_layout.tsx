@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import { Image } from 'expo-image';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -126,6 +127,9 @@ function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const title = titleForPath(pathname);
+  // Profilová fotka z Google OAuth (user_metadata.avatar_url / picture).
+  const meta = session?.user.user_metadata as { avatar_url?: string; picture?: string } | undefined;
+  const avatarUrl = meta?.avatar_url ?? meta?.picture ?? null;
 
   return (
     <View
@@ -173,7 +177,11 @@ function Header() {
             onPress={() => router.push('/account')}
             style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, height: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border }}
           >
-            <Feather name="user" size={18} color={colors.textMuted} />
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={{ width: 26, height: 26, borderRadius: 13 }} accessibilityLabel="avatar" />
+            ) : (
+              <Feather name="user" size={18} color={colors.textMuted} />
+            )}
             <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSize.caption, fontWeight: fontWeight.medium, maxWidth: 160 }}>
               {session.user.email ?? t('account.title')}
             </Text>

@@ -196,7 +196,7 @@ export default function HomeScreen() {
               icon="zap"
             />
             <View style={s.avatarCol}>
-              <Avatar mood={mood} size={184} />
+              <Avatar mood={mood} size={224} />
               <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
             </View>
             <Ring

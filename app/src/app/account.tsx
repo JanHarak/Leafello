@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
@@ -82,6 +83,29 @@ export default function Account() {
           <Text style={s.muted}>{t('account.needSignIn')}</Text>
         ) : (
           <>
+            <View style={s.profileCard}>
+              {(() => {
+                const meta = session.user.user_metadata as { avatar_url?: string; picture?: string; full_name?: string; name?: string } | undefined;
+                const avatarUrl = meta?.avatar_url ?? meta?.picture ?? null;
+                const name = meta?.full_name ?? meta?.name ?? null;
+                return (
+                  <>
+                    {avatarUrl ? (
+                      <Image source={{ uri: avatarUrl }} style={s.profileImg} accessibilityLabel="avatar" />
+                    ) : (
+                      <View style={s.profileFallback}>
+                        <Text style={s.profileInitial}>{(name ?? session.user.email ?? '?').slice(0, 1).toUpperCase()}</Text>
+                      </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                      {name && <Text style={s.profileName}>{name}</Text>}
+                      <Text style={s.profileEmail}>{session.user.email ?? ''}</Text>
+                    </View>
+                  </>
+                );
+              })()}
+            </View>
+
             <View style={s.card}>
               <Text style={s.cardTitle}>{t('language.label')}</Text>
               <View style={s.langRow}>
@@ -157,6 +181,12 @@ const styles = (c: ThemeColors) =>
     muted: { color: c.textFaint, fontSize: fontSize.body },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
+    profileCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl },
+    profileImg: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.surfaceElevated },
+    profileFallback: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
+    profileInitial: { color: c.onAccent, fontSize: fontSize.title, fontWeight: fontWeight.bold },
+    profileName: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
+    profileEmail: { color: c.textMuted, fontSize: fontSize.body },
     langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     langButton: { minHeight: touchTarget, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1 },
     signOut: { minHeight: touchTarget, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },
