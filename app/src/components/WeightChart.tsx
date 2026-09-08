@@ -33,8 +33,9 @@ export function WeightChart({
   const span = max - min || 1;
   const n = points.length;
 
+  const flat = max === min;
   const x = (i: number) => (n <= 1 ? w / 2 : padX + (i / (n - 1)) * (w - 2 * padX));
-  const y = (kg: number) => padY + (1 - (kg - min) / span) * (height - 2 * padY);
+  const y = (kg: number) => (flat ? height / 2 : padY + (1 - (kg - min) / span) * (height - 2 * padY));
   const polyline = points.map((p, i) => `${x(i)},${y(p.kg)}`).join(' ');
 
   return (

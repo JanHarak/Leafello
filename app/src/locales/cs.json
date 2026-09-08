@@ -172,7 +172,9 @@
     "water": "Pití",
     "meals": "Jídlo",
     "waterBody": "Čas se napít (~{ml} ml)",
-    "mealBody": "Čas na jídlo: {meal}"
+    "mealBody": "Čas na jídlo: {meal}",
+    "emailNote": "Na webu ti připomínky pošleme e-mailem na adresu tvého účtu.",
+    "emailEnabled": "E-mailové připomínky jsou zapnuté."
   },
   "escalation": {
     "title": "Zkusme to jinak",
@@ -236,11 +238,14 @@
     "errorName": "Zadej název plánu.",
     "errorDate": "Zadej datum ve formátu RRRR-MM-DD.",
     "noItems": "Žádné položky.",
-    "back": "Zpět na plány"
+    "back": "Zpět na plány",
+    "aboutTitle": "Jak fungují plány jídel",
+    "aboutBody": "Plán je jídelníček na 1 až 4 týdny dopředu. Vytvoříš plán, k jednotlivým dnům a jídlům (snídaně, oběd, večeře, svačina) přiřadíš potraviny nebo uložené recepty. Až daný den nastane, tlačítkem „Přenést den do deníku“ si celý naplánovaný den jedním klikem zapíšeš. Nic se nezapisuje samo – plán je jen předpis, který potvrzuješ ty."
   },
   "common": {
     "back": "Zpět",
     "pin": "Ukotvit menu",
-    "collapse": "Sbalit menu"
+    "collapse": "Sbalit menu",
+    "delete": "Smazat"
   }
 }

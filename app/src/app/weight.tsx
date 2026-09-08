@@ -100,7 +100,7 @@ export default function Weight() {
               </View>
             )}
 
-            {rows.length >= 2 && (
+            {rows.length >= 1 && (
               <View style={s.card}>
                 <Text style={s.label}>{t('weight.trend')}</Text>
                 <WeightChart

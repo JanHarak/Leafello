@@ -169,7 +169,9 @@
     "water": "Water",
     "meals": "Meals",
     "waterBody": "Time to drink (~{ml} ml)",
-    "mealBody": "Time to eat: {meal}"
+    "mealBody": "Time to eat: {meal}",
+    "emailNote": "On the web we send reminders by e-mail to your account address.",
+    "emailEnabled": "E-mail reminders are on."
   },
   "escalation": {
     "title": "Let's take a different approach",
@@ -233,11 +235,14 @@
     "errorName": "Enter a plan name.",
     "errorDate": "Enter a date as YYYY-MM-DD.",
     "noItems": "No items.",
-    "back": "Back to plans"
+    "back": "Back to plans",
+    "aboutTitle": "How meal plans work",
+    "aboutBody": "A plan is a menu for 1 to 4 weeks ahead. Create a plan, assign foods or saved recipes to each day and meal (breakfast, lunch, dinner, snack). When the day comes, the „Transfer day to diary“ button logs the whole planned day in one tap. Nothing is logged automatically – the plan is just a template you confirm."
   },
   "common": {
     "back": "Back",
     "pin": "Pin menu",
-    "collapse": "Collapse menu"
+    "collapse": "Collapse menu",
+    "delete": "Delete"
   }
 }

@@ -8,7 +8,7 @@ import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
 import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { addDiaryEntry, createUserFood, listTodayEntries, searchFoods } from '@/lib/db';
+import { addDiaryEntry, createUserFood, deleteDiaryEntry, listTodayEntries, searchFoods } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
@@ -175,6 +175,21 @@ export default function Diary() {
     setQuery('');
   }
 
+  async function removeEntry(id: string) {
+    if (session) {
+      try {
+        await deleteDiaryEntry(id);
+        await reload();
+        setDbError(null);
+      } catch (e) {
+        console.error('Smazání záznamu selhalo:', e);
+        setDbError(e instanceof Error ? e.message : String(e));
+      }
+    } else {
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+    }
+  }
+
   function openCreate() {
     setCf({ name: query.trim(), kcal: '', protein: '', carbs: '', fat: '' });
     setCfError(null);
@@ -336,10 +351,15 @@ export default function Diary() {
                 .filter((e) => e.meal === m)
                 .map((e) => (
                   <View key={e.id} style={s.entryRow}>
-                    <Text style={s.entryName}>{e.foodName}</Text>
-                    <Text style={s.entryMeta}>
-                      {e.grams} g · {Math.round(e.snapshot.kcal)} {t('goal.unitKcal')}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.entryName}>{e.foodName}</Text>
+                      <Text style={s.entryMeta}>
+                        {e.grams} g · {Math.round(e.snapshot.kcal)} {t('goal.unitKcal')}
+                      </Text>
+                    </View>
+                    <Pressable accessibilityRole="button" accessibilityLabel={t('common.delete')} onPress={() => removeEntry(e.id)} hitSlop={8}>
+                      <Text style={s.entryDelete}>×</Text>
+                    </Pressable>
                   </View>
                 ))}
             </View>
@@ -424,7 +444,8 @@ const styles = (c: ThemeColors) =>
     empty: { color: c.textFaint, fontSize: fontSize.body, textAlign: 'center', marginTop: spacing.lg },
     mealGroup: { gap: spacing.xs },
     mealHeader: { color: c.textMuted, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium, marginTop: spacing.sm },
-    entryRow: { minHeight: touchTarget, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
+    entryRow: { minHeight: touchTarget, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
     entryName: { color: c.text, fontSize: fontSize.body },
     entryMeta: { color: c.textFaint, fontSize: fontSize.caption },
+    entryDelete: { color: c.textFaint, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold, paddingHorizontal: spacing.sm },
   });

@@ -1,4 +1,5 @@
 
+import { Image } from 'expo-image';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ export default function Photo() {
   const { session } = useAuth();
 
   const [busy, setBusy] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [items, setItems] = useState<Item[] | null>(null);
   const [notFood, setNotFood] = useState(false);
   const [failedMsg, setFailedMsg] = useState<string | null>(null);
@@ -43,6 +45,7 @@ export default function Photo() {
 
   function reset() {
     setItems(null);
+    setImageUri(null);
     setNotFood(false);
     setFailedMsg(null);
     setLogged(false);
@@ -81,6 +84,7 @@ export default function Photo() {
         compress: 0.8,
         format: ImageManipulator.SaveFormat.JPEG,
       });
+      setImageUri(manip.uri);
 
       const uid = session.user.id;
       const path = `${uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
@@ -168,6 +172,8 @@ export default function Photo() {
               <Text style={s.pickText}>{busy ? t('photo.analyzing') : t('photo.pick')}</Text>
             </Pressable>
 
+            {imageUri && <Image source={{ uri: imageUri }} style={s.preview} contentFit="cover" accessibilityLabel={t('photo.title')} />}
+
             {notFood && <Text style={s.info}>{t('photo.notFood')}</Text>}
             {failedMsg && <Text style={s.info}>{t(failedMsg)}</Text>}
             {error && <Text style={s.error}>{error}</Text>}
@@ -234,6 +240,7 @@ const styles = (c: ThemeColors) =>
     about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
+    preview: { width: '100%', height: 240, borderRadius: radius.lg, backgroundColor: c.surfaceElevated },
     pick: { minHeight: touchTarget * 1.2, backgroundColor: c.accent, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
     pickText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     info: { color: c.textMuted, fontSize: fontSize.body, backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.md, padding: spacing.md },

@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { getActiveGoal } from '@/lib/db';
+import { getActiveGoal, getEmailReminders, setEmailReminders } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
@@ -30,6 +30,15 @@ export default function Reminders() {
       getActiveGoal()
         .then((g) => setGoalMl(g?.water_ml ?? null))
         .catch(() => {});
+      // Na webu je zdrojem pravdy uložená preference e-mailových připomínek.
+      if (Platform.OS === 'web') {
+        getEmailReminders()
+          .then((on) => {
+            setEnabled(on);
+            if (on) setNote(t('reminders.emailNote'));
+          })
+          .catch(() => {});
+      }
     }, [session]),
   );
 
@@ -39,9 +48,16 @@ export default function Reminders() {
   async function toggle() {
     setNote(null);
     if (Platform.OS === 'web') {
-      // Na webu jen náhled – plánování notifikací je záležitost mobilní appky.
-      setEnabled((v) => !v);
-      setNote(t('reminders.webNote'));
+      // Na webu se místo lokálních notifikací posílají e-maily (Edge Function).
+      if (!session) return;
+      const next = !enabled;
+      try {
+        await setEmailReminders(session.user.id, session.user.email ?? null, next);
+        setEnabled(next);
+        setNote(next ? t('reminders.emailNote') : null);
+      } catch (e) {
+        setNote(e instanceof Error ? e.message : String(e));
+      }
       return;
     }
     if (enabled) {

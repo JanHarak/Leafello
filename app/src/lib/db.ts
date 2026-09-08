@@ -132,6 +132,31 @@ export async function addDiaryEntry(
 }
 
 /* -------------------------------------------------------------------------- */
+/* E-mailové připomínky (F-13, web)                                            */
+/* -------------------------------------------------------------------------- */
+
+/** Zda má přihlášený uživatel zapnuté e-mailové připomínky. */
+export async function getEmailReminders(): Promise<boolean> {
+  const { data, error } = await supabase.from('reminder_prefs').select('email_reminders').maybeSingle();
+  if (error) throw error;
+  return !!data?.email_reminders;
+}
+
+/** Zapne/vypne e-mailové připomínky a uloží e-mail pro odesílání. */
+export async function setEmailReminders(userId: string, email: string | null, enabled: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('reminder_prefs')
+    .upsert({ user_id: userId, email, email_reminders: enabled, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) throw error;
+}
+
+/** Smaže záznam deníku (RLS pustí jen vlastní). */
+export async function deleteDiaryEntry(id: string): Promise<void> {
+  const { error } = await supabase.from('diary_entries').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* -------------------------------------------------------------------------- */
 /* Vyhledávání potravin (F-04)                                                 */
 /* -------------------------------------------------------------------------- */
 

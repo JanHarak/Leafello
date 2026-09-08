@@ -272,6 +272,12 @@ export default function Plans() {
           <Text style={s.muted}>{t('plans.needSignIn')}</Text>
         ) : !plan ? (
           <>
+            {/* Vysvětlení sekce */}
+            <View style={s.card}>
+              <Text style={s.cardTitle}>{t('plans.aboutTitle')}</Text>
+              <Text style={s.aboutBody}>{t('plans.aboutBody')}</Text>
+            </View>
+
             {/* Tvorba plánu */}
             <View style={s.card}>
               <Text style={s.cardTitle}>{t('plans.newPlan')}</Text>
@@ -460,6 +466,7 @@ const styles = (c: ThemeColors) =>
     muted: { color: c.textFaint, fontSize: fontSize.body, marginTop: spacing.sm },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.sm },
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
+    aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
     input: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },
     weeksRow: { flexDirection: 'row', gap: spacing.sm },
