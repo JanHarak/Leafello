@@ -39,14 +39,16 @@ function Rail() {
   const { colors } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const expanded = hovered || pinned;
 
   const items = [{ route: '/' as const, icon: 'home' as const, labelKey: 'home.today' }, ...NAV_ITEMS];
 
   return (
     <View
-      onPointerEnter={() => setExpanded(true)}
-      onPointerLeave={() => setExpanded(false)}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
       style={[
         {
           width: expanded ? RAIL_EXPANDED : RAIL_COLLAPSED,
@@ -66,6 +68,7 @@ function Rail() {
           <Pressable
             key={String(item.route)}
             accessibilityRole="button"
+            accessibilityLabel={t(item.labelKey)}
             onPress={() => router.push(item.route)}
             style={{
               flexDirection: 'row',
@@ -87,6 +90,32 @@ function Rail() {
           </Pressable>
         );
       })}
+
+      {/* Dole: ukotvení menu otevřeného / sbalení do úzkého pruhu */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={pinned ? t('common.collapse') : t('common.pin')}
+        onPress={() => setPinned((p) => !p)}
+        style={{
+          marginTop: 'auto',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+          marginHorizontal: spacing.sm,
+          paddingHorizontal: spacing.md,
+          height: touchTarget,
+          borderRadius: radius.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}
+      >
+        <Feather name={pinned ? 'chevrons-left' : 'chevrons-right'} size={22} color={colors.textMuted} />
+        {expanded && (
+          <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>
+            {pinned ? t('common.collapse') : t('common.pin')}
+          </Text>
+        )}
+      </Pressable>
     </View>
   );
 }

@@ -3,6 +3,8 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { waterSchedule } from '@dietapp/reminders';
+
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { addWater, getActiveGoal, getTodayWaterMl } from '@/lib/db';
@@ -52,6 +54,19 @@ export default function Water() {
 
   const pct = goalMl && goalMl > 0 ? Math.min(1, todayMl / goalMl) : 0;
 
+  // Bloky pitného režimu (F-13): stejné fáze jako v upozorněních, plněné
+  // podle dosud vypitého množství (dřívější bloky se plní jako první).
+  const blocks = (() => {
+    if (!goalMl || goalMl <= 0) return [] as { hour: number; minute: number; ml: number; filled: number }[];
+    let cumulative = 0;
+    return waterSchedule(goalMl).map((p) => {
+      const start = cumulative;
+      cumulative += p.ml;
+      const filled = Math.max(0, Math.min(1, p.ml > 0 ? (todayMl - start) / p.ml : 0));
+      return { ...p, filled };
+    });
+  })();
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
@@ -71,6 +86,25 @@ export default function Water() {
                 <View style={[s.barFill, { width: `${pct * 100}%` as `${number}%` }]} />
               </View>
             </View>
+
+            {blocks.length > 0 && (
+              <View style={s.card}>
+                <Text style={s.label}>{t('water.blocksTitle')}</Text>
+                <View style={s.blocksRow}>
+                  {blocks.map((b, i) => (
+                    <View key={i} style={s.block}>
+                      <View style={s.blockTrack}>
+                        <View style={[s.blockFill, { height: `${b.filled * 100}%` as `${number}%` }]} />
+                      </View>
+                      <Text style={s.blockTime}>
+                        {b.hour}:{String(b.minute).padStart(2, '0')}
+                      </Text>
+                      <Text style={s.blockMl}>{b.ml}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
 
             <View style={s.quickRow}>
               {QUICK.map((ml) => (
@@ -113,6 +147,12 @@ const styles = (c: ThemeColors) =>
     unit: { color: c.textFaint, fontSize: fontSize.subtitle, fontWeight: fontWeight.regular },
     bar: { height: 8, borderRadius: radius.pill, backgroundColor: c.surfaceElevated, overflow: 'hidden' },
     barFill: { height: 8, borderRadius: radius.pill, backgroundColor: c.accent },
+    blocksRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-end', marginTop: spacing.sm },
+    block: { flex: 1, alignItems: 'center', gap: spacing.xs },
+    blockTrack: { width: '100%', height: 96, borderRadius: radius.md, backgroundColor: c.surfaceElevated, overflow: 'hidden', justifyContent: 'flex-end' },
+    blockFill: { width: '100%', backgroundColor: c.accent, borderRadius: radius.md },
+    blockTime: { color: c.textMuted, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
+    blockMl: { color: c.textFaint, fontSize: fontSize.caption },
     quickRow: { flexDirection: 'row', gap: spacing.sm },
     quickButton: { flex: 1, minHeight: touchTarget * 1.2, borderRadius: radius.md, borderWidth: 1, borderColor: c.accent, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },
     quickText: { color: c.accent, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },

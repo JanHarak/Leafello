@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { WeightChart } from '@/components/WeightChart';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { listWeights, upsertWeight, type WeightRow } from '@/lib/db';
@@ -65,7 +66,6 @@ export default function Weight() {
   const latestAvg = avg.length ? avg[avg.length - 1] : null;
   const min = raw.length ? Math.min(...raw) : 0;
   const max = raw.length ? Math.max(...raw) : 0;
-  const span = max - min || 1;
   const recent = rows.slice(-14);
 
   return (
@@ -97,12 +97,20 @@ export default function Weight() {
                 <Text style={s.big}>
                   {latestAvg.toFixed(1)} <Text style={s.unit}>{t('weight.unitKg')}</Text>
                 </Text>
-                {/* Surová data slabě, průměr výrazně (F-07). */}
-                <View style={s.chart}>
-                  {recent.map((r, i) => {
-                    const h = 8 + ((r.weight_kg - min) / span) * 56;
-                    return <View key={r.logged_on + i} style={[s.rawBar, { height: h }]} />;
-                  })}
+              </View>
+            )}
+
+            {rows.length >= 2 && (
+              <View style={s.card}>
+                <Text style={s.label}>{t('weight.trend')}</Text>
+                <WeightChart
+                  points={rows.slice(-30).map((r) => ({ date: r.logged_on, kg: r.weight_kg }))}
+                  color={colors.accent}
+                  gridColor={colors.border}
+                />
+                <View style={s.chartAxis}>
+                  <Text style={s.axisLabel}>{min.toFixed(1)}</Text>
+                  <Text style={s.axisLabel}>{max.toFixed(1)} {t('weight.unitKg')}</Text>
                 </View>
               </View>
             )}
@@ -140,8 +148,8 @@ const styles = (c: ThemeColors) =>
     label: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     big: { color: c.text, fontSize: 40, fontWeight: fontWeight.bold },
     unit: { color: c.textFaint, fontSize: fontSize.subtitle, fontWeight: fontWeight.regular },
-    chart: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs, height: 70, marginTop: spacing.sm },
-    rawBar: { flex: 1, backgroundColor: c.border, borderRadius: radius.sm },
+    chartAxis: { flexDirection: 'row', justifyContent: 'space-between' },
+    axisLabel: { color: c.textFaint, fontSize: fontSize.caption },
     entryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
     entryDate: { color: c.textMuted, fontSize: fontSize.body },
     entryVal: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },

@@ -155,6 +155,11 @@ export default function Photo() {
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+        <View style={s.about}>
+          <Text style={s.aboutTitle}>{t('photo.aboutTitle')}</Text>
+          <Text style={s.aboutBody}>{t('photo.aboutBody')}</Text>
+        </View>
+
         {!session ? (
           <Text style={s.muted}>{t('auth.subtitle')}</Text>
         ) : (
@@ -226,6 +231,9 @@ const styles = (c: ThemeColors) =>
     safe: { flex: 1, backgroundColor: c.background },
     content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl },
     muted: { color: c.textFaint, fontSize: fontSize.body },
+    about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+    aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
+    aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
     pick: { minHeight: touchTarget * 1.2, backgroundColor: c.accent, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
     pickText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     info: { color: c.textMuted, fontSize: fontSize.body, backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.md, padding: spacing.md },

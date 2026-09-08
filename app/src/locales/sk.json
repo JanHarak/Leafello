@@ -77,7 +77,8 @@
     "add": "Pridať",
     "custom": "Vlastné (ml)",
     "today": "Dnes vypité",
-    "goalSuffix": "z {goal} ml"
+    "goalSuffix": "z {goal} ml",
+    "blocksTitle": "Rozvrhnutie pitia"
   },
   "weight": {
     "title": "Váha",
@@ -87,7 +88,8 @@
     "saved": "Uložené.",
     "average": "7-dňový priemer",
     "empty": "Zatiaľ žiadny záznam váhy.",
-    "unitKg": "kg"
+    "unitKg": "kg",
+    "trend": "Vývoj váhy"
   },
   "avatar": {
     "actionWater": "Pridať vodu",
@@ -135,7 +137,9 @@
     "rateLimited": "Dnešný limit fotoanalýz je vyčerpaný.",
     "lowConfidence": "nízka istota",
     "logSelected": "Zapísať vybrané do denníka",
-    "logged": "Zapísané do denníka."
+    "logged": "Zapísané do denníka.",
+    "aboutTitle": "Ako funguje fotoanalýza",
+    "aboutBody": "Vyber fotku svojho jedla a aplikácia pomocou AI odhadne jednotlivé potraviny, ich gramáž a výživové hodnoty. Odhad si pri každej položke skontroluj a prípadne uprav gramáž, potom vybrané položky jedným tlačidlom zapíšeš do denníka. Ide o odhad, nie presné meranie – ber ho ako pomôcku."
   },
   "recipes": {
     "title": "Recepty",
@@ -234,6 +238,8 @@
     "back": "Späť na plány"
   },
   "common": {
-    "back": "Späť"
+    "back": "Späť",
+    "pin": "Ukotviť menu",
+    "collapse": "Zbaliť menu"
   }
 }

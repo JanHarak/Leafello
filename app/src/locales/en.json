@@ -77,7 +77,8 @@
     "add": "Add",
     "custom": "Custom (ml)",
     "today": "Today",
-    "goalSuffix": "of {goal} ml"
+    "goalSuffix": "of {goal} ml",
+    "blocksTitle": "Hydration blocks"
   },
   "weight": {
     "title": "Weight",
@@ -87,7 +88,8 @@
     "saved": "Saved.",
     "average": "7-day average",
     "empty": "No weight entries yet.",
-    "unitKg": "kg"
+    "unitKg": "kg",
+    "trend": "Weight trend"
   },
   "avatar": {
     "actionWater": "Add water",
@@ -133,7 +135,9 @@
     "rateLimited": "Today's photo analysis limit is reached.",
     "lowConfidence": "low confidence",
     "logSelected": "Log selected to diary",
-    "logged": "Logged to diary."
+    "logged": "Logged to diary.",
+    "aboutTitle": "How photo analysis works",
+    "aboutBody": "Pick a photo of your meal and the app uses AI to estimate the individual foods, their weight and nutrition. Review each item, adjust the grams if needed, then log the selected items to your diary with one tap. It is an estimate, not a precise measurement – treat it as a helper."
   },
   "recipes": {
     "title": "Recipes",
@@ -232,6 +236,8 @@
     "back": "Back to plans"
   },
   "common": {
-    "back": "Back"
+    "back": "Back",
+    "pin": "Pin menu",
+    "collapse": "Collapse menu"
   }
 }

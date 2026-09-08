@@ -12,7 +12,7 @@
     "remaining": "Zbývá {n} kcal",
     "goalReached": "Cíl naplněn",
     "setGoalFirst": "Nastav si cíl a uvidíš, jak na tom dnes jsi.",
-    "foodLabel":"Jídlo"
+    "foodLabel": "Jídlo"
   },
   "onboarding": {
     "title": "Pojďme nastavit tvůj cíl",
@@ -78,7 +78,8 @@
     "add": "Přidat",
     "custom": "Vlastní (ml)",
     "today": "Dnes vypito",
-    "goalSuffix": "z {goal} ml"
+    "goalSuffix": "z {goal} ml",
+    "blocksTitle": "Rozvržení pití"
   },
   "weight": {
     "title": "Váha",
@@ -88,7 +89,8 @@
     "saved": "Uloženo.",
     "average": "7denní průměr",
     "empty": "Zatím žádný záznam váhy.",
-    "unitKg": "kg"
+    "unitKg": "kg",
+    "trend": "Vývoj váhy"
   },
   "avatar": {
     "actionWater": "Přidat vodu",
@@ -136,7 +138,9 @@
     "rateLimited": "Dnešní limit fotoanalýz je vyčerpán.",
     "lowConfidence": "nízká jistota",
     "logSelected": "Zapsat vybrané do deníku",
-    "logged": "Zapsáno do deníku."
+    "logged": "Zapsáno do deníku.",
+    "aboutTitle": "Jak funguje fotoanalýza",
+    "aboutBody": "Vyber fotku svého jídla a aplikace pomocí AI odhadne jednotlivé potraviny, jejich gramáž a výživové hodnoty. Odhad si u každé položky zkontroluj a případně uprav gramáž, pak vybrané položky jedním tlačítkem zapíšeš do deníku. Jde o odhad, ne přesné měření – ber ho jako pomůcku."
   },
   "recipes": {
     "title": "Recepty",
@@ -235,6 +239,8 @@
     "back": "Zpět na plány"
   },
   "common": {
-    "back": "Zpět"
+    "back": "Zpět",
+    "pin": "Ukotvit menu",
+    "collapse": "Sbalit menu"
   }
 }
