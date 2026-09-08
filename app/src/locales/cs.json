@@ -196,5 +196,14 @@
   },
   "language": {
     "label": "Jazyk"
+  },
+  "food": {
+    "createPrompt": "Nenašlo se? Vytvoř vlastní potravinu.",
+    "create": "Vytvořit vlastní",
+    "title": "Nová potravina",
+    "per100": "Hodnoty na 100 g",
+    "save": "Uložit potravinu",
+    "errorName": "Zadej název potraviny.",
+    "errorKcal": "Kalorie musí být mezi 0 a 900."
   }
 }

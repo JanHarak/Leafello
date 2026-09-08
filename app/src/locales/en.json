@@ -194,5 +194,14 @@
   },
   "language": {
     "label": "Language"
+  },
+  "food": {
+    "createPrompt": "Not found? Create your own food.",
+    "create": "Create custom",
+    "title": "New food",
+    "per100": "Values per 100 g",
+    "save": "Save food",
+    "errorName": "Enter a food name.",
+    "errorKcal": "Calories must be between 0 and 900."
   }
 }

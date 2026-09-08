@@ -8,7 +8,7 @@ import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
 import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { addDiaryEntry, listTodayEntries, searchFoods } from '@/lib/db';
+import { addDiaryEntry, createUserFood, listTodayEntries, searchFoods } from '@/lib/db';
 import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -47,6 +47,9 @@ export default function Diary() {
   const [grams, setGrams] = useState('100');
   const [meal, setMeal] = useState<MealType>('breakfast');
   const [dbError, setDbError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [cf, setCf] = useState({ name: '', kcal: '', protein: '', carbs: '', fat: '' });
+  const [cfError, setCfError] = useState<string | null>(null);
 
   async function reload() {
     const rows = await listTodayEntries();
@@ -171,6 +174,56 @@ export default function Diary() {
     setQuery('');
   }
 
+  function openCreate() {
+    setCf({ name: query.trim(), kcal: '', protein: '', carbs: '', fat: '' });
+    setCfError(null);
+    setCreating(true);
+  }
+
+  async function saveCustomFood() {
+    if (!session) return;
+    const name = cf.name.trim();
+    if (name === '') {
+      setCfError(t('food.errorName'));
+      return;
+    }
+    const kcal = Number(cf.kcal);
+    if (!Number.isFinite(kcal) || kcal < 0 || kcal > 900) {
+      setCfError(t('food.errorKcal'));
+      return;
+    }
+    const num = (v: string) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    };
+    try {
+      const food = await createUserFood(session.user.id, {
+        name,
+        kcal_100g: kcal,
+        protein_100g: num(cf.protein),
+        carbs_100g: num(cf.carbs),
+        fat_100g: num(cf.fat),
+      });
+      // Rovnou ji vyber pro zápis (gramáž + jídlo).
+      setSelected({
+        id: food.id,
+        foodId: food.id,
+        name: food.name,
+        brand: food.brand,
+        kcal: food.kcal_100g,
+        protein: food.protein_100g,
+        carbs: food.carbs_100g,
+        fat: food.fat_100g,
+      });
+      setCreating(false);
+      setCfError(null);
+      setDbError(null);
+    } catch (e) {
+      console.error('Vytvoření potraviny selhalo:', e);
+      setCfError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   return (
     <SafeAreaView style={s.safe}>
       <Stack.Screen options={{ title: t('diary.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
@@ -218,6 +271,42 @@ export default function Diary() {
               <Text style={s.resultKcal}>{Math.round(f.kcal)} {t('goal.unitKcal')}/100 g</Text>
             </Pressable>
           ))}
+
+        {/* Vlastní potravina (F-03): nabídka, když je co hledat a nic není vybrané */}
+        {session && !selected && !creating && !searching && query.trim().length >= 2 && (
+          <Pressable style={s.createPrompt} onPress={openCreate}>
+            <Text style={s.createPromptText}>+ {t('food.create')}</Text>
+          </Pressable>
+        )}
+
+        {creating && (
+          <View style={s.addCard}>
+            <Text style={s.addTitle}>{t('food.title')}</Text>
+            <TextInput
+              value={cf.name}
+              onChangeText={(v) => setCf((p) => ({ ...p, name: v }))}
+              placeholder={t('recipes.name')}
+              placeholderTextColor={colors.textFaint}
+              style={s.gramsInput}
+            />
+            <Text style={s.fieldLabel}>{t('food.per100')}</Text>
+            <View style={s.cfGrid}>
+              <CfField label={t('goal.kcal')} value={cf.kcal} onChange={(v) => setCf((p) => ({ ...p, kcal: v }))} c={colors} />
+              <CfField label={t('goal.protein')} value={cf.protein} onChange={(v) => setCf((p) => ({ ...p, protein: v }))} c={colors} />
+              <CfField label={t('goal.carbs')} value={cf.carbs} onChange={(v) => setCf((p) => ({ ...p, carbs: v }))} c={colors} />
+              <CfField label={t('goal.fat')} value={cf.fat} onChange={(v) => setCf((p) => ({ ...p, fat: v }))} c={colors} />
+            </View>
+            {cfError && <Text style={s.error}>{cfError}</Text>}
+            <View style={s.cfActions}>
+              <Pressable style={[s.addButton, s.cfFlex]} onPress={saveCustomFood}>
+                <Text style={s.addButtonText}>{t('food.save')}</Text>
+              </Pressable>
+              <Pressable style={[s.cancelButton, s.cfFlex]} onPress={() => setCreating(false)}>
+                <Text style={s.cancelText}>{t('account.cancel')}</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
 
         {/* Přidání vybrané potraviny */}
         {selected && (
@@ -272,6 +361,22 @@ function Macro({ label, value, c }: { label: string; value: number; c: ThemeColo
   );
 }
 
+function CfField({ label, value, onChange, c }: { label: string; value: string; onChange: (v: string) => void; c: ThemeColors }) {
+  return (
+    <View style={{ flex: 1, minWidth: 68, gap: spacing.xs }}>
+      <Text style={{ color: c.textFaint, fontSize: fontSize.caption }}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        keyboardType="numeric"
+        placeholder="0"
+        placeholderTextColor={c.textFaint}
+        style={{ minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.background, fontSize: fontSize.body }}
+      />
+    </View>
+  );
+}
+
 function Choice({ label, active, onPress, c }: { label: string; active: boolean; onPress: () => void; c: ThemeColors }) {
   return (
     <Pressable
@@ -302,6 +407,13 @@ const styles = (c: ThemeColors) =>
     resultName: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },
     resultBrand: { color: c.textFaint, fontSize: fontSize.caption },
     resultKcal: { color: c.textFaint, fontSize: fontSize.caption, flexShrink: 0 },
+    createPrompt: { minHeight: touchTarget, borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: c.accent, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },
+    createPromptText: { color: c.accent, fontSize: fontSize.body, fontWeight: fontWeight.medium },
+    cfGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    cfActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+    cfFlex: { flex: 1 },
+    cancelButton: { minHeight: touchTarget, borderRadius: radius.pill, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },
+    cancelText: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },
     addCard: { backgroundColor: c.surface, borderColor: c.accent, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     addTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },

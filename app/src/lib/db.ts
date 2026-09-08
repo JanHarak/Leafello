@@ -144,6 +144,51 @@ export interface FoodRow {
   fiber_100g: number | null;
 }
 
+/** Namapuje řádek foods z PostgREST (číselné sloupce chodí jako string). */
+function mapFoodRow(r: Record<string, unknown>): FoodRow {
+  return {
+    id: String(r.id),
+    name: String(r.name),
+    brand: r.brand != null ? String(r.brand) : null,
+    kcal_100g: Number(r.kcal_100g),
+    protein_100g: Number(r.protein_100g),
+    carbs_100g: Number(r.carbs_100g),
+    fat_100g: Number(r.fat_100g),
+    fiber_100g: r.fiber_100g != null ? Number(r.fiber_100g) : null,
+  };
+}
+
+export interface UserFoodInput {
+  name: string;
+  kcal_100g: number;
+  protein_100g: number;
+  carbs_100g: number;
+  fat_100g: number;
+}
+
+/**
+ * Vytvoří vlastní potravinu uživatele (F-03, source='user'). RLS ji zpřístupní
+ * jen jemu (foods_read: source='off' nebo created_by=auth.uid()). Trigger
+ * naplní search_tsv, takže je hned dohledatelná přes search_foods.
+ */
+export async function createUserFood(userId: string, input: UserFoodInput): Promise<FoodRow> {
+  const { data, error } = await supabase
+    .from('foods')
+    .insert({
+      source: 'user',
+      created_by: userId,
+      name: input.name.trim().slice(0, 200),
+      kcal_100g: input.kcal_100g,
+      protein_100g: input.protein_100g,
+      carbs_100g: input.carbs_100g,
+      fat_100g: input.fat_100g,
+    })
+    .select('id, name, brand, kcal_100g, protein_100g, carbs_100g, fat_100g, fiber_100g')
+    .single();
+  if (error) throw error;
+  return mapFoodRow(data as Record<string, unknown>);
+}
+
 /**
  * Vyhledá potraviny v tabulce foods přes RPC search_foods (full-text +
  * fuzzy fallback, řazení podle F-04). RLS vrátí jen potraviny se source='off'
@@ -154,16 +199,7 @@ export async function searchFoods(q: string, limit = 20): Promise<FoodRow[]> {
   if (query.length < 2) return [];
   const { data, error } = await supabase.rpc('search_foods', { q: query, lim: limit });
   if (error) throw error;
-  return (data ?? []).map((r: Record<string, unknown>) => ({
-    id: String(r.id),
-    name: String(r.name),
-    brand: r.brand != null ? String(r.brand) : null,
-    kcal_100g: Number(r.kcal_100g),
-    protein_100g: Number(r.protein_100g),
-    carbs_100g: Number(r.carbs_100g),
-    fat_100g: Number(r.fat_100g),
-    fiber_100g: r.fiber_100g != null ? Number(r.fiber_100g) : null,
-  }));
+  return (data ?? []).map((r: Record<string, unknown>) => mapFoodRow(r));
 }
 
 /* -------------------------------------------------------------------------- */
