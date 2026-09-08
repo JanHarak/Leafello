@@ -1,12 +1,13 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { listWeights, upsertWeight, type WeightRow } from '@/lib/db';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 /** 7denní (7bodový) klouzavý průměr přes seřazené hodnoty. */
 function movingAverage(values: number[], window = 7): number[] {
@@ -18,7 +19,7 @@ function movingAverage(values: number[], window = 7): number[] {
 }
 
 export default function Weight() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
 
@@ -69,7 +70,6 @@ export default function Weight() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('weight.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         {!session ? (
           <Text style={s.muted}>{t('auth.subtitle')}</Text>

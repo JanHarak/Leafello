@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
@@ -9,7 +9,8 @@ import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { addDiaryEntry, createUserFood, listTodayEntries, searchFoods } from '@/lib/db';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -35,7 +36,7 @@ interface Candidate {
 }
 
 export default function Diary() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
 
   const { session } = useAuth();
@@ -226,7 +227,6 @@ export default function Diary() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('diary.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         {/* Denní souhrn */}
         <View style={s.summary}>

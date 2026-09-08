@@ -1,15 +1,16 @@
-import { Stack } from 'expo-router';
+
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { addDiaryEntry } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 interface Item {
   name: string;
@@ -26,7 +27,7 @@ const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 const LOW_CONFIDENCE = 0.4;
 
 export default function Photo() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
 
@@ -153,7 +154,6 @@ export default function Photo() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('photo.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         {!session ? (
           <Text style={s.muted}>{t('auth.subtitle')}</Text>

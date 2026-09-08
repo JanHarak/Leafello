@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -22,7 +22,8 @@ import {
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { saveProfileAndGoal } from '@/lib/db';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'high', 'very_high'];
 const RATES = [0, 0.25, 0.5, 0.75, 1];
@@ -37,7 +38,7 @@ interface GoalResult {
 }
 
 export default function Onboarding() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
 
   const [sex, setSex] = useState<Sex>('female');
@@ -111,7 +112,6 @@ export default function Onboarding() {
   if (goal) {
     return (
       <SafeAreaView style={s.safe}>
-        <Stack.Screen options={{ title: t('goal.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
         <ScrollView contentContainerStyle={s.content}>
           <Text style={s.title}>{t('goal.title')}</Text>
 
@@ -149,7 +149,6 @@ export default function Onboarding() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('app.name'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <Text style={s.title}>{t('onboarding.title')}</Text>
         <Text style={s.subtitle}>{t('onboarding.subtitle')}</Text>

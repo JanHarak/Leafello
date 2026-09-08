@@ -1,21 +1,22 @@
 import { mealSchedule, waterSchedule } from '@dietapp/reminders';
-import { Stack, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useMemo, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { getActiveGoal } from '@/lib/db';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 function fmt(hour: number, minute: number): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
 export default function Reminders() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
 
@@ -71,7 +72,6 @@ export default function Reminders() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('reminders.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content}>
         <Text style={s.intro}>{t('reminders.intro')}</Text>
 

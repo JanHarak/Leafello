@@ -1,17 +1,17 @@
-import { Stack } from 'expo-router';
-import { ScrollView, StyleSheet, useColorScheme } from 'react-native';
+
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Markdown } from '@/components/Markdown';
 import { t } from '@/i18n';
 import { PRIVACY_MARKDOWN } from '@/legal/content';
-import { colorsFor, spacing } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { spacing } from '@/theme';
 
 export default function Privacy() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-      <Stack.Screen options={{ title: t('legal.privacy'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={styles.content}>
         <Markdown source={PRIVACY_MARKDOWN} colors={colors} />
       </ScrollView>

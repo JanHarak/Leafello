@@ -1,7 +1,7 @@
 import { recipePerPortion } from '@dietapp/diary';
-import { Stack, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
@@ -20,7 +20,8 @@ import {
   type MealPlanRow,
   type SavedRecipe,
 } from '@/lib/db';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -91,7 +92,7 @@ function itemNutrition(item: MealPlanItem, recipes: Map<string, SavedRecipe>) {
 }
 
 export default function Plans() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
 
@@ -266,7 +267,6 @@ export default function Plans() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('plans.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         {!session ? (
           <Text style={s.muted}>{t('plans.needSignIn')}</Text>

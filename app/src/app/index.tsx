@@ -1,15 +1,8 @@
+import Feather from '@expo/vector-icons/Feather';
 import * as Linking from 'expo-linking';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useReducer, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useState, type ComponentProps } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { dailyTotals } from '@dietapp/diary';
 import { detectEscalation } from '@dietapp/nutrition-analyst';
@@ -27,14 +20,11 @@ import {
 } from '@dietapp/gamification-rules';
 
 import { Avatar } from '@/components/Avatar';
-import {
-  LANGUAGES,
-  getLanguage,
-  plural,
-  setLanguage,
-  t,
-} from '@/i18n';
+import { ProgressRing } from '@/components/ProgressRing';
+import { plural, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { NAV_ITEMS } from '@/lib/nav';
+import { useTheme } from '@/lib/theme';
 import {
   getActiveGoal,
   getAvatarState,
@@ -47,15 +37,7 @@ import {
   saveAvatarState,
   type GoalRow,
 } from '@/lib/db';
-import {
-  colorsFor,
-  fontSize,
-  fontWeight,
-  radius,
-  spacing,
-  touchTarget,
-  type ThemeColors,
-} from '@/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 interface Consumed {
   kcal: number;
@@ -65,13 +47,9 @@ interface Consumed {
 }
 
 export default function HomeScreen() {
-  const scheme = useColorScheme();
-  const colors = colorsFor(scheme);
+  const { colors } = useTheme();
   const router = useRouter();
-  const { session, signOut } = useAuth();
-  // i18n drží aktivní jazyk v modulu; tímhle překreslíme po přepnutí.
-  const [, rerender] = useReducer((n: number) => n + 1, 0);
-  const activeLang = getLanguage();
+  const { session } = useAuth();
 
   const [goal, setGoal] = useState<GoalRow | null>(null);
   const [consumed, setConsumed] = useState<Consumed | null>(null);
@@ -83,8 +61,6 @@ export default function HomeScreen() {
   const [celebrated, setCelebrated] = useState(false);
   const [escalated, setEscalated] = useState(false);
 
-  // Načti cíl a dnešní příjem vždy, když je obrazovka aktivní (i po návratu
-  // z deníku, ať se čísla aktualizují).
   useFocusEffect(
     useCallback(() => {
       if (!session) {
@@ -100,8 +76,6 @@ export default function HomeScreen() {
           const totals = dailyTotals(entries.map((e) => e.snapshot));
           const water = await getTodayWaterMl();
 
-          // Herní stav: XP, level a série. Přidělení je idempotentní přes den
-          // (applyLoggedDay se stejným dnem vrátí 'unchanged').
           const st = (await getAvatarState()) ?? {
             level: 0,
             xp: 0,
@@ -147,7 +121,6 @@ export default function HomeScreen() {
             }
           }
 
-          // Bezpečnostní eskalace (nutrition-analyst 8.1).
           let escalate = false;
           try {
             const heightCm = await getProfileHeightCm();
@@ -181,7 +154,7 @@ export default function HomeScreen() {
             setEscalated(escalate);
           }
         } catch {
-          // ticho: dashboard je doplněk, chyby zápisu řeší příslušné obrazovky
+          // dashboard je doplněk, chyby řeší příslušné obrazovky
         }
       })();
       return () => {
@@ -190,13 +163,6 @@ export default function HomeScreen() {
     }, [session]),
   );
 
-  function switchLanguage(code: string) {
-    setLanguage(code);
-    rerender();
-  }
-
-  // Nálada avatara z pravidel gamification-rules. Herní mechanika se má skrýt
-  // při aktivní eskalaci z nutrition-analyst (zatím placeholder, proto vždy).
   const mood: Mood | null =
     session && goal && consumed
       ? moodFor({
@@ -208,263 +174,149 @@ export default function HomeScreen() {
         })
       : null;
 
-  function onAvatarAction(m: Mood) {
-    if (m === 'thirsty') router.push('/water');
-    else router.push('/diary');
-  }
+  const s = styles(colors);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.eyebrow, { color: colors.accent }]}>
-          {t('app.name')}
-        </Text>
-        <Text style={[styles.title, { color: colors.text }]}>
-          {t('home.title')}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          {t('home.subtitle')}
-        </Text>
-
-        {!escalated && mood && (
-          <View style={styles.avatarBlock}>
-            <Avatar mood={mood} />
-            <Text style={[styles.avatarCaption, { color: colors.textMuted }]}>{t(`avatar.mood.${mood}`)}</Text>
-            <Text style={[styles.levelText, { color: colors.text }]}>
-              {t('level.label', { n: level })}
-              {streakDays > 0 ? `  ·  ${plural('streak.days', streakDays)}` : ''}
-            </Text>
-            <View style={[styles.levelBar, { backgroundColor: colors.surfaceElevated }]}>
-              <View style={[styles.levelBarFill, { backgroundColor: colors.accent, width: `${levelPct * 100}%` as `${number}%` }]} />
-            </View>
-            {isActionable(mood) && (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onAvatarAction(mood)}
-                style={[styles.avatarAction, { backgroundColor: colors.accent }]}
-              >
-                <Text style={[styles.startText, { color: colors.onAccent }]}>
-                  {mood === 'thirsty' ? t('avatar.actionWater') : t('avatar.actionLog')}
-                </Text>
-              </Pressable>
-            )}
+    <ScrollView contentContainerStyle={s.content}>
+      {/* Postavička a stav */}
+      {!escalated && mood && (
+        <View style={s.hero}>
+          <Avatar mood={mood} />
+          <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
+          <Text style={s.level}>
+            {t('level.label', { n: level })}
+            {streakDays > 0 ? `  ·  ${plural('streak.days', streakDays)}` : ''}
+          </Text>
+          <View style={s.levelBar}>
+            <View style={[s.levelBarFill, { width: `${levelPct * 100}%` as `${number}%` }]} />
           </View>
-        )}
-
-        {escalated ? (
-          <EscalationCard colors={colors} />
-        ) : session && goal && consumed ? (
-          <TodayCard goal={goal} consumed={consumed} waterMl={waterMl} colors={colors} />
-        ) : session && !goal ? (
-          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={[styles.body, { color: colors.textMuted }]}>{t('home.setGoalFirst')}</Text>
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
-          >
-            <Text style={[styles.body, { color: colors.text }]}>
-              {t('home.stackNote')}
-            </Text>
-            <Text style={[styles.body, { color: colors.textMuted }]}>
-              {t('home.phaseNote')}
-            </Text>
-            {/* Ukázka CLDR plurálu z i18n. */}
-            <Text style={[styles.streak, { color: colors.accent }]}>
-              {plural('streak.days', 3)}
-            </Text>
-          </View>
-        )}
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push('/onboarding')}
-          style={[styles.startButton, { backgroundColor: colors.accent }]}
-        >
-          <Text style={[styles.startText, { color: colors.onAccent }]}>{t('home.start')}</Text>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push('/diary')}
-          style={[styles.secondaryButton, { borderColor: colors.border }]}
-        >
-          <Text style={[styles.startText, { color: colors.text }]}>{t('diary.open')}</Text>
-        </Pressable>
-
-        <View style={styles.navRow}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/water')}
-            style={[styles.navButton, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('water.open')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/weight')}
-            style={[styles.navButton, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('weight.open')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/reminders')}
-            style={[styles.navButton, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('reminders.open')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/recipes')}
-            style={[styles.navButton, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('recipes.open')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/photo')}
-            style={[styles.navButton, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('photo.open')}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/plans')}
-            style={[styles.navButton, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('plans.open')}</Text>
-          </Pressable>
-        </View>
-
-        {session ? (
-          <>
+          {isActionable(mood) && (
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push('/account')}
-              style={[styles.secondaryButton, { borderColor: colors.border }]}
+              onPress={() => router.push(mood === 'thirsty' ? '/water' : '/diary')}
+              style={s.heroAction}
             >
-              <Text style={[styles.startText, { color: colors.text }]}>{t('account.open')}</Text>
+              <Text style={s.heroActionText}>{mood === 'thirsty' ? t('avatar.actionWater') : t('avatar.actionLog')}</Text>
             </Pressable>
-            <View style={styles.authRow}>
-              <Text style={[styles.authInfo, { color: colors.textFaint }]}>
-                {t('auth.signedInAs', { email: session.user.email ?? '' })}
-              </Text>
-              <Pressable accessibilityRole="button" onPress={() => signOut()}>
-                <Text style={[styles.authAction, { color: colors.accent }]}>{t('auth.signOut')}</Text>
-              </Pressable>
-            </View>
-          </>
-        ) : (
+          )}
+        </View>
+      )}
+
+      {/* Kruhové grafy: jídlo a pití */}
+      {escalated ? (
+        <EscalationCard colors={colors} />
+      ) : session && goal && consumed ? (
+        <View style={s.rings}>
+          <Ring
+            colors={colors}
+            progress={goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 0}
+            value={`${consumed.kcal}`}
+            unit={`/ ${goal.kcal_target} ${t('goal.unitKcal')}`}
+            caption={t('home.today')}
+          />
+          <Ring
+            colors={colors}
+            progress={goal.water_ml > 0 ? waterMl / goal.water_ml : 0}
+            value={`${waterMl}`}
+            unit={`/ ${goal.water_ml} ${t('goal.unitMl')}`}
+            caption={t('goal.water')}
+            icon="droplet"
+          />
+        </View>
+      ) : session && !goal ? (
+        <View style={s.card}>
+          <Text style={s.body}>{t('home.setGoalFirst')}</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/onboarding')} style={s.primary}>
+            <Text style={s.primaryText}>{t('home.start')}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={s.card}>
+          <Text style={s.body}>{t('home.subtitle')}</Text>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/login')} style={s.primary}>
+            <Text style={s.primaryText}>{t('auth.signIn')}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Makra pod grafy */}
+      {!escalated && session && goal && consumed && (
+        <View style={s.macros}>
+          <MacroCol label={t('goal.protein')} value={consumed.protein} target={goal.protein_g} colors={colors} />
+          <MacroCol label={t('goal.carbs')} value={consumed.carbs} target={goal.carbs_g} colors={colors} />
+          <MacroCol label={t('goal.fat')} value={consumed.fat} target={goal.fat_g} colors={colors} />
+        </View>
+      )}
+
+      {/* Ikonové akční dlaždice */}
+      <View style={s.tiles}>
+        {NAV_ITEMS.map((item) => (
           <Pressable
+            key={String(item.route)}
             accessibilityRole="button"
-            onPress={() => router.push('/login')}
-            style={[styles.secondaryButton, { borderColor: colors.border }]}
+            accessibilityLabel={t(item.labelKey)}
+            onPress={() => router.push(item.route)}
+            style={s.tile}
           >
-            <Text style={[styles.startText, { color: colors.text }]}>{t('auth.signIn')}</Text>
+            <Feather name={item.icon} size={26} color={colors.accent} />
           </Pressable>
-        )}
+        ))}
+      </View>
 
-        <Text style={[styles.label, { color: colors.textFaint }]}>
-          {t('language.label')}
-        </Text>
-        <View style={styles.langRow}>
-          {LANGUAGES.map((lang) => {
-            const isActive = lang.code === activeLang;
-            return (
-              <Pressable
-                key={lang.code}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
-                onPress={() => switchLanguage(lang.code)}
-                style={[
-                  styles.langButton,
-                  {
-                    backgroundColor: isActive ? colors.accent : colors.surface,
-                    borderColor: isActive ? colors.accent : colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.langText,
-                    { color: isActive ? colors.onAccent : colors.text },
-                  ]}
-                >
-                  {lang.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.spacer} />
-
-        <View style={styles.legalRow}>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
-            <Text style={[styles.legalLink, { color: colors.accent }]}>{t('legal.privacy')}</Text>
-          </Pressable>
-          <Text style={[styles.legalDot, { color: colors.textFaint }]}>·</Text>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
-            <Text style={[styles.legalLink, { color: colors.accent }]}>{t('legal.terms')}</Text>
-          </Pressable>
-        </View>
-
-        {/* N-07 / F-03: viditelná atribuce ODbL. */}
-        <Text style={[styles.attribution, { color: colors.textFaint }]}>
-          {t('attribution.off')}
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+      {/* Právní odkazy a atribuce */}
+      <View style={s.legalRow}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
+          <Text style={s.legalLink}>{t('legal.privacy')}</Text>
+        </Pressable>
+        <Text style={s.legalDot}>·</Text>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
+          <Text style={s.legalLink}>{t('legal.terms')}</Text>
+        </Pressable>
+      </View>
+      <Text style={s.attribution}>{t('attribution.off')}</Text>
+    </ScrollView>
   );
 }
 
-function EscalationCard({ colors }: { colors: ThemeColors }) {
+function Ring({
+  colors,
+  progress,
+  value,
+  unit,
+  caption,
+  icon,
+}: {
+  colors: ThemeColors;
+  progress: number;
+  value: string;
+  unit: string;
+  caption: string;
+  icon?: ComponentProps<typeof Feather>['name'];
+}) {
   return (
-    <View style={[styles.escalation, { backgroundColor: colors.noticeBackground, borderColor: colors.notice }]}>
-      <Text style={[styles.escalationTitle, { color: colors.text }]}>{t('escalation.title')}</Text>
-      <Text style={[styles.escalationBody, { color: colors.text }]}>{t('escalation.body')}</Text>
-      <Text style={[styles.escalationHelp, { color: colors.textMuted }]}>{t('escalation.helpName')}</Text>
-      <Pressable
-        accessibilityRole="button"
-        style={[styles.escalationAction, { backgroundColor: colors.accent }]}
-        onPress={() => Linking.openURL('https://www.anabell.cz')}
-      >
-        <Text style={[styles.startText, { color: colors.onAccent }]}>{t('escalation.helpAction')}</Text>
-      </Pressable>
+    <View style={{ alignItems: 'center', gap: spacing.xs }}>
+      <ProgressRing progress={progress} color={colors.accent} trackColor={colors.surfaceElevated} size={150} strokeWidth={13}>
+        {icon && <Feather name={icon} size={18} color={colors.accent} style={{ marginBottom: 2 }} />}
+        <Text style={{ color: colors.text, fontSize: fontSize.title, fontWeight: fontWeight.bold }}>{value}</Text>
+        <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{unit}</Text>
+      </ProgressRing>
+      <Text style={{ color: colors.textMuted, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium }}>
+        {caption}
+      </Text>
     </View>
   );
 }
 
-function TodayCard({ goal, consumed, waterMl, colors }: { goal: GoalRow; consumed: Consumed; waterMl: number; colors: ThemeColors }) {
-  const pct = goal.kcal_target > 0 ? Math.min(1, consumed.kcal / goal.kcal_target) : 0;
-  const remaining = Math.max(0, goal.kcal_target - consumed.kcal);
+function EscalationCard({ colors }: { colors: ThemeColors }) {
+  const s = styles(colors);
   return (
-    <View style={[styles.today, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Text style={[styles.todayLabel, { color: colors.textFaint }]}>{t('home.today')}</Text>
-      <Text style={[styles.todayKcal, { color: colors.text }]}>
-        {consumed.kcal}{' '}
-        <Text style={[styles.todayTarget, { color: colors.textFaint }]}>
-          / {goal.kcal_target} {t('goal.unitKcal')}
-        </Text>
-      </Text>
-      <View style={[styles.bar, { backgroundColor: colors.surfaceElevated }]}>
-        <View style={[styles.barFill, { backgroundColor: colors.accent, width: `${pct * 100}%` as `${number}%` }]} />
-      </View>
-      <Text style={[styles.remaining, { color: colors.textMuted }]}>
-        {consumed.kcal >= goal.kcal_target ? t('home.goalReached') : t('home.remaining', { n: remaining })}
-      </Text>
-      <View style={styles.todayMacros}>
-        <MacroCol label={t('goal.protein')} value={consumed.protein} target={goal.protein_g} colors={colors} />
-        <MacroCol label={t('goal.carbs')} value={consumed.carbs} target={goal.carbs_g} colors={colors} />
-        <MacroCol label={t('goal.fat')} value={consumed.fat} target={goal.fat_g} colors={colors} />
-      </View>
-      <Text style={[styles.waterLine, { color: colors.textMuted }]}>
-        {t('goal.water')}: {waterMl} / {goal.water_ml} {t('goal.unitMl')}
-      </Text>
+    <View style={s.escalation}>
+      <Text style={s.escalationTitle}>{t('escalation.title')}</Text>
+      <Text style={s.escalationBody}>{t('escalation.body')}</Text>
+      <Text style={s.escalationHelp}>{t('escalation.helpName')}</Text>
+      <Pressable accessibilityRole="button" style={s.primary} onPress={() => Linking.openURL('https://www.anabell.cz')}>
+        <Text style={s.primaryText}>{t('escalation.helpAction')}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -480,235 +332,30 @@ function MacroCol({ label, value, target, colors }: { label: string; value: numb
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  today: {
-    marginTop: spacing.md,
-    padding: spacing.xl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: spacing.sm,
-  },
-  todayLabel: {
-    fontSize: fontSize.caption,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontWeight: fontWeight.medium,
-  },
-  todayKcal: {
-    fontSize: 36,
-    fontWeight: fontWeight.bold,
-  },
-  todayTarget: {
-    fontSize: fontSize.subtitle,
-    fontWeight: fontWeight.regular,
-  },
-  bar: {
-    height: 8,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: 8,
-    borderRadius: radius.pill,
-  },
-  remaining: {
-    fontSize: fontSize.body,
-  },
-  todayMacros: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingTop: spacing.sm,
-  },
-  waterLine: {
-    fontSize: fontSize.body,
-    paddingTop: spacing.xs,
-  },
-  escalation: {
-    marginTop: spacing.md,
-    padding: spacing.xl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: spacing.sm,
-  },
-  escalationTitle: {
-    fontSize: fontSize.subtitle,
-    fontWeight: fontWeight.bold,
-  },
-  escalationBody: {
-    fontSize: fontSize.body,
-    lineHeight: fontSize.body * 1.5,
-  },
-  escalationHelp: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.medium,
-  },
-  escalationAction: {
-    minHeight: touchTarget,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.sm,
-  },
-  avatarBlock: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  avatarCaption: {
-    fontSize: fontSize.body,
-    textAlign: 'center',
-  },
-  levelText: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.bold,
-  },
-  levelBar: {
-    height: 6,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-    alignSelf: 'stretch',
-  },
-  levelBarFill: {
-    height: 6,
-    borderRadius: radius.pill,
-  },
-  avatarAction: {
-    minHeight: touchTarget,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  navButton: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    minHeight: touchTarget,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.md,
-    flexGrow: 1,
-  },
-  eyebrow: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontSize: fontSize.title,
-    fontWeight: fontWeight.bold,
-  },
-  subtitle: {
-    fontSize: fontSize.subtitle,
-    fontWeight: fontWeight.regular,
-  },
-  card: {
-    marginTop: spacing.md,
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: spacing.sm,
-  },
-  body: {
-    fontSize: fontSize.body,
-    lineHeight: fontSize.body * 1.5,
-  },
-  streak: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.medium,
-    marginTop: spacing.xs,
-  },
-  startButton: {
-    minHeight: touchTarget,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.lg,
-  },
-  secondaryButton: {
-    minHeight: touchTarget,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.sm,
-  },
-  startText: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.bold,
-  },
-  authRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.sm,
-  },
-  authInfo: {
-    fontSize: fontSize.caption,
-    flexShrink: 1,
-  },
-  authAction: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.medium,
-  },
-  label: {
-    marginTop: spacing.lg,
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  langRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  langButton: {
-    minHeight: touchTarget,
-    paddingHorizontal: spacing.lg,
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  langText: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.medium,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: spacing.xl,
-  },
-  attribution: {
-    fontSize: fontSize.caption,
-    textAlign: 'center',
-  },
-  legalRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  legalLink: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.medium,
-  },
-  legalDot: {
-    fontSize: fontSize.caption,
-  },
-});
+const styles = (c: ThemeColors) =>
+  StyleSheet.create({
+    content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', flexGrow: 1 },
+    hero: { alignItems: 'center', gap: spacing.sm, alignSelf: 'stretch' },
+    caption: { color: c.textMuted, fontSize: fontSize.body, textAlign: 'center' },
+    level: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
+    levelBar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', width: 220, backgroundColor: c.surfaceElevated },
+    levelBarFill: { height: 6, borderRadius: radius.pill, backgroundColor: c.accent },
+    heroAction: { minHeight: touchTarget, paddingHorizontal: spacing.xl, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
+    heroActionText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
+    rings: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxl, justifyContent: 'center' },
+    macros: { flexDirection: 'row', gap: spacing.sm, alignSelf: 'stretch', maxWidth: 480 },
+    tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'center', marginTop: spacing.sm },
+    tile: { width: 64, height: 64, borderRadius: radius.lg, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' },
+    card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md, alignSelf: 'stretch', maxWidth: 480 },
+    body: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5, textAlign: 'center' },
+    primary: { minHeight: touchTarget, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
+    primaryText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
+    escalation: { backgroundColor: c.noticeBackground, borderColor: c.notice, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm, alignSelf: 'stretch', maxWidth: 520 },
+    escalationTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
+    escalationBody: { color: c.text, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
+    escalationHelp: { color: c.textMuted, fontSize: fontSize.body, fontWeight: fontWeight.medium },
+    legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg },
+    legalLink: { color: c.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
+    legalDot: { color: c.textFaint, fontSize: fontSize.caption },
+    attribution: { color: c.textFaint, fontSize: fontSize.caption, textAlign: 'center' },
+  });

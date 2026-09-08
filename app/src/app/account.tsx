@@ -1,12 +1,14 @@
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { t } from '@/i18n';
+import { LANGUAGES, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { deleteAccount, exportMyData } from '@/lib/db';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useLocale } from '@/lib/locale';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 /** Doručí JSON export: na webu jako stažený soubor, jinak přes systémové sdílení. */
 async function deliverExport(filename: string, json: string, shareTitle: string): Promise<void> {
@@ -26,9 +28,10 @@ async function deliverExport(filename: string, json: string, shareTitle: string)
 }
 
 export default function Account() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
+  const { lang, setLang } = useLocale();
   const router = useRouter();
 
   const [exporting, setExporting] = useState(false);
@@ -74,12 +77,34 @@ export default function Account() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('account.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <ScrollView contentContainerStyle={s.content}>
         {!session ? (
           <Text style={s.muted}>{t('account.needSignIn')}</Text>
         ) : (
           <>
+            <View style={s.card}>
+              <Text style={s.cardTitle}>{t('language.label')}</Text>
+              <View style={s.langRow}>
+                {LANGUAGES.map((l) => {
+                  const activeLang = l.code === lang;
+                  return (
+                    <Pressable
+                      key={l.code}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: activeLang }}
+                      onPress={() => setLang(l.code)}
+                      style={[s.langButton, { borderColor: activeLang ? colors.accent : colors.border, backgroundColor: activeLang ? colors.accent : colors.surface }]}
+                    >
+                      <Text style={{ color: activeLang ? colors.onAccent : colors.text, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>{l.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Pressable style={s.signOut} onPress={() => signOut()}>
+                <Text style={s.signOutText}>{t('auth.signOut')}</Text>
+              </Pressable>
+            </View>
+
             <View style={s.card}>
               <Text style={s.cardTitle}>{t('account.exportTitle')}</Text>
               <Text style={s.desc}>{t('account.exportDesc')}</Text>
@@ -132,6 +157,10 @@ const styles = (c: ThemeColors) =>
     muted: { color: c.textFaint, fontSize: fontSize.body },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
+    langRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    langButton: { minHeight: touchTarget, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1 },
+    signOut: { minHeight: touchTarget, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface },
+    signOutText: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },
     desc: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
     button: { minHeight: touchTarget, paddingHorizontal: spacing.xl, backgroundColor: c.accent, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
     buttonDisabled: { opacity: 0.6 },

@@ -1,14 +1,15 @@
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/lib/auth';
 import { t } from '@/i18n';
-import { colorsFor, fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { useTheme } from '@/lib/theme';
+import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
 export default function Login() {
-  const colors = colorsFor(useColorScheme());
+  const { colors } = useTheme();
   const s = styles(colors);
   const router = useRouter();
   const { signInWithGoogle, signInWithEmail, session } = useAuth();
@@ -38,7 +39,6 @@ export default function Login() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <Stack.Screen options={{ title: t('auth.title'), headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text }} />
       <View style={s.content}>
         <Text style={s.title}>{t('auth.title')}</Text>
         <Text style={s.subtitle}>{t('auth.subtitle')}</Text>
