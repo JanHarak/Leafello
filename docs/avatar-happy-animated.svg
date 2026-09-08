@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="240" height="240">
+  <!-- Ukázka animované postavičky (happy): mrkání, opakující se úsměv a jemné „dýchání".
+       Otevři soubor v prohlížeči, animace (SMIL) se přehraje sama. -->
+  <g>
+    <!-- jemné dýchání celé postavičky -->
+    <animateTransform attributeName="transform" type="scale"
+      values="1;1.04;1" keyTimes="0;0.5;1" dur="2s" repeatCount="indefinite"
+      additive="sum" />
+    <animateTransform attributeName="transform" type="translate"
+      values="0 0" dur="2s" repeatCount="indefinite" additive="sum" />
+
+    <!-- tělo -->
+    <circle cx="50" cy="52" r="40" fill="#2f7dd1" transform="translate(-50 -52)" />
+    <g transform="translate(-50 -52)">
+      <!-- tváře -->
+      <ellipse cx="30" cy="60" rx="6" ry="4" fill="#b6699a" opacity="0.55" />
+      <ellipse cx="70" cy="60" rx="6" ry="4" fill="#b6699a" opacity="0.55" />
+
+      <!-- oči – mrkání přes ry -->
+      <ellipse cx="38" cy="47" rx="5" ry="6" fill="#ffffff">
+        <animate attributeName="ry" values="6;6;0.6;6" keyTimes="0;0.88;0.93;1" dur="3.2s" repeatCount="indefinite" />
+      </ellipse>
+      <ellipse cx="62" cy="47" rx="5" ry="6" fill="#ffffff">
+        <animate attributeName="ry" values="6;6;0.6;6" keyTimes="0;0.88;0.93;1" dur="3.2s" repeatCount="indefinite" />
+      </ellipse>
+
+      <!-- ústa – opakující se rozšíření úsměvu -->
+      <path d="M40 63 Q50 70 60 63" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none">
+        <animate attributeName="d"
+          values="M40 63 Q50 70 60 63;M37 62 Q50 77 63 62;M40 63 Q50 70 60 63"
+          keyTimes="0;0.5;1" dur="2.2s" repeatCount="indefinite" />
+      </path>
+    </g>
+  </g>
+</svg>
