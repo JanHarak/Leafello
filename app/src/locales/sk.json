@@ -180,7 +180,10 @@
     "channelEmail": "E-mail",
     "channelPush": "Push",
     "channelBoth": "Oboje",
-    "pushNote": "Push notifikácie zatiaľ pripravujeme – zatiaľ spoľahlivo chodí e-mail."
+    "pushNote": "Push notifikácie zatiaľ pripravujeme – zatiaľ spoľahlivo chodí e-mail.",
+    "weighTitle": "Váženie",
+    "weighInfo": "1× týždenne, ráno",
+    "weighBody": "Pripomenieme len vtedy, keď sa 7 dní nezvážiš. Ideálne ráno, nalačno, rovnaký deň a čas."
   },
   "escalation": {
     "title": "Skúsme to inak",

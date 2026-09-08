@@ -112,6 +112,37 @@ Deno.serve(async (req: Request) => {
       }).catch(() => {});
       sent += 1;
     }
+
+    // Připomínka vážení: ráno v 8:00, jen když se uživatel 7+ dní nezvážil.
+    const WEIGH_MIN = 8 * 60;
+    if (minutes >= WEIGH_MIN && minutes <= WEIGH_MIN + WINDOW_MIN) {
+      const { data: last } = await admin
+        .from('weight_logs')
+        .select('logged_on')
+        .eq('user_id', p.user_id)
+        .order('logged_on', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const lastMs = last?.logged_on ? new Date(`${last.logged_on}T00:00:00Z`).getTime() : 0;
+      const todayMs = new Date(`${date}T00:00:00Z`).getTime();
+      const daysSince = lastMs ? Math.round((todayMs - lastMs) / 86400000) : 999;
+      if (daysSince >= 7) {
+        const body = 'Už je to týden od posledního vážení. Když chceš, zvaž se dnes ráno – ideálně nalačno a ve stejný čas.';
+        if (!resendKey) {
+          planned.push(`${p.email}:weigh_in`);
+        } else {
+          const ins = await admin.from('reminder_sends').insert({ user_id: p.user_id, slot: 'weigh_in', sent_on: date }).select('slot');
+          if (!ins.error) {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ from, to: p.email, subject: 'DietApp – čas na vážení', html: `<p>${body}</p>` }),
+            }).catch(() => {});
+            sent += 1;
+          }
+        }
+      }
+    }
   }
 
   return json(200, { status: 'ok', now: { date, minutes }, sent, planned, resend: resendKey ? 'on' : 'off' });

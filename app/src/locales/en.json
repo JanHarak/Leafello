@@ -178,7 +178,10 @@
     "channelEmail": "E-mail",
     "channelPush": "Push",
     "channelBoth": "Both",
-    "pushNote": "Push notifications are coming soon – e-mail works reliably for now."
+    "pushNote": "Push notifications are coming soon – e-mail works reliably for now.",
+    "weighTitle": "Weigh-in",
+    "weighInfo": "Once a week, morning",
+    "weighBody": "We remind you only if you have not weighed in for 7 days. Best in the morning, fasted, same day and time."
   },
   "escalation": {
     "title": "Let's take a different approach",

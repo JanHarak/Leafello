@@ -158,6 +158,13 @@ export default function Reminders() {
             <Text style={s.detail}>{t(`meal.${m.meal}`)}</Text>
           </View>
         ))}
+
+        <Text style={s.section}>{t('reminders.weighTitle')}</Text>
+        <View style={s.row}>
+          <Text style={s.time}>{fmt(8, 0)}</Text>
+          <Text style={s.detail}>{t('reminders.weighInfo')}</Text>
+        </View>
+        <Text style={s.intro}>{t('reminders.weighBody')}</Text>
       </ScrollView>
     </SafeAreaView>
   );
