@@ -259,13 +259,16 @@
     "allergies": "Allergies / intolerances (optional)",
     "available": "Available ingredients (optional)",
     "aiRegenerate": "Regenerate",
-    "aiHint": "Untick what does not fit, then add selected to the day."
+    "aiHint": "Untick what does not fit, then add selected to the day.",
+    "altFind": "Alternative (AI)",
+    "altBusy": "Finding alternatives…"
   },
   "common": {
     "back": "Back",
     "pin": "Pin menu",
     "collapse": "Collapse menu",
     "delete": "Delete",
-    "edit": "Edit"
+    "edit": "Edit",
+    "save": "Save"
   }
 }

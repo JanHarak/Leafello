@@ -196,7 +196,7 @@ export default function HomeScreen() {
               icon="zap"
             />
             <View style={s.avatarCol}>
-              <Avatar mood={mood} size={224} />
+              <Avatar mood={mood} size={288} />
               <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
             </View>
             <Ring
@@ -331,8 +331,8 @@ const styles = (c: ThemeColors) =>
     levelBarFill: { height: 6, borderRadius: radius.pill, backgroundColor: c.accent },
     heroAction: { minHeight: touchTarget, paddingHorizontal: spacing.xl, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
     heroActionText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    topRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xl, justifyContent: 'center', alignItems: 'center' },
-    avatarCol: { alignItems: 'center', gap: spacing.xs },
+    topRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'center', alignItems: 'flex-end' },
+    avatarCol: { alignItems: 'center', gap: spacing.xs, marginHorizontal: -spacing.lg },
     statusRow: { alignItems: 'center', gap: spacing.sm },
     macroRings: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xl, justifyContent: 'center' },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'center', marginTop: spacing.sm },

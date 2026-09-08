@@ -262,13 +262,16 @@
     "allergies": "Alergie / intolerance (volitelné)",
     "available": "Dostupné suroviny (volitelné)",
     "aiRegenerate": "Přegenerovat",
-    "aiHint": "Odškrtni, co ti nesedí, pak vlož vybrané do dne."
+    "aiHint": "Odškrtni, co ti nesedí, pak vlož vybrané do dne.",
+    "altFind": "Alternativa (AI)",
+    "altBusy": "Hledám alternativy…"
   },
   "common": {
     "back": "Zpět",
     "pin": "Ukotvit menu",
     "collapse": "Sbalit menu",
     "delete": "Smazat",
-    "edit": "Upravit"
+    "edit": "Upravit",
+    "save": "Uložit"
   }
 }

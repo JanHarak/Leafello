@@ -163,6 +163,9 @@ export default function Account() {
                   );
                 })}
               </View>
+            </View>
+
+            <View style={s.card}>
               <Pressable style={s.signOut} onPress={() => signOut()}>
                 <Text style={s.signOutText}>{t('auth.signOut')}</Text>
               </Pressable>

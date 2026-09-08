@@ -653,6 +653,31 @@ export async function suggestDay(opts?: { allergies?: string; available?: string
   return { meals, notes: typeof d.notes === 'string' ? d.notes : undefined };
 }
 
+/** Navrhne pár alternativ k jedné položce jídla (výběr nahradí původní). */
+export async function suggestAlternatives(opts: {
+  name: string;
+  meal: MealType;
+  grams: number;
+  allergies?: string;
+}): Promise<SuggestedItem[]> {
+  const { data, error } = await supabase.functions.invoke('suggest-alternatives', {
+    method: 'POST',
+    body: { name: opts.name, meal: opts.meal, grams: opts.grams, allergies: opts.allergies ?? '' },
+  });
+  if (error) throw error;
+  const d = data as { status?: string; alternatives?: unknown[] };
+  if (!d || d.status !== 'done' || !Array.isArray(d.alternatives)) throw new Error('failed');
+  const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  return (d.alternatives as Record<string, unknown>[]).map((it) => ({
+    name: String(it.name ?? '').slice(0, 200),
+    grams: num(it.grams) || 100,
+    kcal_100g: Math.min(900, Math.max(0, num(it.kcal_100g))),
+    protein_100g: num(it.protein_100g),
+    carbs_100g: num(it.carbs_100g),
+    fat_100g: num(it.fat_100g),
+  }));
+}
+
 /* -------------------------------------------------------------------------- */
 /* GDPR – export dat (N-06) a smazání účtu                                     */
 /* -------------------------------------------------------------------------- */

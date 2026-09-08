@@ -18,8 +18,10 @@ import {
   listMealPlans,
   listRecipes,
   searchFoods,
+  suggestAlternatives,
   suggestDay,
   type DaySuggestion,
+  type SuggestedItem,
   type MealPlanItem,
   type MealPlanRow,
   type SavedRecipe,
@@ -127,6 +129,12 @@ export default function Plans() {
   const [allergies, setAllergies] = useState('');
   const [available, setAvailable] = useState('');
   const [deselected, setDeselected] = useState<Set<string>>(new Set());
+  const [altFor, setAltFor] = useState<string | null>(null);
+  const [altOptions, setAltOptions] = useState<SuggestedItem[]>([]);
+  const [altBusy, setAltBusy] = useState(false);
+  const [editFor, setEditFor] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editGrams, setEditGrams] = useState('');
 
   const loadPlans = useCallback(() => {
     if (!session) {
@@ -301,6 +309,50 @@ export default function Plans() {
     });
   }
 
+  // Nahradí položku návrhu jinou a znovu ji zařadí (zruší vyškrtnutí).
+  function replaceItem(mi: number, ii: number, item: SuggestedItem) {
+    setSuggestion((prev) => {
+      if (!prev) return prev;
+      const meals = prev.meals.map((m, i) => (i !== mi ? m : { ...m, items: m.items.map((it, j) => (j !== ii ? it : item)) }));
+      return { ...prev, meals };
+    });
+    setDeselected((prev) => {
+      const next = new Set(prev);
+      next.delete(itemKey(mi, ii));
+      return next;
+    });
+    setAltFor(null);
+    setEditFor(null);
+  }
+
+  async function onFindAlt(mi: number, ii: number, item: SuggestedItem, meal: MealType) {
+    const key = itemKey(mi, ii);
+    setAltFor(key);
+    setEditFor(null);
+    setAltOptions([]);
+    setAltBusy(true);
+    try {
+      setAltOptions(await suggestAlternatives({ name: item.name, meal, grams: item.grams, allergies }));
+    } catch {
+      setError(t('plans.aiError'));
+      setAltFor(null);
+    } finally {
+      setAltBusy(false);
+    }
+  }
+
+  function onEdit(mi: number, ii: number, item: SuggestedItem) {
+    setEditFor(itemKey(mi, ii));
+    setAltFor(null);
+    setEditName(item.name);
+    setEditGrams(String(item.grams));
+  }
+
+  function saveEdit(mi: number, ii: number, base: SuggestedItem) {
+    const g = Number(editGrams);
+    replaceItem(mi, ii, { ...base, name: editName.trim() || base.name, grams: Number.isFinite(g) && g > 0 ? g : base.grams });
+  }
+
   // Vloží AI návrh do vybraného dne: každou položku uloží jako vlastní
   // potravinu a přidá do plánu. Nic se neděje bez tohoto potvrzení.
   async function applySuggestion() {
@@ -463,14 +515,53 @@ export default function Plans() {
                         <View key={mi} style={s.mealGroup}>
                           <Text style={s.mealHeader}>{t(`meal.${m.meal}`)}</Text>
                           {m.items.map((it, ii) => {
-                            const off = deselected.has(itemKey(mi, ii));
+                            const key = itemKey(mi, ii);
+                            const off = deselected.has(key);
                             return (
-                              <Pressable key={ii} style={s.suggestItem} onPress={() => toggleItem(mi, ii)} accessibilityRole="checkbox" accessibilityState={{ checked: !off }}>
-                                <Feather name={off ? 'square' : 'check-square'} size={20} color={off ? colors.textFaint : colors.accent} />
-                                <Text style={[s.itemMeta, off && s.itemOff]} numberOfLines={1}>
-                                  {it.name} · {it.grams} g · {Math.round((it.kcal_100g * it.grams) / 100)} {t('goal.unitKcal')}
-                                </Text>
-                              </Pressable>
+                              <View key={ii}>
+                                <Pressable style={s.suggestItem} onPress={() => toggleItem(mi, ii)} accessibilityRole="checkbox" accessibilityState={{ checked: !off }}>
+                                  <Feather name={off ? 'square' : 'check-square'} size={20} color={off ? colors.textFaint : colors.accent} />
+                                  <Text style={[s.itemMeta, off && s.itemOff]} numberOfLines={1}>
+                                    {it.name} · {it.grams} g · {Math.round((it.kcal_100g * it.grams) / 100)} {t('goal.unitKcal')}
+                                  </Text>
+                                </Pressable>
+
+                                {off && editFor === key && (
+                                  <View style={s.altBox}>
+                                    <TextInput value={editName} onChangeText={setEditName} placeholder={t('recipes.name')} placeholderTextColor={colors.textFaint} style={s.input} />
+                                    <View style={s.altActions}>
+                                      <TextInput value={editGrams} onChangeText={setEditGrams} keyboardType="numeric" style={[s.input, { width: 90 }]} />
+                                      <Pressable onPress={() => saveEdit(mi, ii, it)}><Text style={s.altLink}>{t('common.save')}</Text></Pressable>
+                                      <Pressable onPress={() => setEditFor(null)}><Text style={s.muted}>{t('account.cancel')}</Text></Pressable>
+                                    </View>
+                                  </View>
+                                )}
+
+                                {off && altFor === key && editFor !== key && (
+                                  <View style={s.altBox}>
+                                    {altBusy ? (
+                                      <Text style={s.muted}>{t('plans.altBusy')}</Text>
+                                    ) : altOptions.length > 0 ? (
+                                      altOptions.map((alt, ai) => (
+                                        <Pressable key={ai} style={s.altOption} onPress={() => replaceItem(mi, ii, alt)}>
+                                          <Text style={s.itemMeta} numberOfLines={1}>
+                                            {alt.name} · {alt.grams} g · {Math.round((alt.kcal_100g * alt.grams) / 100)} {t('goal.unitKcal')}
+                                          </Text>
+                                        </Pressable>
+                                      ))
+                                    ) : (
+                                      <Text style={s.muted}>{t('plans.aiError')}</Text>
+                                    )}
+                                  </View>
+                                )}
+
+                                {off && altFor !== key && editFor !== key && (
+                                  <View style={s.altActions}>
+                                    <Pressable onPress={() => onFindAlt(mi, ii, it, m.meal)}><Text style={s.altLink}>{t('plans.altFind')}</Text></Pressable>
+                                    <Pressable onPress={() => onEdit(mi, ii, it)}><Text style={s.altLink}>{t('common.edit')}</Text></Pressable>
+                                  </View>
+                                )}
+                              </View>
                             );
                           })}
                         </View>
@@ -568,6 +659,10 @@ const styles = (c: ThemeColors) =>
     suggestBox: { gap: spacing.sm, marginTop: spacing.sm },
     suggestItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget, paddingVertical: spacing.xs },
     itemOff: { textDecorationLine: 'line-through', color: c.textFaint },
+    altBox: { gap: spacing.xs, paddingLeft: spacing.xl, paddingBottom: spacing.sm },
+    altActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, paddingLeft: spacing.xl, paddingBottom: spacing.sm },
+    altOption: { minHeight: touchTarget, justifyContent: 'center', paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface },
+    altLink: { color: c.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
     input: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },
     weeksRow: { flexDirection: 'row', gap: spacing.sm },
