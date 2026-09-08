@@ -179,51 +179,71 @@ export default function HomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={s.content}>
-      {/* Postavička a stav */}
-      {!escalated && mood && (
-        <View style={s.hero}>
-          <Avatar mood={mood} size={200} />
-          <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
-          <Text style={s.level}>
-            {t('level.label', { n: level })}
-            {streakDays > 0 ? `  ·  ${plural('streak.days', streakDays)}` : ''}
-          </Text>
-          <View style={s.levelBar}>
-            <View style={[s.levelBarFill, { width: `${levelPct * 100}%` as `${number}%` }]} />
-          </View>
-          {isActionable(mood) && (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push(mood === 'thirsty' ? '/water' : '/diary')}
-              style={s.heroAction}
-            >
-              <Text style={s.heroActionText}>{mood === 'thirsty' ? t('avatar.actionWater') : t('avatar.actionLog')}</Text>
-            </Pressable>
-          )}
-        </View>
-      )}
-
-      {/* Kruhové grafy: jídlo a pití */}
       {escalated ? (
         <EscalationCard colors={colors} />
-      ) : session && goal && consumed ? (
-        <View style={s.rings}>
-          <Ring
-            colors={colors}
-            progress={goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 0}
-            value={`${consumed.kcal}`}
-            unit={`/ ${goal.kcal_target} ${t('goal.unitKcal')}`}
-            caption={t('home.today')}
-          />
-          <Ring
-            colors={colors}
-            progress={goal.water_ml > 0 ? waterMl / goal.water_ml : 0}
-            value={`${waterMl}`}
-            unit={`/ ${goal.water_ml} ${t('goal.unitMl')}`}
-            caption={t('goal.water')}
-            icon="droplet"
-          />
-        </View>
+      ) : session && goal && consumed && mood ? (
+        <>
+          {/* Řádek: jídlo – postavička – pití */}
+          <View style={s.topRow}>
+            <Ring
+              colors={colors}
+              color={colors.ringWater}
+              size={184}
+              progress={goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 0}
+              value={`${consumed.kcal}`}
+              unit={`/ ${goal.kcal_target} ${t('goal.unitKcal')}`}
+              caption={t('home.today')}
+              icon="zap"
+            />
+            <View style={s.avatarCol}>
+              <Avatar mood={mood} size={184} />
+              <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
+            </View>
+            <Ring
+              colors={colors}
+              color={colors.accent}
+              size={184}
+              progress={goal.water_ml > 0 ? waterMl / goal.water_ml : 0}
+              value={`${waterMl}`}
+              unit={`/ ${goal.water_ml} ${t('goal.unitMl')}`}
+              caption={t('goal.water')}
+              icon="droplet"
+            />
+          </View>
+
+          {/* Level, série a akce */}
+          <View style={s.statusRow}>
+            <Text style={s.level}>
+              {t('level.label', { n: level })}
+              {streakDays > 0 ? `  ·  ${plural('streak.days', streakDays)}` : ''}
+            </Text>
+            <View style={s.levelBar}>
+              <View style={[s.levelBarFill, { width: `${levelPct * 100}%` as `${number}%` }]} />
+            </View>
+            {isActionable(mood) && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push(mood === 'thirsty' ? '/water' : '/diary')}
+                style={s.heroAction}
+              >
+                <Text style={s.heroActionText}>{mood === 'thirsty' ? t('avatar.actionWater') : t('avatar.actionLog')}</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Makra jako kruhové grafy */}
+          <View style={s.macroRings}>
+            <Ring colors={colors} color={colors.macroProtein} size={132} strokeWidth={13}
+              progress={goal.protein_g > 0 ? consumed.protein / goal.protein_g : 0}
+              value={`${consumed.protein}`} unit={`/ ${goal.protein_g} ${t('goal.unitG')}`} caption={t('goal.protein')} />
+            <Ring colors={colors} color={colors.macroCarbs} size={132} strokeWidth={13}
+              progress={goal.carbs_g > 0 ? consumed.carbs / goal.carbs_g : 0}
+              value={`${consumed.carbs}`} unit={`/ ${goal.carbs_g} ${t('goal.unitG')}`} caption={t('goal.carbs')} />
+            <Ring colors={colors} color={colors.macroFat} size={132} strokeWidth={13}
+              progress={goal.fat_g > 0 ? consumed.fat / goal.fat_g : 0}
+              value={`${consumed.fat}`} unit={`/ ${goal.fat_g} ${t('goal.unitG')}`} caption={t('goal.fat')} />
+          </View>
+        </>
       ) : session && !goal ? (
         <View style={s.card}>
           <Text style={s.body}>{t('home.setGoalFirst')}</Text>
@@ -237,15 +257,6 @@ export default function HomeScreen() {
           <Pressable accessibilityRole="button" onPress={() => router.push('/login')} style={s.primary}>
             <Text style={s.primaryText}>{t('auth.signIn')}</Text>
           </Pressable>
-        </View>
-      )}
-
-      {/* Makra pod grafy */}
-      {!escalated && session && goal && consumed && (
-        <View style={s.macros}>
-          <MacroCol label={t('goal.protein')} value={consumed.protein} target={goal.protein_g} colors={colors} />
-          <MacroCol label={t('goal.carbs')} value={consumed.carbs} target={goal.carbs_g} colors={colors} />
-          <MacroCol label={t('goal.fat')} value={consumed.fat} target={goal.fat_g} colors={colors} />
         </View>
       )}
 
@@ -263,27 +274,34 @@ export default function HomeScreen() {
 
 function Ring({
   colors,
+  color,
   progress,
   value,
   unit,
   caption,
   icon,
+  size = 156,
+  strokeWidth = 16,
 }: {
   colors: ThemeColors;
+  color: string;
   progress: number;
   value: string;
   unit: string;
   caption: string;
   icon?: ComponentProps<typeof Feather>['name'];
+  size?: number;
+  strokeWidth?: number;
 }) {
+  const valueFont = Math.max(18, Math.round(size * 0.2));
   return (
     <View style={{ alignItems: 'center', gap: spacing.xs }}>
-      <ProgressRing progress={progress} color={colors.accent} trackColor={colors.surfaceElevated} size={200} strokeWidth={18}>
-        {icon && <Feather name={icon} size={22} color={colors.accent} style={{ marginBottom: 2 }} />}
-        <Text style={{ color: colors.text, fontSize: 40, fontWeight: fontWeight.bold }}>{value}</Text>
+      <ProgressRing progress={progress} color={color} trackColor={colors.surfaceElevated} size={size} strokeWidth={strokeWidth}>
+        {icon && <Feather name={icon} size={Math.round(size * 0.12)} color={color} style={{ marginBottom: 2 }} />}
+        <Text style={{ color: colors.text, fontSize: valueFont, fontWeight: fontWeight.bold }}>{value}</Text>
         <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{unit}</Text>
       </ProgressRing>
-      <Text style={{ color: colors.textMuted, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium }}>
+      <Text style={{ color, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.bold }}>
         {caption}
       </Text>
     </View>
@@ -304,33 +322,19 @@ function EscalationCard({ colors }: { colors: ThemeColors }) {
   );
 }
 
-function MacroCol({ label, value, target, colors }: { label: string; value: number; target: number; colors: ThemeColors }) {
-  const pct = target > 0 ? Math.max(0, Math.min(1, value / target)) : 0;
-  return (
-    <View style={{ flex: 1, alignItems: 'center', gap: spacing.xs }}>
-      <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{label}</Text>
-      <Text style={{ color: colors.text, fontSize: fontSize.body, fontWeight: fontWeight.bold }}>
-        {value} / {target} {t('goal.unitG')}
-      </Text>
-      <View style={{ height: 6, borderRadius: radius.pill, backgroundColor: colors.surfaceElevated, alignSelf: 'stretch', overflow: 'hidden' }}>
-        <View style={{ height: 6, borderRadius: radius.pill, backgroundColor: colors.accent, width: `${pct * 100}%` as `${number}%` }} />
-      </View>
-    </View>
-  );
-}
-
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
-    hero: { alignItems: 'center', gap: spacing.sm, alignSelf: 'stretch' },
     caption: { color: c.textMuted, fontSize: fontSize.body, textAlign: 'center' },
     level: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     levelBar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', width: 220, backgroundColor: c.surfaceElevated },
     levelBarFill: { height: 6, borderRadius: radius.pill, backgroundColor: c.accent },
     heroAction: { minHeight: touchTarget, paddingHorizontal: spacing.xl, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
     heroActionText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    rings: { flexDirection: 'row', flexWrap: 'wrap', gap: 72, justifyContent: 'center' },
-    macros: { flexDirection: 'row', gap: spacing.sm, alignSelf: 'center', width: '100%', maxWidth: 420 },
+    topRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xl, justifyContent: 'center', alignItems: 'center' },
+    avatarCol: { alignItems: 'center', gap: spacing.xs },
+    statusRow: { alignItems: 'center', gap: spacing.sm },
+    macroRings: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xl, justifyContent: 'center' },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'center', marginTop: spacing.sm },
     tile: { width: 64, height: 64, borderRadius: radius.lg, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md, alignSelf: 'center', width: '100%', maxWidth: 480 },

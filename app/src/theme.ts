@@ -31,6 +31,16 @@ const raw = {
   // k hodnocení jídla (pravidlo 6).
   target: '#2e9e5b',
   targetDark: '#4ec27d',
+  // Kategorické barvy grafů – slouží k ROZLIŠENÍ metrik (pití, makra), ne
+  // k hodnocení „dobré/špatné“. Zvolené tak, aby se lišily i odstínem jasu.
+  water: '#1798a5',
+  waterDark: '#3fc0d6',
+  macroProtein: '#5b6ee1',
+  macroProteinDark: '#8aa0ff',
+  macroCarbs: '#d99a2b',
+  macroCarbsDark: '#e7b451',
+  macroFat: '#b6699a',
+  macroFatDark: '#d68cbb',
 } as const;
 
 export interface ThemeColors {
@@ -46,6 +56,10 @@ export interface ThemeColors {
   notice: string;
   noticeBackground: string;
   targetLine: string;
+  ringWater: string;
+  macroProtein: string;
+  macroCarbs: string;
+  macroFat: string;
 }
 
 export const lightColors: ThemeColors = {
@@ -61,6 +75,10 @@ export const lightColors: ThemeColors = {
   notice: raw.notice,
   noticeBackground: raw.noticeBg,
   targetLine: raw.target,
+  ringWater: raw.water,
+  macroProtein: raw.macroProtein,
+  macroCarbs: raw.macroCarbs,
+  macroFat: raw.macroFat,
 };
 
 export const darkColors: ThemeColors = {
@@ -76,6 +94,10 @@ export const darkColors: ThemeColors = {
   notice: '#e3c766',
   noticeBackground: '#3a3212',
   targetLine: raw.targetDark,
+  ringWater: raw.waterDark,
+  macroProtein: raw.macroProteinDark,
+  macroCarbs: raw.macroCarbsDark,
+  macroFat: raw.macroFatDark,
 };
 
 /** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */
