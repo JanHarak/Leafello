@@ -99,16 +99,21 @@ export default function Weight() {
   const month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-  // Osa Y: ~5 kg pod cílovou váhou až ~5 kg nad zadanou (onboardingovou) váhou.
-  // Zaokrouhleno na 5 kg kvůli čistým popiskům. baseline = nejstarší (zadaná) váha.
-  const baseline = rows.length ? rows[0].weight_kg : (targetKg ?? 80);
-  const lo = targetKg != null ? Math.min(targetKg, baseline) : baseline;
-  const hi = targetKg != null ? Math.max(targetKg, baseline) : baseline;
-  const yMin = Math.floor((lo - 5) / 5) * 5;
-  const yMax = Math.ceil((hi + 5) / 5) * 5;
   const points = rows
     .filter((r) => r.logged_on.startsWith(monthPrefix))
     .map((r) => ({ day: Number(r.logged_on.slice(8, 10)), kg: r.weight_kg }));
+
+  // Osa Y: ~5 kg pod cílem a ~5 kg nad zadanou (nejstarší) váhou, a VŽDY aspoň
+  // 2 kg nad/pod nejzazší zapsanou hodnotou (aby bod nikdy neležel na hraně).
+  // Zaokrouhleno na 5 kg kvůli čistým popiskům.
+  const baseline = rows.length ? rows[0].weight_kg : (targetKg ?? 80);
+  const vals = [...points.map((p) => p.kg), baseline, ...(targetKg != null ? [targetKg] : [])];
+  const dataMin = Math.min(...vals);
+  const dataMax = Math.max(...vals);
+  const loRef = Math.min(dataMin - 2, targetKg != null ? targetKg - 5 : dataMin - 2);
+  const hiRef = Math.max(dataMax + 2, baseline + 5);
+  const yMin = Math.floor(loRef / 5) * 5;
+  const yMax = Math.ceil(hiRef / 5) * 5;
   const showChart = rows.length > 0 || targetKg !== null;
 
   return (

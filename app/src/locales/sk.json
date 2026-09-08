@@ -183,7 +183,12 @@
     "pushNote": "Push notifikácie zatiaľ pripravujeme – zatiaľ spoľahlivo chodí e-mail.",
     "weighTitle": "Váženie",
     "weighInfo": "1× týždenne, ráno",
-    "weighBody": "Pripomenieme len vtedy, keď sa 7 dní nezvážiš. Ideálne ráno, nalačno, rovnaký deň a čas."
+    "weighBody": "Pripomenieme len vtedy, keď sa 7 dní nezvážiš. Ideálne ráno, nalačno, rovnaký deň a čas.",
+    "timesTitle": "Časy pripomienok",
+    "saveTimes": "Uložiť časy",
+    "timesSaved": "Časy uložené.",
+    "waterFrom": "Pitie od (h)",
+    "waterTo": "Pitie do (h)"
   },
   "escalation": {
     "title": "Skúsme to inak",

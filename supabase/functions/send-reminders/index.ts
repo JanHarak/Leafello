@@ -35,12 +35,14 @@ function waterSchedule(goalMl: number, count = 5, startHour = 8, endHour = 20) {
   }
   return out;
 }
-const mealSchedule = () => [
-  { hour: 8, minute: 0, meal: 'breakfast' },
-  { hour: 12, minute: 30, meal: 'lunch' },
-  { hour: 18, minute: 30, meal: 'dinner' },
-];
 const MEAL_CS: Record<string, string> = { breakfast: 'snídaně', lunch: 'oběd', dinner: 'večeře', snack: 'svačina' };
+
+const DEFAULT_TIMES = { waterStart: 8, waterEnd: 20, breakfast: '08:00', lunch: '12:30', dinner: '18:30', weigh: '08:00' };
+function parseHM(s: string): number {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(s ?? '').trim());
+  if (!m) return 8 * 60;
+  return Math.min(23, Number(m[1])) * 60 + Math.min(59, Number(m[2]));
+}
 
 function nowInTz(): { date: string; minutes: number } {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -70,7 +72,7 @@ Deno.serve(async (req: Request) => {
   const { date, minutes } = nowInTz();
   const { data: prefs, error } = await admin
     .from('reminder_prefs')
-    .select('user_id, email, channel')
+    .select('user_id, email, channel, times')
     .eq('email_reminders', true);
   if (error) return json(500, { error: error.message });
 
@@ -88,6 +90,7 @@ Deno.serve(async (req: Request) => {
       .eq('is_active', true)
       .maybeSingle();
     const waterMl = goal?.water_ml ?? 2000;
+    const tm = { ...DEFAULT_TIMES, ...((p.times as Record<string, unknown>) ?? {}) };
 
     // Denní strop notifikací (F-13: nikdy víc než 8 denně celkem). Počítáme
     // už odeslané dnešní sloty a novými nepřekročíme limit.
@@ -117,8 +120,8 @@ Deno.serve(async (req: Request) => {
       sent += 1;
     };
 
-    // Vážení má přednost (ráno v 8:00, jen když se uživatel 7+ dní nezvážil).
-    const WEIGH_MIN = 8 * 60;
+    // Vážení má přednost (jen když se uživatel 7+ dní nezvážil).
+    const WEIGH_MIN = parseHM(tm.weigh);
     if (minutes >= WEIGH_MIN && minutes <= WEIGH_MIN + WINDOW_MIN) {
       const { data: last } = await admin
         .from('weight_logs')
@@ -135,9 +138,18 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    const mealDefs = [
+      { meal: 'breakfast', min: parseHM(tm.breakfast) },
+      { meal: 'lunch', min: parseHM(tm.lunch) },
+      { meal: 'dinner', min: parseHM(tm.dinner) },
+    ];
     const slots = [
-      ...waterSchedule(waterMl).map((w, i) => ({ slot: `water-${i}`, min: w.hour * 60 + w.minute, body: `Čas se napít (~${w.ml} ml).` })),
-      ...mealSchedule().map((m) => ({ slot: `meal-${m.meal}`, min: m.hour * 60 + m.minute, body: `Čas na jídlo: ${MEAL_CS[m.meal] ?? m.meal}.` })),
+      ...waterSchedule(waterMl, 5, Number(tm.waterStart) || 8, Number(tm.waterEnd) || 20).map((w, i) => ({
+        slot: `water-${i}`,
+        min: w.hour * 60 + w.minute,
+        body: `Čas se napít (~${w.ml} ml).`,
+      })),
+      ...mealDefs.map((m) => ({ slot: `meal-${m.meal}`, min: m.min, body: `Čas na jídlo: ${MEAL_CS[m.meal] ?? m.meal}.` })),
     ];
     for (const sdef of slots) {
       if (minutes < sdef.min || minutes > sdef.min + WINDOW_MIN) continue;

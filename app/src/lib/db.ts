@@ -136,19 +136,49 @@ export async function addDiaryEntry(
 /* -------------------------------------------------------------------------- */
 
 export type ReminderChannel = 'email' | 'push' | 'both';
+
+export interface ReminderTimes {
+  waterStart: number;
+  waterEnd: number;
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+  weigh: string;
+}
+
+export const DEFAULT_REMINDER_TIMES: ReminderTimes = {
+  waterStart: 8,
+  waterEnd: 20,
+  breakfast: '08:00',
+  lunch: '12:30',
+  dinner: '18:30',
+  weigh: '08:00',
+};
+
 export interface ReminderPrefs {
   enabled: boolean;
   channel: ReminderChannel;
+  times: ReminderTimes;
 }
 
 /** Nastavení připomínek přihlášeného uživatele. */
 export async function getReminderPrefs(): Promise<ReminderPrefs> {
-  const { data, error } = await supabase.from('reminder_prefs').select('email_reminders, channel').maybeSingle();
+  const { data, error } = await supabase.from('reminder_prefs').select('email_reminders, channel, times').maybeSingle();
   if (error) throw error;
+  const times = (data?.times ?? {}) as Partial<ReminderTimes>;
   return {
     enabled: !!data?.email_reminders,
     channel: (data?.channel as ReminderChannel) ?? 'email',
+    times: { ...DEFAULT_REMINDER_TIMES, ...times },
   };
+}
+
+/** Uloží vlastní časy připomínek (ostatní pole prefs nechá beze změny). */
+export async function setReminderTimes(userId: string, times: ReminderTimes): Promise<void> {
+  const { error } = await supabase
+    .from('reminder_prefs')
+    .upsert({ user_id: userId, times, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) throw error;
 }
 
 /** Zapne/vypne připomínky, uloží e-mail a zvolený kanál (email/push/both). */

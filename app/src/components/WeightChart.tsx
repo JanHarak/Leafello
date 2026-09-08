@@ -57,10 +57,11 @@ export function WeightChart({
   const yTicks: number[] = [];
   for (let kg = yMin; kg <= yMax + 0.001; kg += 5) yTicks.push(Math.round(kg));
 
-  // Popisky osy X: 1., pak po 5 dnech, a poslední den.
-  const xTicks: number[] = [1];
-  for (let d = 5; d < daysInMonth; d += 5) xTicks.push(d);
-  if (xTicks[xTicks.length - 1] !== daysInMonth) xTicks.push(daysInMonth);
+  // Osa X po jednotlivých dnech: tenká linka pro každý den; popisky řidší,
+  // aby se nepřekrývaly (u dlouhých měsíců každý druhý den).
+  const allDays: number[] = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const labelStep = daysInMonth > 16 ? 2 : 1;
+  const xLabels = allDays.filter((d) => d === 1 || d === daysInMonth || d % labelStep === 0);
 
   const sorted = [...points].sort((a, b) => a.day - b.day);
   const polyline = sorted.map((p) => `${x(p.day)},${y(p.kg)}`).join(' ');
@@ -79,9 +80,13 @@ export function WeightChart({
               {kg}
             </SvgText>
           ))}
+          {/* Svislé linky pro jednotlivé dny */}
+          {allDays.map((d) => (
+            <Line key={`gd${d}`} x1={x(d)} y1={padT} x2={x(d)} y2={height - padB} stroke={gridColor} strokeWidth={0.5} opacity={0.5} />
+          ))}
           {/* Popisky dnů na ose X */}
-          {xTicks.map((d) => (
-            <SvgText key={`xt${d}`} x={x(d)} y={height - 6} fontSize={11} fill={textColor} textAnchor="middle">
+          {xLabels.map((d) => (
+            <SvgText key={`xt${d}`} x={x(d)} y={height - 6} fontSize={10} fill={textColor} textAnchor="middle">
               {d}
             </SvgText>
           ))}

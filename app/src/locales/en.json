@@ -181,7 +181,12 @@
     "pushNote": "Push notifications are coming soon – e-mail works reliably for now.",
     "weighTitle": "Weigh-in",
     "weighInfo": "Once a week, morning",
-    "weighBody": "We remind you only if you have not weighed in for 7 days. Best in the morning, fasted, same day and time."
+    "weighBody": "We remind you only if you have not weighed in for 7 days. Best in the morning, fasted, same day and time.",
+    "timesTitle": "Reminder times",
+    "saveTimes": "Save times",
+    "timesSaved": "Times saved.",
+    "waterFrom": "Water from (h)",
+    "waterTo": "Water to (h)"
   },
   "escalation": {
     "title": "Let's take a different approach",
