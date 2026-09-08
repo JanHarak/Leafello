@@ -20,7 +20,7 @@ import {
   type GeminiResponse,
 } from '../_shared/analyze.ts';
 
-const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash';
+const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-lite-latest';
 const DAILY_LIMIT = Number(Deno.env.get('PHOTO_DAILY_LIMIT') ?? DEFAULT_DAILY_LIMIT);
 
 // CORS: volá se z webového klienta (prohlížeč pošle preflight OPTIONS).
