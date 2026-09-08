@@ -262,18 +262,6 @@ export default function HomeScreen() {
           </Pressable>
         ))}
       </View>
-
-      {/* Právní odkazy a atribuce */}
-      <View style={s.legalRow}>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
-          <Text style={s.legalLink}>{t('legal.privacy')}</Text>
-        </Pressable>
-        <Text style={s.legalDot}>·</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
-          <Text style={s.legalLink}>{t('legal.terms')}</Text>
-        </Pressable>
-      </View>
-      <Text style={s.attribution}>{t('attribution.off')}</Text>
     </ScrollView>
   );
 }
@@ -334,7 +322,7 @@ function MacroCol({ label, value, target, colors }: { label: string; value: numb
 
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
-    content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', flexGrow: 1 },
+    content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
     hero: { alignItems: 'center', gap: spacing.sm, alignSelf: 'stretch' },
     caption: { color: c.textMuted, fontSize: fontSize.body, textAlign: 'center' },
     level: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
@@ -343,19 +331,15 @@ const styles = (c: ThemeColors) =>
     heroAction: { minHeight: touchTarget, paddingHorizontal: spacing.xl, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
     heroActionText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     rings: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xxl, justifyContent: 'center' },
-    macros: { flexDirection: 'row', gap: spacing.sm, alignSelf: 'stretch', maxWidth: 480 },
+    macros: { flexDirection: 'row', gap: spacing.sm, alignSelf: 'center', width: '100%', maxWidth: 420 },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'center', marginTop: spacing.sm },
     tile: { width: 64, height: 64, borderRadius: radius.lg, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' },
-    card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md, alignSelf: 'stretch', maxWidth: 480 },
+    card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md, alignSelf: 'center', width: '100%', maxWidth: 480 },
     body: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5, textAlign: 'center' },
     primary: { minHeight: touchTarget, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
     primaryText: { color: c.onAccent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
-    escalation: { backgroundColor: c.noticeBackground, borderColor: c.notice, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm, alignSelf: 'stretch', maxWidth: 520 },
+    escalation: { backgroundColor: c.noticeBackground, borderColor: c.notice, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm, alignSelf: 'center', width: '100%', maxWidth: 520 },
     escalationTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     escalationBody: { color: c.text, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
     escalationHelp: { color: c.textMuted, fontSize: fontSize.body, fontWeight: fontWeight.medium },
-    legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg },
-    legalLink: { color: c.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
-    legalDot: { color: c.textFaint, fontSize: fontSize.caption },
-    attribution: { color: c.textFaint, fontSize: fontSize.caption, textAlign: 'center' },
   });

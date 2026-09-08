@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LANGUAGES, t } from '@/i18n';
+import { t } from '@/i18n';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { LocaleProvider, useLocale } from '@/lib/locale';
 import { NAV_ITEMS } from '@/lib/nav';
@@ -19,7 +19,7 @@ const HEADER_HEIGHT = 60;
 const CONTENT_MAX_WIDTH = 960;
 
 function titleForPath(path: string): string {
-  if (path === '/' || path === '') return t('app.name');
+  if (path === '/' || path === '') return '';
   const nav = NAV_ITEMS.find((n) => n.route === path);
   if (nav) return t(nav.labelKey);
   if (path.startsWith('/account')) return t('account.title');
@@ -82,36 +82,12 @@ function Rail() {
   );
 }
 
-function LanguageSwitch() {
-  const { colors } = useTheme();
-  const { lang, setLang } = useLocale();
-  return (
-    <View style={{ flexDirection: 'row', gap: 2, backgroundColor: colors.surfaceElevated, borderRadius: radius.pill, padding: 3 }}>
-      {LANGUAGES.map((l) => {
-        const active = l.code === lang;
-        return (
-          <Pressable
-            key={l.code}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            onPress={() => setLang(l.code)}
-            style={{ paddingHorizontal: spacing.sm, height: 30, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? colors.accent : 'transparent' }}
-          >
-            <Text style={{ color: active ? colors.onAccent : colors.textMuted, fontSize: fontSize.caption, fontWeight: fontWeight.bold }}>
-              {l.code.toUpperCase()}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 function Header() {
   const { colors, mode, toggle } = useTheme();
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const title = titleForPath(pathname);
 
   return (
     <View
@@ -126,13 +102,24 @@ function Header() {
         borderBottomColor: colors.border,
       }}
     >
+      {/* Střed: název sekce, vycentrovaný nezávisle na šířce postranních bloků */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+        {title !== '' && (
+          <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold }}>
+            {title}
+          </Text>
+        )}
+      </View>
+
+      {/* Vlevo: název aplikace */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent }} />
         <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold }}>
-          {titleForPath(pathname)}
+          {t('app.name')}
         </Text>
       </View>
 
+      {/* Vpravo: téma a uživatel */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <Pressable
           accessibilityRole="button"
@@ -141,8 +128,6 @@ function Header() {
         >
           <Feather name={mode === 'dark' ? 'sun' : 'moon'} size={20} color={colors.textMuted} />
         </Pressable>
-
-        <LanguageSwitch />
 
         {session ? (
           <Pressable
@@ -169,6 +154,35 @@ function Header() {
   );
 }
 
+function Footer() {
+  const { colors } = useTheme();
+  const router = useRouter();
+  return (
+    <View
+      style={{
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        backgroundColor: colors.surface,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        alignItems: 'center',
+        gap: 2,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
+          <Text style={{ color: colors.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{t('legal.privacy')}</Text>
+        </Pressable>
+        <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>·</Text>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
+          <Text style={{ color: colors.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{t('legal.terms')}</Text>
+        </Pressable>
+      </View>
+      <Text style={{ color: colors.textFaint, fontSize: fontSize.caption, textAlign: 'center' }}>{t('attribution.off')}</Text>
+    </View>
+  );
+}
+
 function Shell() {
   const { colors } = useTheme();
   // Konzumace jazyka tady zajistí překreslení obsahu po přepnutí jazyka.
@@ -186,6 +200,7 @@ function Shell() {
           </View>
         </View>
       </View>
+      <Footer />
     </View>
   );
 }

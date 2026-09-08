@@ -44,9 +44,9 @@ export interface ThemeColors {
 }
 
 export const lightColors: ThemeColors = {
-  background: raw.paper50,
+  background: raw.paper0,
   surface: raw.paper0,
-  surfaceElevated: raw.paper100,
+  surfaceElevated: raw.paper50,
   border: raw.line,
   text: raw.ink900,
   textMuted: raw.ink700,
