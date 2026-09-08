@@ -19,6 +19,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const TZ = 'Europe/Prague';
 const WINDOW_MIN = 15; // tolerance: pošli, když slot právě proběhl v tomto okně
+const MAX_DAILY = 8; // F-13: nikdy víc než 8 notifikací denně celkem
 
 function waterSchedule(goalMl: number, count = 5, startHour = 8, endHour = 20) {
   const phases = Math.max(2, Math.round(count));
@@ -88,32 +89,35 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
     const waterMl = goal?.water_ml ?? 2000;
 
-    const slots = [
-      ...waterSchedule(waterMl).map((w, i) => ({ slot: `water-${i}`, min: w.hour * 60 + w.minute, body: `Čas se napít (~${w.ml} ml).` })),
-      ...mealSchedule().map((m) => ({ slot: `meal-${m.meal}`, min: m.hour * 60 + m.minute, body: `Čas na jídlo: ${MEAL_CS[m.meal] ?? m.meal}.` })),
-    ];
+    // Denní strop notifikací (F-13: nikdy víc než 8 denně celkem). Počítáme
+    // už odeslané dnešní sloty a novými nepřekročíme limit.
+    const { count: sentToday } = await admin
+      .from('reminder_sends')
+      .select('slot', { count: 'exact', head: true })
+      .eq('user_id', p.user_id)
+      .eq('sent_on', date);
+    let budget = MAX_DAILY - (sentToday ?? 0);
 
-    for (const sdef of slots) {
-      if (minutes < sdef.min || minutes > sdef.min + WINDOW_MIN) continue;
-      // Bez e-mailového providera jen ohlásíme, co bychom poslali (sloty
-      // se neoznačí jako odeslané, aby po přidání RESEND_API_KEY fungovaly hned).
+    const deliver = async (slot: string, subject: string, body: string): Promise<void> => {
       if (!resendKey) {
-        planned.push(`${p.email}:${sdef.slot}`);
-        continue;
+        // Bez providera jen ohlásíme (sloty se neoznačí, po přidání klíče jdou hned).
+        planned.push(`${p.email}:${slot}`);
+        return;
       }
+      if (budget <= 0) return;
       // Idempotence: unikátní (user, slot, den). Konflikt = už odesláno.
-      const ins = await admin.from('reminder_sends').insert({ user_id: p.user_id, slot: sdef.slot, sent_on: date }).select('slot');
-      if (ins.error) continue;
-
+      const ins = await admin.from('reminder_sends').insert({ user_id: p.user_id, slot, sent_on: date }).select('slot');
+      if (ins.error) return;
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to: p.email, subject: 'DietApp – připomínka', html: `<p>${sdef.body}</p>` }),
+        body: JSON.stringify({ from, to: p.email, subject, html: `<p>${body}</p>` }),
       }).catch(() => {});
+      budget -= 1;
       sent += 1;
-    }
+    };
 
-    // Připomínka vážení: ráno v 8:00, jen když se uživatel 7+ dní nezvážil.
+    // Vážení má přednost (ráno v 8:00, jen když se uživatel 7+ dní nezvážil).
     const WEIGH_MIN = 8 * 60;
     if (minutes >= WEIGH_MIN && minutes <= WEIGH_MIN + WINDOW_MIN) {
       const { data: last } = await admin
@@ -127,21 +131,17 @@ Deno.serve(async (req: Request) => {
       const todayMs = new Date(`${date}T00:00:00Z`).getTime();
       const daysSince = lastMs ? Math.round((todayMs - lastMs) / 86400000) : 999;
       if (daysSince >= 7) {
-        const body = 'Už je to týden od posledního vážení. Když chceš, zvaž se dnes ráno – ideálně nalačno a ve stejný čas.';
-        if (!resendKey) {
-          planned.push(`${p.email}:weigh_in`);
-        } else {
-          const ins = await admin.from('reminder_sends').insert({ user_id: p.user_id, slot: 'weigh_in', sent_on: date }).select('slot');
-          if (!ins.error) {
-            await fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ from, to: p.email, subject: 'DietApp – čas na vážení', html: `<p>${body}</p>` }),
-            }).catch(() => {});
-            sent += 1;
-          }
-        }
+        await deliver('weigh_in', 'DietApp – čas na vážení', 'Už je to týden od posledního vážení. Když chceš, zvaž se dnes ráno – ideálně nalačno a ve stejný čas.');
       }
+    }
+
+    const slots = [
+      ...waterSchedule(waterMl).map((w, i) => ({ slot: `water-${i}`, min: w.hour * 60 + w.minute, body: `Čas se napít (~${w.ml} ml).` })),
+      ...mealSchedule().map((m) => ({ slot: `meal-${m.meal}`, min: m.hour * 60 + m.minute, body: `Čas na jídlo: ${MEAL_CS[m.meal] ?? m.meal}.` })),
+    ];
+    for (const sdef of slots) {
+      if (minutes < sdef.min || minutes > sdef.min + WINDOW_MIN) continue;
+      await deliver(sdef.slot, 'DietApp – připomínka', sdef.body);
     }
   }
 
