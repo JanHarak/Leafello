@@ -152,14 +152,10 @@ export default function Weight() {
                   color={colors.accent}
                   gridColor={colors.border}
                   targetColor={colors.targetLine}
+                  textColor={colors.textFaint}
                 />
-                <View style={s.chartAxis}>
-                  <Text style={s.axisLabel}>1</Text>
-                  <Text style={s.axisLabel}>{t('weight.days')}</Text>
-                  <Text style={s.axisLabel}>{daysInMonth}</Text>
-                </View>
                 <View style={s.legendRow}>
-                  <Text style={s.axisLabel}>{yMin}–{yMax} {t('weight.unitKg')}</Text>
+                  <Text style={s.axisLabel}>{t('weight.days')} · {t('weight.unitKg')}</Text>
                   {targetKg !== null && (
                     <View style={s.legendItem}>
                       <View style={s.legendDash} />
