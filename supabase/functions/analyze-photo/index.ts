@@ -23,6 +23,13 @@ import {
 const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.0-flash';
 const DAILY_LIMIT = Number(Deno.env.get('PHOTO_DAILY_LIMIT') ?? DEFAULT_DAILY_LIMIT);
 
+// CORS: volá se z webového klienta (prohlížeč pošle preflight OPTIONS).
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 const RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
@@ -49,6 +56,8 @@ const RESPONSE_SCHEMA = {
 };
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+
   const authHeader = req.headers.get('Authorization') ?? '';
   const jwt = authHeader.replace(/^Bearer\s+/i, '');
   const hasJwt = jwt.length > 0;
@@ -135,6 +144,6 @@ Deno.serve(async (req: Request) => {
 
   return new Response(JSON.stringify(result.body), {
     status: result.httpStatus,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...CORS, 'Content-Type': 'application/json' },
   });
 });
