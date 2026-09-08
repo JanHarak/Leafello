@@ -212,5 +212,25 @@
     "save": "Uložit potravinu",
     "errorName": "Zadej název potraviny.",
     "errorKcal": "Kalorie musí být mezi 0 a 900."
+  },
+  "plans": {
+    "title": "Plány jídel",
+    "open": "Plány jídel",
+    "needSignIn": "Přihlas se pro tvorbu plánů jídel.",
+    "newPlan": "Nový plán",
+    "planName": "Název plánu",
+    "startDate": "Začátek (RRRR-MM-DD)",
+    "weeks": "Týdny (1–4)",
+    "create": "Vytvořit plán",
+    "empty": "Zatím žádný plán. Vytvoř první.",
+    "addItem": "Přidat položku",
+    "food": "Potravina",
+    "recipe": "Recept",
+    "transferDay": "Přenést den do deníku",
+    "transferred": "Den přenesen do deníku.",
+    "errorName": "Zadej název plánu.",
+    "errorDate": "Zadej datum ve formátu RRRR-MM-DD.",
+    "noItems": "Žádné položky.",
+    "back": "Zpět na plány"
   }
 }

@@ -442,6 +442,123 @@ export async function getLatestWeightKg(): Promise<number | null> {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Plány jídel (F-12)                                                          */
+/* -------------------------------------------------------------------------- */
+
+export interface MealPlanRow {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface MealPlanItem {
+  id: string;
+  planDate: string;
+  meal: MealType;
+  foodId: string | null;
+  recipeId: string | null;
+  grams: number | null;
+  servings: number | null;
+  name: string;
+  /** Výživa potraviny na 100 g; u položek s receptem je null (řeší se přes recept). */
+  kcal_100g: number | null;
+  protein_100g: number | null;
+  carbs_100g: number | null;
+  fat_100g: number | null;
+}
+
+/** Přidá `days` dní k datu ve formátu YYYY-MM-DD. */
+function addDays(dateIso: string, days: number): string {
+  const d = new Date(`${dateIso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Vytvoří plán na `weeks` (1 až 4) týdnů od `startDate`. Vrací id plánu. */
+export async function createMealPlan(userId: string, name: string, startDate: string, weeks: number): Promise<string> {
+  const w = Math.min(4, Math.max(1, Math.round(weeks)));
+  const endDate = addDays(startDate, w * 7 - 1);
+  const { data, error } = await supabase
+    .from('meal_plans')
+    .insert({ user_id: userId, name: name.trim().slice(0, 200), start_date: startDate, end_date: endDate })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return (data as { id: string }).id;
+}
+
+export async function listMealPlans(): Promise<MealPlanRow[]> {
+  const { data, error } = await supabase
+    .from('meal_plans')
+    .select('id, name, start_date, end_date')
+    .order('start_date', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MealPlanRow[];
+}
+
+export async function deleteMealPlan(planId: string): Promise<void> {
+  const { error } = await supabase.from('meal_plans').delete().eq('id', planId);
+  if (error) throw error;
+}
+
+/** Položky plánu i s názvem a výživou potraviny (recept jen id + název). */
+export async function getMealPlanItems(planId: string): Promise<MealPlanItem[]> {
+  const { data, error } = await supabase
+    .from('meal_plan_items')
+    .select(
+      'id, plan_date, meal, grams, servings, food_id, recipe_id, foods(name, kcal_100g, protein_100g, carbs_100g, fat_100g), recipes(name)',
+    )
+    .eq('meal_plan_id', planId)
+    .order('plan_date', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((r: Record<string, unknown>) => {
+    const food = (Array.isArray(r.foods) ? r.foods[0] : r.foods) as Record<string, unknown> | null;
+    const recipe = (Array.isArray(r.recipes) ? r.recipes[0] : r.recipes) as Record<string, unknown> | null;
+    return {
+      id: String(r.id),
+      planDate: String(r.plan_date),
+      meal: r.meal as MealType,
+      foodId: r.food_id != null ? String(r.food_id) : null,
+      recipeId: r.recipe_id != null ? String(r.recipe_id) : null,
+      grams: r.grams != null ? Number(r.grams) : null,
+      servings: r.servings != null ? Number(r.servings) : null,
+      name: String(food?.name ?? recipe?.name ?? '?'),
+      kcal_100g: food?.kcal_100g != null ? Number(food.kcal_100g) : null,
+      protein_100g: food?.protein_100g != null ? Number(food.protein_100g) : null,
+      carbs_100g: food?.carbs_100g != null ? Number(food.carbs_100g) : null,
+      fat_100g: food?.fat_100g != null ? Number(food.fat_100g) : null,
+    };
+  });
+}
+
+export interface MealPlanItemInput {
+  planDate: string;
+  meal: MealType;
+  foodId?: string;
+  grams?: number;
+  recipeId?: string;
+  servings?: number;
+}
+
+/** Přidá položku do plánu (potravina s gramáží, nebo recept s počtem porcí). */
+export async function addMealPlanItem(planId: string, item: MealPlanItemInput): Promise<void> {
+  const { error } = await supabase.from('meal_plan_items').insert({
+    meal_plan_id: planId,
+    plan_date: item.planDate,
+    meal: item.meal,
+    ...(item.foodId ? { food_id: item.foodId, grams: item.grams } : {}),
+    ...(item.recipeId ? { recipe_id: item.recipeId, servings: item.servings } : {}),
+  });
+  if (error) throw error;
+}
+
+export async function deleteMealPlanItem(itemId: string): Promise<void> {
+  const { error } = await supabase.from('meal_plan_items').delete().eq('id', itemId);
+  if (error) throw error;
+}
+
+/* -------------------------------------------------------------------------- */
 /* GDPR – export dat (N-06) a smazání účtu                                     */
 /* -------------------------------------------------------------------------- */
 

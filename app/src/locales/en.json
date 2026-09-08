@@ -210,5 +210,25 @@
     "save": "Save food",
     "errorName": "Enter a food name.",
     "errorKcal": "Calories must be between 0 and 900."
+  },
+  "plans": {
+    "title": "Meal plans",
+    "open": "Meal plans",
+    "needSignIn": "Sign in to create meal plans.",
+    "newPlan": "New plan",
+    "planName": "Plan name",
+    "startDate": "Start (YYYY-MM-DD)",
+    "weeks": "Weeks (1–4)",
+    "create": "Create plan",
+    "empty": "No plan yet. Create your first.",
+    "addItem": "Add item",
+    "food": "Food",
+    "recipe": "Recipe",
+    "transferDay": "Transfer day to diary",
+    "transferred": "Day transferred to diary.",
+    "errorName": "Enter a plan name.",
+    "errorDate": "Enter a date as YYYY-MM-DD.",
+    "noItems": "No items.",
+    "back": "Back to plans"
   }
 }

@@ -331,6 +331,13 @@ export default function HomeScreen() {
           >
             <Text style={[styles.startText, { color: colors.text }]}>{t('photo.open')}</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/plans')}
+            style={[styles.navButton, { borderColor: colors.border }]}
+          >
+            <Text style={[styles.startText, { color: colors.text }]}>{t('plans.open')}</Text>
+          </Pressable>
         </View>
 
         {session ? (
