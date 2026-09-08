@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { getActiveGoal, getEmailReminders, setEmailReminders } from '@/lib/db';
+import { getActiveGoal, getReminderPrefs, setReminderPrefs, type ReminderChannel } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
@@ -22,7 +22,14 @@ export default function Reminders() {
 
   const [goalMl, setGoalMl] = useState<number | null>(null);
   const [enabled, setEnabled] = useState(false);
+  const [channel, setChannel] = useState<ReminderChannel>('email');
   const [note, setNote] = useState<string | null>(null);
+
+  const CHANNELS: { key: ReminderChannel; label: string }[] = [
+    { key: 'email', label: t('reminders.channelEmail') },
+    { key: 'push', label: t('reminders.channelPush') },
+    { key: 'both', label: t('reminders.channelBoth') },
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -30,12 +37,13 @@ export default function Reminders() {
       getActiveGoal()
         .then((g) => setGoalMl(g?.water_ml ?? null))
         .catch(() => {});
-      // Na webu je zdrojem pravdy uložená preference e-mailových připomínek.
+      // Na webu je zdrojem pravdy uložená preference připomínek.
       if (Platform.OS === 'web') {
-        getEmailReminders()
-          .then((on) => {
-            setEnabled(on);
-            if (on) setNote(t('reminders.emailNote'));
+        getReminderPrefs()
+          .then((p) => {
+            setEnabled(p.enabled);
+            setChannel(p.channel);
+            if (p.enabled) setNote(t('reminders.emailNote'));
           })
           .catch(() => {});
       }
@@ -52,7 +60,7 @@ export default function Reminders() {
       if (!session) return;
       const next = !enabled;
       try {
-        await setEmailReminders(session.user.id, session.user.email ?? null, next);
+        await setReminderPrefs(session.user.id, session.user.email ?? null, next, channel);
         setEnabled(next);
         setNote(next ? t('reminders.emailNote') : null);
       } catch (e) {
@@ -86,6 +94,17 @@ export default function Reminders() {
     setEnabled(true);
   }
 
+  async function changeChannel(ch: ReminderChannel) {
+    setChannel(ch);
+    if (Platform.OS === 'web' && session && enabled) {
+      try {
+        await setReminderPrefs(session.user.id, session.user.email ?? null, true, ch);
+      } catch (e) {
+        setNote(e instanceof Error ? e.message : String(e));
+      }
+    }
+  }
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.content}>
@@ -98,6 +117,30 @@ export default function Reminders() {
         </Pressable>
 
         {enabled && <Text style={s.enabled}>{t('reminders.enabled')}</Text>}
+
+        {Platform.OS === 'web' && (
+          <>
+            <Text style={s.section}>{t('reminders.channelLabel')}</Text>
+            <View style={s.channelRow}>
+              {CHANNELS.map((ch) => {
+                const active = channel === ch.key;
+                return (
+                  <Pressable
+                    key={ch.key}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => changeChannel(ch.key)}
+                    style={[s.channelChip, { backgroundColor: active ? colors.accent : colors.surface, borderColor: active ? colors.accent : colors.border }]}
+                  >
+                    <Text style={{ color: active ? colors.onAccent : colors.text, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>{ch.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {(channel === 'push' || channel === 'both') && <Text style={s.note}>{t('reminders.pushNote')}</Text>}
+          </>
+        )}
+
         {note && <Text style={s.note}>{note}</Text>}
 
         <Text style={s.section}>{t('reminders.water')}</Text>
@@ -128,6 +171,8 @@ const styles = (c: ThemeColors) =>
     toggle: { minHeight: touchTarget, borderRadius: radius.pill, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginTop: spacing.md },
     toggleText: { fontSize: fontSize.body, fontWeight: fontWeight.bold },
     enabled: { color: c.accent, fontSize: fontSize.body },
+    channelRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    channelChip: { minHeight: touchTarget, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1 },
     note: { color: c.notice, backgroundColor: c.noticeBackground, padding: spacing.md, borderRadius: radius.md, fontSize: fontSize.body },
     section: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium, marginTop: spacing.lg },
     row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },

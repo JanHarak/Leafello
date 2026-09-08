@@ -305,12 +305,16 @@ function EscalationCard({ colors }: { colors: ThemeColors }) {
 }
 
 function MacroCol({ label, value, target, colors }: { label: string; value: number; target: number; colors: ThemeColors }) {
+  const pct = target > 0 ? Math.max(0, Math.min(1, value / target)) : 0;
   return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
+    <View style={{ flex: 1, alignItems: 'center', gap: spacing.xs }}>
       <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{label}</Text>
       <Text style={{ color: colors.text, fontSize: fontSize.body, fontWeight: fontWeight.bold }}>
         {value} / {target} {t('goal.unitG')}
       </Text>
+      <View style={{ height: 6, borderRadius: radius.pill, backgroundColor: colors.surfaceElevated, alignSelf: 'stretch', overflow: 'hidden' }}>
+        <View style={{ height: 6, borderRadius: radius.pill, backgroundColor: colors.accent, width: `${pct * 100}%` as `${number}%` }} />
+      </View>
     </View>
   );
 }

@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
   const { date, minutes } = nowInTz();
   const { data: prefs, error } = await admin
     .from('reminder_prefs')
-    .select('user_id, email')
+    .select('user_id, email, channel')
     .eq('email_reminders', true);
   if (error) return json(500, { error: error.message });
 
@@ -78,6 +78,8 @@ Deno.serve(async (req: Request) => {
 
   for (const p of prefs ?? []) {
     if (!p.email) continue;
+    // Push kanál zatím neposílá e-mail; e-mail jde u 'email' a 'both'.
+    if (p.channel === 'push') continue;
     const { data: goal } = await admin
       .from('goals')
       .select('water_ml')

@@ -89,7 +89,9 @@
     "average": "7-day average",
     "empty": "No weight entries yet.",
     "unitKg": "kg",
-    "trend": "Weight trend"
+    "trend": "Weight trend",
+    "targetLegend": "Target {kg} kg",
+    "days": "Days in month"
   },
   "avatar": {
     "actionWater": "Add water",
@@ -171,7 +173,12 @@
     "waterBody": "Time to drink (~{ml} ml)",
     "mealBody": "Time to eat: {meal}",
     "emailNote": "On the web we send reminders by e-mail to your account address.",
-    "emailEnabled": "E-mail reminders are on."
+    "emailEnabled": "E-mail reminders are on.",
+    "channelLabel": "Reminder channel",
+    "channelEmail": "E-mail",
+    "channelPush": "Push",
+    "channelBoth": "Both",
+    "pushNote": "Push notifications are coming soon – e-mail works reliably for now."
   },
   "escalation": {
     "title": "Let's take a different approach",
@@ -243,6 +250,7 @@
     "back": "Back",
     "pin": "Pin menu",
     "collapse": "Collapse menu",
-    "delete": "Delete"
+    "delete": "Delete",
+    "edit": "Edit"
   }
 }

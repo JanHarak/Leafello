@@ -21,7 +21,7 @@ import {
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { saveProfileAndGoal } from '@/lib/db';
+import { saveProfileAndGoal, upsertWeight } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
@@ -91,6 +91,8 @@ export default function Onboarding() {
               waterMl: result.water,
             },
           );
+          // Zadaná váha z onboardingu je první bod grafu vývoje váhy.
+          await upsertWeight(session.user.id, weightKg);
           setSaved(true);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

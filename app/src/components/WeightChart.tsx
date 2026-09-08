@@ -3,51 +3,70 @@ import { View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
 export interface WeightPoint {
-  date: string;
+  /** Den v měsíci 1..daysInMonth. */
+  day: number;
   kg: number;
 }
 
 /**
- * Jednoduchý čárový graf vývoje váhy po dnech. Neutrální barvy (jen accent),
- * nehodnotí trend. Šířku měří přes onLayout, aby byl responzivní.
+ * Graf vývoje váhy za celý měsíc. Osa X = dny v měsíci, osa Y = pevný rozsah
+ * (typicky zadaná váha ±10 kg). Zelená vodorovná čára značí cílovou váhu.
+ * Šířku měří přes onLayout (responzivní).
  */
 export function WeightChart({
   points,
+  daysInMonth,
+  yMin,
+  yMax,
+  targetKg,
   color,
   gridColor,
-  height = 160,
+  targetColor,
+  height = 200,
 }: {
   points: WeightPoint[];
+  daysInMonth: number;
+  yMin: number;
+  yMax: number;
+  targetKg?: number | null;
   color: string;
   gridColor: string;
+  targetColor: string;
   height?: number;
 }) {
   const [w, setW] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
 
-  const padX = 10;
+  const padX = 12;
   const padY = 16;
-  const kgs = points.map((p) => p.kg);
-  const min = kgs.length ? Math.min(...kgs) : 0;
-  const max = kgs.length ? Math.max(...kgs) : 1;
-  const span = max - min || 1;
-  const n = points.length;
+  const span = yMax - yMin || 1;
 
-  const flat = max === min;
-  const x = (i: number) => (n <= 1 ? w / 2 : padX + (i / (n - 1)) * (w - 2 * padX));
-  const y = (kg: number) => (flat ? height / 2 : padY + (1 - (kg - min) / span) * (height - 2 * padY));
-  const polyline = points.map((p, i) => `${x(i)},${y(p.kg)}`).join(' ');
+  const x = (day: number) => padX + ((day - 1) / Math.max(1, daysInMonth - 1)) * (w - 2 * padX);
+  const y = (kg: number) => {
+    const clamped = Math.max(yMin, Math.min(yMax, kg));
+    return padY + (1 - (clamped - yMin) / span) * (height - 2 * padY);
+  };
+
+  const sorted = [...points].sort((a, b) => a.day - b.day);
+  const polyline = sorted.map((p) => `${x(p.day)},${y(p.kg)}`).join(' ');
+  const targetInRange = typeof targetKg === 'number' && targetKg >= yMin && targetKg <= yMax;
 
   return (
     <View onLayout={onLayout} style={{ height }}>
-      {w > 0 && n > 0 && (
+      {w > 0 && (
         <Svg width={w} height={height}>
-          {/* Vodicí čáry: horní (max) a dolní (min) */}
+          {/* Horní a dolní hranice rozsahu */}
           <Line x1={padX} y1={padY} x2={w - padX} y2={padY} stroke={gridColor} strokeWidth={1} />
           <Line x1={padX} y1={height - padY} x2={w - padX} y2={height - padY} stroke={gridColor} strokeWidth={1} />
-          {n > 1 && <Polyline points={polyline} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />}
-          {points.map((p, i) => (
-            <Circle key={`${p.date}-${i}`} cx={x(i)} cy={y(p.kg)} r={3} fill={color} />
+          {/* Cílová váha – zelená referenční čára */}
+          {targetInRange && (
+            <Line x1={padX} y1={y(targetKg as number)} x2={w - padX} y2={y(targetKg as number)} stroke={targetColor} strokeWidth={2} strokeDasharray="6 5" />
+          )}
+          {sorted.length > 1 && (
+            <Polyline points={polyline} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+          )}
+          {sorted.map((p) => (
+            <Circle key={p.day} cx={x(p.day)} cy={y(p.kg)} r={3.5} fill={color} />
           ))}
         </Svg>
       )}

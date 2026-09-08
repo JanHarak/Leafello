@@ -27,6 +27,10 @@ const raw = {
   accentDark: '#5aa0e6',
   notice: '#8a6d1f',
   noticeBg: '#fbf3d9',
+  // Zelená jen jako referenční „cílová“ linie (např. cílová váha), nikdy
+  // k hodnocení jídla (pravidlo 6).
+  target: '#2e9e5b',
+  targetDark: '#4ec27d',
 } as const;
 
 export interface ThemeColors {
@@ -41,6 +45,7 @@ export interface ThemeColors {
   onAccent: string;
   notice: string;
   noticeBackground: string;
+  targetLine: string;
 }
 
 export const lightColors: ThemeColors = {
@@ -55,6 +60,7 @@ export const lightColors: ThemeColors = {
   onAccent: raw.paper0,
   notice: raw.notice,
   noticeBackground: raw.noticeBg,
+  targetLine: raw.target,
 };
 
 export const darkColors: ThemeColors = {
@@ -69,6 +75,7 @@ export const darkColors: ThemeColors = {
   onAccent: raw.paper900,
   notice: '#e3c766',
   noticeBackground: '#3a3212',
+  targetLine: raw.targetDark,
 };
 
 /** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */

@@ -90,7 +90,9 @@
     "average": "7denní průměr",
     "empty": "Zatím žádný záznam váhy.",
     "unitKg": "kg",
-    "trend": "Vývoj váhy"
+    "trend": "Vývoj váhy",
+    "targetLegend": "Cíl {kg} kg",
+    "days": "Dny v měsíci"
   },
   "avatar": {
     "actionWater": "Přidat vodu",
@@ -174,7 +176,12 @@
     "waterBody": "Čas se napít (~{ml} ml)",
     "mealBody": "Čas na jídlo: {meal}",
     "emailNote": "Na webu ti připomínky pošleme e-mailem na adresu tvého účtu.",
-    "emailEnabled": "E-mailové připomínky jsou zapnuté."
+    "emailEnabled": "E-mailové připomínky jsou zapnuté.",
+    "channelLabel": "Kanál připomínek",
+    "channelEmail": "E-mail",
+    "channelPush": "Push",
+    "channelBoth": "Oboje",
+    "pushNote": "Push notifikace zatím připravujeme – zatím spolehlivě chodí e-mail."
   },
   "escalation": {
     "title": "Zkusme to jinak",
@@ -246,6 +253,7 @@
     "back": "Zpět",
     "pin": "Ukotvit menu",
     "collapse": "Sbalit menu",
-    "delete": "Smazat"
+    "delete": "Smazat",
+    "edit": "Upravit"
   }
 }

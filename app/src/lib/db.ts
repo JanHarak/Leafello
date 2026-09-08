@@ -135,18 +135,35 @@ export async function addDiaryEntry(
 /* E-mailové připomínky (F-13, web)                                            */
 /* -------------------------------------------------------------------------- */
 
-/** Zda má přihlášený uživatel zapnuté e-mailové připomínky. */
-export async function getEmailReminders(): Promise<boolean> {
-  const { data, error } = await supabase.from('reminder_prefs').select('email_reminders').maybeSingle();
-  if (error) throw error;
-  return !!data?.email_reminders;
+export type ReminderChannel = 'email' | 'push' | 'both';
+export interface ReminderPrefs {
+  enabled: boolean;
+  channel: ReminderChannel;
 }
 
-/** Zapne/vypne e-mailové připomínky a uloží e-mail pro odesílání. */
-export async function setEmailReminders(userId: string, email: string | null, enabled: boolean): Promise<void> {
+/** Nastavení připomínek přihlášeného uživatele. */
+export async function getReminderPrefs(): Promise<ReminderPrefs> {
+  const { data, error } = await supabase.from('reminder_prefs').select('email_reminders, channel').maybeSingle();
+  if (error) throw error;
+  return {
+    enabled: !!data?.email_reminders,
+    channel: (data?.channel as ReminderChannel) ?? 'email',
+  };
+}
+
+/** Zapne/vypne připomínky, uloží e-mail a zvolený kanál (email/push/both). */
+export async function setReminderPrefs(
+  userId: string,
+  email: string | null,
+  enabled: boolean,
+  channel: ReminderChannel,
+): Promise<void> {
   const { error } = await supabase
     .from('reminder_prefs')
-    .upsert({ user_id: userId, email, email_reminders: enabled, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    .upsert(
+      { user_id: userId, email, email_reminders: enabled, channel, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' },
+    );
   if (error) throw error;
 }
 
@@ -378,6 +395,12 @@ export async function upsertWeight(userId: string, weightKg: number, loggedOn?: 
   const { error } = await supabase
     .from('weight_logs')
     .upsert({ user_id: userId, logged_on, weight_kg: weightKg }, { onConflict: 'user_id,logged_on' });
+  if (error) throw error;
+}
+
+/** Smaže záznam váhy podle dne (RLS pustí jen vlastní). */
+export async function deleteWeight(loggedOn: string): Promise<void> {
+  const { error } = await supabase.from('weight_logs').delete().eq('logged_on', loggedOn);
   if (error) throw error;
 }
 
