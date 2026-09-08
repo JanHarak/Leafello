@@ -19,7 +19,7 @@ import {
   type StreakState,
 } from '@dietapp/gamification-rules';
 
-import { Avatar } from '@/components/Avatar';
+import { AnimatedAvatar } from '@/components/Avatar';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Tooltip } from '@/components/Tooltip';
 import { plural, t } from '@/i18n';
@@ -196,7 +196,7 @@ export default function HomeScreen() {
               icon="zap"
             />
             <View style={s.avatarCol}>
-              <Avatar mood={mood} size={288} />
+              <AnimatedAvatar mood={mood} size={288} />
               <Text style={s.caption}>{t(`avatar.mood.${mood}`)}</Text>
             </View>
             <Ring
