@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   cornerBL: { bottom: 0, left: 0, transform: [{ scaleY: -1 }, { rotate: '180deg' }] },
 
   // Název v levém horním rohu (text + loading animace jako logo)
-  brand: { position: 'absolute', top: spacing.md, left: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, zIndex: 5 },
+  brand: { position: 'absolute', top: spacing.md, left: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   brandName: { color: brandLeaf.ink, fontSize: 40, fontWeight: fontWeight.bold },
 
   // Ručně psané slogany
