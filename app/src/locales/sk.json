@@ -108,10 +108,10 @@
   },
   "auth": {
     "title": "Prihlásenie",
-    "subtitle": "Prihlás sa pre uloženie cieľa a denníka.",
+    "subtitle": "Prihlás sa a pokračuj na svojej ceste za zdravším a šťastnejším ja.",
     "google": "Prihlásiť cez Google",
     "or": "alebo",
-    "emailPlaceholder": "tvoj@email.sk",
+    "emailPlaceholder": "E-mail alebo používateľské meno",
     "sendLink": "Poslať prihlasovací odkaz",
     "linkSent": "Odkaz odoslaný. Skontroluj e-mail.",
     "signIn": "Prihlásiť sa",
@@ -127,7 +127,23 @@
     "errorPasswordMatch": "Heslá sa nezhodujú.",
     "errorSignIn": "Prihlásenie zlyhalo. Skontroluj e-mail a heslo.",
     "errorSignUp": "Registrácia zlyhala. Skús to prosím znova.",
-    "confirmEmail": "Účet vytvorený. Potvrď ho odkazom, ktorý sme ti poslali e-mailom."
+    "confirmEmail": "Účet vytvorený. Potvrď ho odkazom, ktorý sme ti poslali e-mailom.",
+    "welcome": "Vitajte",
+    "welcomeAccent": "späť!",
+    "tagline": "Zdravšie ja začína dnes",
+    "slogan": "Silnejší · Zdravší · Šťastnejší Ty",
+    "featureFood": "Jedlo",
+    "featureMove": "Pohyb",
+    "featureSleep": "Spánok",
+    "featureWater": "Voda",
+    "featureFoodSub": "Lepšie voľby denne",
+    "featureMoveSub": "Viac energie každý deň",
+    "featureSleepSub": "Lepšie dni sa začínajú v noci",
+    "featureWaterSub": "Malé kroky, veľký rozdiel",
+    "hwSteps": "Malé kroky veľké zmeny",
+    "hwLife": "Zdravý život je krásny život",
+    "welcomeTo": "Vitajte v",
+    "welcomeBack": "späť"
   },
   "streak": {
     "days": {

@@ -108,10 +108,10 @@
   },
   "auth": {
     "title": "Sign in",
-    "subtitle": "Sign in to save your goal and diary.",
+    "subtitle": "Sign in and continue on your journey to a healthier, happier you.",
     "google": "Sign in with Google",
     "or": "or",
-    "emailPlaceholder": "you@email.com",
+    "emailPlaceholder": "E-mail or username",
     "sendLink": "Send sign-in link",
     "linkSent": "Link sent. Check your e-mail.",
     "signIn": "Sign in",
@@ -127,7 +127,23 @@
     "errorPasswordMatch": "Passwords do not match.",
     "errorSignIn": "Sign-in failed. Check your e-mail and password.",
     "errorSignUp": "Sign-up failed. Please try again.",
-    "confirmEmail": "Account created. Confirm it via the link we e-mailed you."
+    "confirmEmail": "Account created. Confirm it via the link we e-mailed you.",
+    "welcome": "Welcome",
+    "welcomeAccent": "back!",
+    "tagline": "A healthier you starts today",
+    "slogan": "Stronger · Healthier · Happier You",
+    "featureFood": "Food",
+    "featureMove": "Movement",
+    "featureSleep": "Sleep",
+    "featureWater": "Water",
+    "featureFoodSub": "Better choices daily",
+    "featureMoveSub": "More energy every day",
+    "featureSleepSub": "Better days begin at night",
+    "featureWaterSub": "Small steps, big difference",
+    "hwSteps": "Small steps, big changes",
+    "hwLife": "A healthy life is a beautiful life",
+    "welcomeTo": "Welcome to",
+    "welcomeBack": "back"
   },
   "streak": {
     "days": {

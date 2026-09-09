@@ -120,6 +120,42 @@ export const brandGoogle = {
   red: '#EA4335',
 } as const;
 
+/**
+ * Značková zelená paleta Leafello pro úvodní (login) obrazovku. Ta je vždy
+ * ve světle zeleném brandovém provedení nezávisle na light/dark motivu appky.
+ */
+export const brandLeaf = {
+  bg: '#EAF7EE',
+  bgSoft: '#F3FAF5',
+  card: '#FFFFFF',
+  ink: '#2F7D4F',
+  inkSoft: '#6B8E7A',
+  accent: '#43A047',
+  field: '#F4FAF6',
+  border: '#D9EBE0',
+  error: '#B23B3B',
+} as const;
+
+/**
+ * Dekorativní barevné odstíny „feature" ikon na login obrazovce (jídlo, pohyb,
+ * spánek, voda). Slouží jen k rozlišení témat na úvodní stránce, ne k hodnocení.
+ */
+export const brandLeafTints = {
+  food: '#E8933B',
+  move: '#43A047',
+  sleep: '#7E6FD1',
+  water: '#3FA9D6',
+} as const;
+
+/** Odstíny zelené pro dekorativní listy (SVG) na login obrazovce. */
+export const brandLeafGreens = {
+  pale: '#C8E6C9',
+  light: '#A5D6A7',
+  mid: '#81C784',
+  deep: '#66BB6A',
+  vein: '#4E9E5A',
+} as const;
+
 /** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */
 export const spacing = {
   xs: 4,
@@ -148,6 +184,14 @@ export const fontWeight = {
   regular: '400',
   medium: '600',
   bold: '700',
+} as const;
+
+/**
+ * Rodiny písma. `hand` je rukopisné písmo pro slogany na úvodní obrazovce
+ * (na webu se načítá Google Font „Caveat", jinde se použije systémová kurzíva).
+ */
+export const fontFamily = {
+  hand: 'Caveat',
 } as const;
 
 /** N-05 přístupnost: minimální velikost cíle dotyku 44 px. */
