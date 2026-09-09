@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "dietapp",
-    "slug": "dietapp",
+    "name": "Leafello",
+    "slug": "Leafello",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
-    "scheme": "dietapp",
+    "scheme": "Leafello",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

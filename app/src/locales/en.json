@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Weight-loss diary"
+    "name": "Leafello"
   },
   "home": {
     "title": "Welcome",
@@ -95,6 +95,7 @@
     "days": "Days in month"
   },
   "avatar": {
+    "name": "Fitlístek",
     "actionWater": "Add water",
     "actionLog": "Log a meal",
     "mood": {
@@ -116,7 +117,17 @@
     "signIn": "Sign in",
     "signOut": "Sign out",
     "signedInAs": "Signed in: {email}",
-    "invalidEmail": "Enter a valid e-mail."
+    "invalidEmail": "Enter a valid e-mail.",
+    "tabSignIn": "Sign in",
+    "tabSignUp": "Sign up",
+    "password": "Password",
+    "passwordConfirm": "Repeat password",
+    "register": "Create account",
+    "errorPassword": "Password must be at least 6 characters.",
+    "errorPasswordMatch": "Passwords do not match.",
+    "errorSignIn": "Sign-in failed. Check your e-mail and password.",
+    "errorSignUp": "Sign-up failed. Please try again.",
+    "confirmEmail": "Account created. Confirm it via the link we e-mailed you."
   },
   "streak": {
     "days": {

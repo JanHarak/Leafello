@@ -112,6 +112,14 @@ export const darkColors: ThemeColors = {
   scrim: raw.scrimDark,
 };
 
+/** Pevné brandové barvy Google „G" loga (stejné v light i dark, dané brandem). */
+export const brandGoogle = {
+  blue: '#4285F4',
+  green: '#34A853',
+  yellow: '#FBBC05',
+  red: '#EA4335',
+} as const;
+
 /** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */
 export const spacing = {
   xs: 4,

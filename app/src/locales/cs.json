@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Deník hubnutí"
+    "name": "Leafello"
   },
   "home": {
     "title": "Vítej",
@@ -97,6 +97,7 @@
     "days": "Dny v měsíci"
   },
   "avatar": {
+    "name": "Fitlístek",
     "actionWater": "Přidat vodu",
     "actionLog": "Zapsat jídlo",
     "mood": {
@@ -118,7 +119,17 @@
     "signIn": "Přihlásit se",
     "signOut": "Odhlásit",
     "signedInAs": "Přihlášen: {email}",
-    "invalidEmail": "Zadej platný e-mail."
+    "invalidEmail": "Zadej platný e-mail.",
+    "tabSignIn": "Přihlášení",
+    "tabSignUp": "Registrace",
+    "password": "Heslo",
+    "passwordConfirm": "Heslo znovu",
+    "register": "Vytvořit účet",
+    "errorPassword": "Heslo musí mít alespoň 6 znaků.",
+    "errorPasswordMatch": "Hesla se neshodují.",
+    "errorSignIn": "Přihlášení selhalo. Zkontroluj e-mail a heslo.",
+    "errorSignUp": "Registrace selhala. Zkus to prosím znovu.",
+    "confirmEmail": "Účet vytvořen. Potvrď ho odkazem, který jsme ti poslali e-mailem."
   },
   "streak": {
     "days": {

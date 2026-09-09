@@ -1,5 +1,5 @@
 {
-  "name": "dietapp",
+  "name": "Leafello",
   "version": "0.1.0",
   "private": true,
   "description": "Hybridní aplikace pro deník jídel a hubnutí (Expo + Supabase + Gemini). Monorepo.",

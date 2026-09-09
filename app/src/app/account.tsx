@@ -86,7 +86,7 @@ export default function Account() {
       const doc = await exportMyData(session.user.id, session.user.email ?? undefined);
       const json = JSON.stringify(doc, null, 2);
       const stamp = new Date().toISOString().slice(0, 10);
-      await deliverExport(`dietapp-export-${stamp}.json`, json, t('account.exportShareTitle'));
+      await deliverExport(`leafello-export-${stamp}.json`, json, t('account.exportShareTitle'));
       setExportMsg(t('account.exportDone', { count: doc.meta.totalRows }));
     } catch (e) {
       console.error('Export dat selhal:', e);

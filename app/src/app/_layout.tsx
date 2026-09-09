@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AuthLanding } from '@/components/AuthLanding';
 import { Loading } from '@/components/Loading';
 import { Tooltip } from '@/components/Tooltip';
 import { t } from '@/i18n';
@@ -246,6 +247,7 @@ function Footer() {
 
 function Shell() {
   const { colors } = useTheme();
+  const { session } = useAuth();
   // Konzumace jazyka tady zajistí překreslení obsahu po přepnutí jazyka.
   useLocale();
   const insets = useSafeAreaInsets();
@@ -265,7 +267,7 @@ function Shell() {
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <Header />
       <View style={{ flex: 1, flexDirection: 'row' }}>
-        <Rail />
+        {session ? <Rail /> : null}
         <View style={{ flex: 1, alignItems: 'center' }}>
           <View style={{ flex: 1, width: '100%', maxWidth: fullWidth ? undefined : CONTENT_MAX_WIDTH }}>
             {showBack && (
@@ -292,11 +294,14 @@ function Shell() {
 
 function ThemedRoot() {
   const { mode } = useTheme();
-  const { loading } = useAuth();
+  const { loading, session } = useAuth();
+  const pathname = usePathname();
+  // Právní stránky jsou veřejné (odkazy z patičky loginu), zbytek je za gatem.
+  const publicRoute = pathname.startsWith('/legal');
   return (
     <>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      {loading ? <Loading overlay /> : <Shell />}
+      {loading ? <Loading overlay /> : session || publicRoute ? <Shell /> : <AuthLanding />}
     </>
   );
 }

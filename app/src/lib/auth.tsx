@@ -14,13 +14,15 @@ interface AuthValue {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
+  signUpWithPassword: (email: string, password: string) => Promise<{ needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | undefined>(undefined);
 
 function redirectTo(): string {
-  // Web: aktuální origin; nativ: hluboký odkaz do appky (schéma dietapp://).
+  // Web: aktuální origin; nativ: hluboký odkaz do appky (schéma Leafello://).
   if (Platform.OS === 'web' && typeof window !== 'undefined') return window.location.origin;
   return Linking.createURL('/');
 }
@@ -57,6 +59,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { emailRedirectTo: redirectTo() },
       });
       if (error) throw error;
+    },
+    async signInWithPassword(email: string, password: string) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    },
+    async signUpWithPassword(email: string, password: string) {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: redirectTo() },
+      });
+      if (error) throw error;
+      // Když je v Supabase zapnuté potvrzení e-mailu, session zatím není –
+      // uživatel musí kliknout na potvrzovací odkaz.
+      return { needsConfirmation: !data.session };
     },
     async signOut() {
       await supabase.auth.signOut();
