@@ -131,6 +131,18 @@ export default function Reminders() {
     setTimes((prev) => ({ ...prev, [key]: value }));
   }
 
+  // Přepínač editace: při zapnutí jen otevře pole, při vypnutí („Hotovo")
+  // rovnou uloží, aby se editované časy vždy zapsaly do DB (dřív šlo editaci
+  // ukončit bez uložení a změny se ztratily).
+  async function toggleEdit() {
+    if (editing) {
+      await saveTimes();
+    } else {
+      setNote(null);
+      setEditing(true);
+    }
+  }
+
   async function saveTimes() {
     if (!session) return;
     // Rozsah pití ohlídáme (start < end, 0..23).
@@ -192,7 +204,7 @@ export default function Reminders() {
         <View style={s.scheduleHeader}>
           <Text style={s.sectionInline}>{t('reminders.timesTitle')}</Text>
           {Platform.OS === 'web' && (
-            <Pressable onPress={() => setEditing((e) => !e)} accessibilityRole="button">
+            <Pressable onPress={toggleEdit} accessibilityRole="button">
               <Text style={s.editLink}>{editing ? t('common.done') : t('common.edit')}</Text>
             </Pressable>
           )}

@@ -80,11 +80,17 @@ Pořadí vyhodnocení, první platné pravidlo vyhrává:
 |---|---|
 | právě získán level nebo odznak | `celebrating` |
 | dnes žádný záznam a je po 12:00 | `sleepy` |
-| voda pod 50 % a je po 15:00 | `thirsty` |
-| kcal pod 50 % a je po 18:00 | `hungry` |
+| u proběhlé připomínky na jídlo chybí zapsaný chod (> 100 kcal) a kalorie jsou pod 90 % | `hungry` |
+| vypito míň, než pitný plán do teď čeká (součet porcí proběhlých slotů) | `thirsty` |
 | jinak | `happy` |
 
 **Odchylka od původního zadání:** `celebrating` je vyhodnocené první, ne předposlední. V zadání bylo pod hladem a žízní, což znamenalo, že uživatel, který si právě odemkl level v sedm večer s nesplněným pitným cílem, uvidí žíznivou postavu místo oslavy. Oslava je krátkodobá a nikoho neochudí o připomínku pití, ta přijde za minutu sama. Zadání jsem podle toho upravil.
+
+**Jídlo má přednost před pitím.** Deník jídel je hlavní účel aplikace, proto se `hungry` vyhodnocuje před `thirsty`. Když je uživatel pozadu s jídlem i pitím, avatar připomene nejdřív jídlo.
+
+**Žízeň je připomínka po fázích pitného plánu**, stejně jako hlad. Sečte se, kolik ml mají „naordinovat" pitné připomínky, které už dnes pinkly (`MoodContext.waterExpectedMl` z `waterSchedule`). Když má uživatel vypito míň, žízní; jakmile porci dožene – nebo pije napřed a má náskok – žízeň zmizí, dokud další slot očekávané množství nezvýší.
+
+**Hlad je připomínka po chodech, ne trest.** U každé jídelní připomínky (snídaně / oběd / večeře), která už dnes pinkla, avatar zhladoví, pokud na daný chod není zapsané jídlo nad 100 kcal (drobnost hlad neuspokojí). Jakmile uživatel chod zapíše, hlad u té fáze zmizí – do další připomínky. **Nad 90 % kalorického cíle se hlad nikdy nezobrazí**, aby avatar netlačil uživatele k přejídání (pořád platí: příjem se neodměňuje ani nevynucuje). Vše je podíl z cíle, nikdy absolutní příjem – nálada dál nehodnotí, kolik uživatel snědl, jen jestli si zapsal.
 
 `ACTIONABLE_MOODS` říká, u kterých nálad má UI připojit tlačítko. U `happy` a `celebrating` není co dělat, takže tam tlačítko nepatří.
 

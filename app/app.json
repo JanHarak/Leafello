@@ -4,7 +4,7 @@
     "slug": "dietapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/logo.png",
     "scheme": "dietapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -21,7 +21,7 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/logo.png"
     },
     "plugins": [
       "expo-router",

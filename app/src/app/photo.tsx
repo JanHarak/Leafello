@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Loading } from '@/components/Loading';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { addDiaryEntry } from '@/lib/db';
@@ -228,6 +229,7 @@ export default function Photo() {
           </>
         )}
       </ScrollView>
+      {busy && <Loading overlay />}
     </SafeAreaView>
   );
 }

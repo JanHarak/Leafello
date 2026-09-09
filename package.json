@@ -17,11 +17,16 @@
     "lint:styles": "node scripts/lint-styles.mjs",
     "db:push": "node scripts/db-push.mjs",
     "import:off": "node scripts/import-off.mjs",
+    "import:off:dump": "node scripts/import-off-dump.mjs",
+    "import:usda": "node scripts/import-usda.mjs",
+    "import:nutridb": "node scripts/import-nutridb.mjs",
+    "seed:curated": "node scripts/seed-curated-foods.mjs",
     "test:rls": "node supabase/tests/rls.test.mjs",
     "test:snapshot": "node supabase/tests/snapshot.test.mjs",
     "test:db": "npm run test:rls && npm run test:snapshot"
   },
   "devDependencies": {
+    "jimp": "^1.6.1",
     "pg": "^8.13.1",
     "supabase": "^2.116.0",
     "typescript": "^5.6.3",

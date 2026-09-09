@@ -9,6 +9,7 @@
     "phaseNote": "Skeleton for now. Features arrive phase by phase per docs/zadani.md.",
     "start": "Set your goal",
     "today": "Today",
+    "addEntry": "add entry",
     "remaining": "{n} kcal left",
     "goalReached": "Goal reached",
     "setGoalFirst": "Set your goal to see how today is going."
@@ -124,7 +125,8 @@
     }
   },
   "attribution": {
-    "off": "Food data © Open Food Facts contributors, ODbL license."
+    "off": "Food data © Open Food Facts contributors, ODbL license.",
+    "nutridb": "Data source: NutriDatabaze.cz – Czech Food Composition Database (ÚZEI)."
   },
   "photo": {
     "title": "Meal photo",
@@ -156,8 +158,41 @@
     "savedList": "Saved recipes",
     "errorName": "Enter a recipe name.",
     "newRecipe": "New recipe",
+    "groupOther": "Other",
+    "emptySaved": "No saved recipes yet.",
+    "phase": "Meal phase (optional)",
+    "instructions": "Steps (optional)",
+    "instructionsPlaceholder": "Write the preparation steps…",
     "update": "Save changes",
-    "updated": "Changes saved."
+    "updated": "Changes saved.",
+    "tabMine": "My recipes",
+    "tabGenerate": "Generate",
+    "gen": {
+      "intro": "Pick a meal and the ingredients you have. The nutrition advisor suggests 3 healthy recipes with steps and amounts.",
+      "selection": "Meal & ingredients",
+      "ingredientsWord": "ingredients",
+      "mealLabel": "Meal",
+      "custom": "Custom ingredients",
+      "customPlaceholder": "Add more ingredients, comma separated",
+      "generate": "Generate recipes",
+      "generating": "Generating…",
+      "error": "Could not generate suggestions. Please try again.",
+      "none": "No suggestions yet. Try adding ingredients.",
+      "needLogin": "Please sign in to generate recipes.",
+      "steps": "Steps",
+      "logToDiary": "Log to diary",
+      "logged": "Logged ✓",
+      "saveToRecipes": "Save to recipes",
+      "savedToRecipes": "Saved ✓",
+      "cat": {
+        "sides": "Sides",
+        "protein": "Meat & protein",
+        "dairy": "Dairy",
+        "veg": "Vegetables",
+        "fruit": "Fruit",
+        "spices": "Spices"
+      }
+    }
   },
   "reminders": {
     "title": "Reminders",

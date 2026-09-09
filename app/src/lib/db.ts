@@ -131,6 +131,23 @@ export async function addDiaryEntry(
   if (error) throw error;
 }
 
+/**
+ * Upraví existující záznam deníku (gramáž, přepočítaný snapshot a přiřazení
+ * k jídlu). RLS pustí jen vlastní záznam. Snapshot je zdroj pravdy o výživě.
+ */
+export async function updateDiaryEntry(
+  id: string,
+  grams: number,
+  snapshot: DiarySnapshot,
+  meal: MealType,
+): Promise<void> {
+  const { error } = await supabase
+    .from('diary_entries')
+    .update({ grams, snapshot, meal })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 /* -------------------------------------------------------------------------- */
 /* E-mailové připomínky (F-13, web)                                            */
 /* -------------------------------------------------------------------------- */
@@ -294,6 +311,8 @@ export interface SavedRecipe {
   id: string;
   name: string;
   servings: number;
+  meal: MealType | null;
+  instructions: string | null;
   ingredients: SavedRecipeIngredient[];
 }
 
@@ -308,11 +327,20 @@ export async function saveRecipe(
   name: string,
   servings: number,
   ingredients: { foodId: string; grams: number }[],
+  instructions?: string,
+  meal?: MealType | null,
 ): Promise<string> {
   if (ingredients.length === 0) throw new Error('Recept nemá žádné ingredience.');
   const { data: recipe, error: recipeErr } = await supabase
     .from('recipes')
-    .insert({ owner_id: userId, name: name.trim().slice(0, 200), servings, source: 'user' })
+    .insert({
+      owner_id: userId,
+      name: name.trim().slice(0, 200),
+      servings,
+      source: 'user',
+      ...(instructions && instructions.trim() ? { instructions: instructions.trim() } : {}),
+      ...(meal ? { meal } : {}),
+    })
     .select('id')
     .single();
   if (recipeErr) throw recipeErr;
@@ -329,16 +357,19 @@ export async function listRecipes(): Promise<SavedRecipe[]> {
   const { data, error } = await supabase
     .from('recipes')
     .select(
-      'id, name, servings, recipe_ingredients(grams, food_id, foods(name, kcal_100g, protein_100g, carbs_100g, fat_100g))',
+      'id, name, servings, meal, instructions, recipe_ingredients(grams, food_id, foods(name, kcal_100g, protein_100g, carbs_100g, fat_100g))',
     )
     .order('id', { ascending: false });
   if (error) throw error;
+  const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
   return (data ?? []).map((r: Record<string, unknown>) => {
     const ings = Array.isArray(r.recipe_ingredients) ? r.recipe_ingredients : [];
     return {
       id: String(r.id),
       name: String(r.name),
       servings: Number(r.servings),
+      meal: MEALS.includes(r.meal as MealType) ? (r.meal as MealType) : null,
+      instructions: typeof r.instructions === 'string' ? r.instructions : null,
       ingredients: ings
         .map((ing: Record<string, unknown>) => {
           const food = (Array.isArray(ing.foods) ? ing.foods[0] : ing.foods) as Record<string, unknown> | null;
@@ -367,11 +398,18 @@ export async function updateRecipe(
   name: string,
   servings: number,
   ingredients: { foodId: string; grams: number }[],
+  meal?: MealType | null,
+  instructions?: string,
 ): Promise<void> {
   if (ingredients.length === 0) throw new Error('Recept nemá žádné ingredience.');
   const { error: upErr } = await supabase
     .from('recipes')
-    .update({ name: name.trim().slice(0, 200), servings })
+    .update({
+      name: name.trim().slice(0, 200),
+      servings,
+      ...(meal !== undefined ? { meal } : {}),
+      ...(instructions !== undefined ? { instructions: instructions.trim() || null } : {}),
+    })
     .eq('id', recipeId);
   if (upErr) throw upErr;
 
@@ -706,6 +744,70 @@ export async function suggestAlternatives(opts: {
     carbs_100g: num(it.carbs_100g),
     fat_100g: num(it.fat_100g),
   }));
+}
+
+/* -------------------------------------------------------------------------- */
+/* AI generátor receptů (suggest-recipes)                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface SuggestedRecipe {
+  name: string;
+  steps: string[];
+  ingredients: SuggestedItem[];
+}
+
+/** Zavolá výživového poradce a vrátí 3 návrhy receptů podle fáze jídla a surovin. */
+export async function suggestRecipes(opts: {
+  meal: MealType;
+  ingredients: string;
+  allergies?: string;
+}): Promise<SuggestedRecipe[]> {
+  const { data, error } = await supabase.functions.invoke('suggest-recipes', {
+    method: 'POST',
+    body: { meal: opts.meal, ingredients: opts.ingredients, allergies: opts.allergies ?? '' },
+  });
+  if (error) throw error;
+  const d = data as { status?: string; error?: string; recipes?: unknown[] };
+  if (!d || d.status !== 'done' || !Array.isArray(d.recipes)) throw new Error(d?.error ?? 'failed');
+  const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  return (d.recipes as Record<string, unknown>[]).map((r) => ({
+    name: String(r.name ?? '').slice(0, 200),
+    steps: (Array.isArray(r.steps) ? r.steps : []).map((x) => String(x)).filter(Boolean),
+    ingredients: (Array.isArray(r.ingredients) ? (r.ingredients as Record<string, unknown>[]) : []).map((it) => ({
+      name: String(it.name ?? '').slice(0, 200),
+      grams: num(it.grams) || 100,
+      kcal_100g: Math.min(900, Math.max(0, num(it.kcal_100g))),
+      protein_100g: num(it.protein_100g),
+      carbs_100g: num(it.carbs_100g),
+      fat_100g: num(it.fat_100g),
+    })),
+  }));
+}
+
+/**
+ * Uloží vygenerovaný recept do „Moje recepty". Protože recipe_ingredients
+ * vyžadují reálnou potravinu (food_id, NOT NULL), založí pro každou surovinu
+ * vlastní potravinu uživatele a teprve pak recept, i s postupem. servings = 1
+ * (jedna porce daného jídla). Vrací id receptu.
+ */
+export async function saveGeneratedRecipe(
+  userId: string,
+  recipe: SuggestedRecipe,
+  meal?: MealType | null,
+): Promise<string> {
+  if (recipe.ingredients.length === 0) throw new Error('Recept nemá žádné ingredience.');
+  const ing: { foodId: string; grams: number }[] = [];
+  for (const it of recipe.ingredients) {
+    const food = await createUserFood(userId, {
+      name: it.name,
+      kcal_100g: it.kcal_100g,
+      protein_100g: it.protein_100g,
+      carbs_100g: it.carbs_100g,
+      fat_100g: it.fat_100g,
+    });
+    ing.push({ foodId: food.id, grams: it.grams });
+  }
+  return saveRecipe(userId, recipe.name, 1, ing, recipe.steps.join('\n'), meal ?? null);
 }
 
 /* -------------------------------------------------------------------------- */

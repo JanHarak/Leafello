@@ -1,11 +1,12 @@
 import Feather from '@expo/vector-icons/Feather';
 import * as Linking from 'expo-linking';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState, type ComponentProps } from 'react';
+import { useCallback, useState, type ComponentProps, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { dailyTotals } from '@dietapp/diary';
 import { detectEscalation } from '@dietapp/nutrition-analyst';
+import { waterSchedule } from '@dietapp/reminders';
 import {
   applyLoggedDay,
   awardsForDay,
@@ -16,10 +17,12 @@ import {
   totalXp,
   MIN_MEALS_FOR_LOGGED_DAY,
   type Mood,
+  type MealPhase,
   type StreakState,
 } from '@dietapp/gamification-rules';
 
 import { AvatarLottie } from '@/components/AvatarLottie';
+import { Loading } from '@/components/Loading';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Tooltip } from '@/components/Tooltip';
 import { plural, t } from '@/i18n';
@@ -32,6 +35,7 @@ import {
   getLatestWeightKg,
   getProfileHeightCm,
   getRecentDailyKcal,
+  getReminderPrefs,
   getTodayWaterMl,
   hasWeighedToday,
   listTodayEntries,
@@ -61,21 +65,60 @@ export default function HomeScreen() {
   const [streakDays, setStreakDays] = useState(0);
   const [celebrated, setCelebrated] = useState(false);
   const [escalated, setEscalated] = useState(false);
+  // Dokud se nenačtou data uživatele, drž loading (ať neblikne onboarding).
+  const [loadingData, setLoadingData] = useState(true);
+  // Vstupy nálady závislé na připomínkách: jídelní fáze dne (proběhlé
+  // připomínky + zapsané chody) a kolik ml plán do teď čeká vypito.
+  const [moodHours, setMoodHours] = useState<{ mealPhases?: MealPhase[]; waterExpectedMl?: number }>({});
 
   useFocusEffect(
     useCallback(() => {
       if (!session) {
         setGoal(null);
         setConsumed(null);
+        setLoadingData(false);
         return;
       }
       let active = true;
+      setLoadingData(true);
       (async () => {
         try {
           const g = await getActiveGoal();
           const entries = await listTodayEntries();
           const totals = dailyTotals(entries.map((e) => e.snapshot));
           const water = await getTodayWaterMl();
+
+          // Vstupy nálady z připomínek – obojí po fázích:
+          //  – jídlo: u každé připomínky (snídaně/oběd/večeře), jestli už
+          //    pinkla a kolik kcal má uživatel na daný chod zapsáno;
+          //  – pití: kolik ml plán očekává vypito „do teď" = součet porcí
+          //    těch pitných slotů, které už dnes pinkly.
+          // Selže-li načtení připomínek, avatar prostě nehladoví/nežízní.
+          let mealPhases: MealPhase[] | undefined;
+          let waterExpectedMl: number | undefined;
+          try {
+            const prefs = await getReminderPrefs();
+            const now = new Date();
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+            const hm = (str: string) => {
+              const [h, m] = String(str ?? '').split(':').map(Number);
+              return (h || 0) * 60 + (m || 0);
+            };
+            const kcalByMeal: Record<string, number> = { breakfast: 0, lunch: 0, dinner: 0 };
+            for (const e of entries) {
+              if (e.meal in kcalByMeal) kcalByMeal[e.meal] += e.snapshot.kcal ?? 0;
+            }
+            mealPhases = (['breakfast', 'lunch', 'dinner'] as const).map((k) => ({
+              reminderPassed: nowMin >= hm(prefs.times[k]),
+              kcalLogged: kcalByMeal[k],
+            }));
+            const slots = waterSchedule(g?.water_ml ?? 2000, 5, prefs.times.waterStart, prefs.times.waterEnd);
+            waterExpectedMl = slots
+              .filter((sl) => nowMin >= sl.hour * 60 + sl.minute)
+              .reduce((sum, sl) => sum + sl.ml, 0);
+          } catch {
+            // bez dat připomínek avatar nehladoví ani nežízní
+          }
 
           const st = (await getAvatarState()) ?? {
             level: 0,
@@ -153,9 +196,12 @@ export default function HomeScreen() {
             setStreakDays(st.streak_days);
             setCelebrated(leveledUp);
             setEscalated(escalate);
+            setMoodHours({ mealPhases, waterExpectedMl });
           }
         } catch {
           // dashboard je doplněk, chyby řeší příslušné obrazovky
+        } finally {
+          if (active) setLoadingData(false);
         }
       })();
       return () => {
@@ -168,17 +214,23 @@ export default function HomeScreen() {
     session && goal && consumed
       ? moodFor({
           entriesToday,
-          waterRatio: goal.water_ml > 0 ? waterMl / goal.water_ml : 1,
           kcalRatio: goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 1,
           justCelebrated: celebrated,
           hour: new Date().getHours(),
+          mealPhases: moodHours.mealPhases,
+          waterMl,
+          waterExpectedMl: moodHours.waterExpectedMl,
         })
       : null;
 
   const s = styles(colors);
 
   return (
-    <ScrollView contentContainerStyle={s.content}>
+    <View style={{ flex: 1 }}>
+      {session && loadingData ? (
+        <Loading overlay />
+      ) : (
+        <ScrollView contentContainerStyle={s.content}>
       {escalated ? (
         <EscalationCard colors={colors} />
       ) : session && goal && consumed && mood ? (
@@ -192,8 +244,9 @@ export default function HomeScreen() {
               progress={goal.kcal_target > 0 ? consumed.kcal / goal.kcal_target : 0}
               value={`${consumed.kcal}`}
               unit={`/ ${goal.kcal_target} ${t('goal.unitKcal')}`}
-              caption={t('home.today')}
+              caption={t('home.foodLabel')}
               icon="zap"
+              onPress={() => router.push('/diary')}
             />
             <View style={s.avatarCol}>
               <AvatarLottie mood={mood} size={288} />
@@ -208,6 +261,7 @@ export default function HomeScreen() {
               unit={`/ ${goal.water_ml} ${t('goal.unitMl')}`}
               caption={t('goal.water')}
               icon="droplet"
+              onPress={() => router.push('/water')}
             />
           </View>
 
@@ -268,7 +322,9 @@ export default function HomeScreen() {
           </Tooltip>
         ))}
       </View>
-    </ScrollView>
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
@@ -282,6 +338,7 @@ function Ring({
   icon,
   size = 156,
   strokeWidth = 16,
+  onPress,
 }: {
   colors: ThemeColors;
   color: string;
@@ -292,19 +349,66 @@ function Ring({
   icon?: ComponentProps<typeof Feather>['name'];
   size?: number;
   strokeWidth?: number;
+  /** Když je zadáno, celý blok (prstenec + popisek) je klikací – vede do
+   *  příslušné sekce a u popisku se zobrazí „+" jako výzva k přidání. */
+  onPress?: () => void;
 }) {
   const valueFont = Math.max(18, Math.round(size * 0.2));
-  return (
-    <View style={{ alignItems: 'center', gap: spacing.xs }}>
+  const captionStyle = {
+    color,
+    fontSize: fontSize.caption,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
+    fontWeight: fontWeight.bold,
+  };
+
+  const inner = (
+    <>
       <ProgressRing progress={progress} color={color} trackColor={colors.surfaceElevated} size={size} strokeWidth={strokeWidth}>
         {icon && <Feather name={icon} size={Math.round(size * 0.12)} color={color} style={{ marginBottom: 2 }} />}
         <Text style={{ color: colors.text, fontSize: valueFont, fontWeight: fontWeight.bold }}>{value}</Text>
         <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>{unit}</Text>
       </ProgressRing>
-      <Text style={{ color, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.bold }}>
-        {caption}
-      </Text>
-    </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+        <Text style={captionStyle}>{caption}</Text>
+        {onPress && <Feather name="plus-circle" size={fontSize.body} color={color} />}
+      </View>
+    </>
+  );
+
+  if (!onPress) {
+    return <View style={{ alignItems: 'center', gap: spacing.xs }}>{inner}</View>;
+  }
+  return <RingButton colors={colors} caption={caption} onPress={onPress}>{inner}</RingButton>;
+}
+
+/** Klikací obal prstence s decentním hover pozadím (stejný vzor jako Tooltip). */
+function RingButton({
+  colors,
+  caption,
+  onPress,
+  children,
+}: {
+  colors: ThemeColors;
+  caption: string;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${caption} – ${t('home.addEntry')}`}
+      onHoverIn={() => setHover(true)}
+      onHoverOut={() => setHover(false)}
+      style={[
+        { alignItems: 'center', gap: spacing.xs, padding: spacing.sm, borderRadius: radius.lg },
+        hover && { backgroundColor: colors.hover },
+      ]}
+    >
+      {children}
+    </Pressable>
   );
 }
 

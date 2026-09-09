@@ -1,4 +1,4 @@
-
+import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +8,7 @@ import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
 import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { addDiaryEntry, createUserFood, deleteDiaryEntry, listTodayEntries, searchFoods } from '@/lib/db';
+import { addDiaryEntry, createUserFood, deleteDiaryEntry, listTodayEntries, searchFoods, updateDiaryEntry } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
@@ -51,6 +51,10 @@ export default function Diary() {
   const [creating, setCreating] = useState(false);
   const [cf, setCf] = useState({ name: '', kcal: '', protein: '', carbs: '', fat: '' });
   const [cfError, setCfError] = useState<string | null>(null);
+  // Editace jednotlivého záznamu (gramáž + přiřazení k jídlu). Default vypnuto.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editGrams, setEditGrams] = useState('');
+  const [editMeal, setEditMeal] = useState<MealType>('breakfast');
 
   async function reload() {
     const rows = await listTodayEntries();
@@ -173,6 +177,45 @@ export default function Diary() {
     setSelected(null);
     setGrams('100');
     setQuery('');
+  }
+
+  function startEdit(e: Entry) {
+    setEditingId(e.id);
+    setEditGrams(String(e.grams));
+    setEditMeal(e.meal);
+  }
+
+  async function saveEdit(e: Entry) {
+    const g = Number(editGrams);
+    if (!Number.isFinite(g) || g <= 0 || e.grams <= 0) return;
+    // Výživa se škáluje lineárně s gramáží: snapshot = per100g × g/100, takže
+    // nový snapshot = starý × (nová gramáž / stará gramáž). Per-100g netřeba.
+    const ratio = g / e.grams;
+    const scaled: Nutrition = {
+      kcal: e.snapshot.kcal * ratio,
+      protein: e.snapshot.protein * ratio,
+      carbs: e.snapshot.carbs * ratio,
+      fat: e.snapshot.fat * ratio,
+      fiber: 0,
+    };
+    if (session) {
+      try {
+        await updateDiaryEntry(
+          e.id,
+          g,
+          { name: e.foodName, kcal: scaled.kcal, protein: scaled.protein, carbs: scaled.carbs, fat: scaled.fat },
+          editMeal,
+        );
+        await reload();
+        setDbError(null);
+      } catch (err) {
+        console.error('Úprava záznamu selhala:', err);
+        setDbError(err instanceof Error ? err.message : String(err));
+      }
+    } else {
+      setEntries((prev) => prev.map((x) => (x.id === e.id ? { ...x, grams: g, meal: editMeal, snapshot: scaled } : x)));
+    }
+    setEditingId(null);
   }
 
   async function removeEntry(id: string) {
@@ -349,19 +392,43 @@ export default function Diary() {
               <Text style={s.mealHeader}>{t(`meal.${m}`)}</Text>
               {entries
                 .filter((e) => e.meal === m)
-                .map((e) => (
-                  <View key={e.id} style={s.entryRow}>
-                    <View style={{ flex: 1 }}>
+                .map((e) =>
+                  editingId === e.id ? (
+                    <View key={e.id} style={s.editCard}>
                       <Text style={s.entryName}>{e.foodName}</Text>
-                      <Text style={s.entryMeta}>
-                        {e.grams} g · {Math.round(e.snapshot.kcal)} {t('goal.unitKcal')}
-                      </Text>
+                      <Text style={s.fieldLabel}>{t('diary.grams')}</Text>
+                      <TextInput value={editGrams} onChangeText={setEditGrams} keyboardType="numeric" style={s.gramsInput} />
+                      <View style={s.mealRow}>
+                        {MEALS.map((mm) => (
+                          <Choice key={mm} label={t(`meal.${mm}`)} active={editMeal === mm} onPress={() => setEditMeal(mm)} c={colors} />
+                        ))}
+                      </View>
+                      <View style={s.cfActions}>
+                        <Pressable style={[s.addButton, s.cfFlex]} onPress={() => saveEdit(e)}>
+                          <Text style={s.addButtonText}>{t('common.save')}</Text>
+                        </Pressable>
+                        <Pressable style={[s.cancelButton, s.cfFlex]} onPress={() => setEditingId(null)}>
+                          <Text style={s.cancelText}>{t('account.cancel')}</Text>
+                        </Pressable>
+                      </View>
                     </View>
-                    <Pressable accessibilityRole="button" accessibilityLabel={t('common.delete')} onPress={() => removeEntry(e.id)} hitSlop={8}>
-                      <Text style={s.entryDelete}>×</Text>
-                    </Pressable>
-                  </View>
-                ))}
+                  ) : (
+                    <View key={e.id} style={s.entryRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.entryName}>{e.foodName}</Text>
+                        <Text style={s.entryMeta}>
+                          {e.grams} g · {Math.round(e.snapshot.kcal)} {t('goal.unitKcal')}
+                        </Text>
+                      </View>
+                      <Pressable accessibilityRole="button" accessibilityLabel={t('common.edit')} onPress={() => startEdit(e)} hitSlop={8} style={s.entryAction}>
+                        <Feather name="edit-2" size={16} color={colors.textMuted} />
+                      </Pressable>
+                      <Pressable accessibilityRole="button" accessibilityLabel={t('common.delete')} onPress={() => removeEntry(e.id)} hitSlop={8} style={s.entryAction}>
+                        <Text style={s.entryDelete}>×</Text>
+                      </Pressable>
+                    </View>
+                  ),
+                )}
             </View>
           ))
         )}
@@ -447,5 +514,7 @@ const styles = (c: ThemeColors) =>
     entryRow: { minHeight: touchTarget, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
     entryName: { color: c.text, fontSize: fontSize.body },
     entryMeta: { color: c.textFaint, fontSize: fontSize.caption },
+    entryAction: { paddingHorizontal: spacing.xs, alignItems: 'center', justifyContent: 'center' },
     entryDelete: { color: c.textFaint, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold, paddingHorizontal: spacing.sm },
+    editCard: { backgroundColor: c.surface, borderColor: c.accent, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
   });

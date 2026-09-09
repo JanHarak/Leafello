@@ -42,12 +42,19 @@ function activity(overrides: Partial<DayActivity> = {}): DayActivity {
 function mood(overrides: Partial<MoodContext> = {}): MoodContext {
   return {
     entriesToday: 4,
-    waterRatio: 1,
     kcalRatio: 0.9,
     justCelebrated: false,
     hour: 20,
+    mealPhases: [], // výchozí: žádná neuzavřená jídelní fáze → bez hladu
+    waterMl: 0,
+    waterExpectedMl: 0, // výchozí: žádná pitná připomínka nepinkla → bez žízně
     ...overrides,
   };
+}
+
+/** Zkratka: jedna už proběhlá jídelní fáze s daným zapsaným množstvím kcal. */
+function phase(kcalLogged: number, reminderPassed = true) {
+  return [{ reminderPassed, kcalLogged }];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -307,20 +314,58 @@ describe('nálada avatara', () => {
     expect(moodFor(mood({ entriesToday: 0, hour: 13 }))).toBe('sleepy');
   });
 
-  it('T-29: voda 30 % v 16:00 se zapsaným jídlem → thirsty', () => {
-    expect(moodFor(mood({ waterRatio: 0.3, hour: 16 }))).toBe('thirsty');
+  it('T-29: vypito míň, než plán do teď čeká → thirsty', () => {
+    // kcalRatio 0.9 (výchozí) je nad prahem, takže hungry nevyhraje.
+    expect(moodFor(mood({ waterMl: 300, waterExpectedMl: 1000 }))).toBe('thirsty');
   });
 
-  it('T-30: voda 100 %, kcal 30 % v 19:00 → hungry', () => {
-    expect(moodFor(mood({ waterRatio: 1, kcalRatio: 0.3, hour: 19 }))).toBe('hungry');
+  it('T-30: proběhlá jídelní připomínka bez zapsaného chodu → hungry', () => {
+    expect(moodFor(mood({ waterRatio: 1, kcalRatio: 0.3, mealPhases: phase(0) }))).toBe('hungry');
+  });
+
+  it('jídlo má přednost před pitím: hlad i žízeň naráz → hungry', () => {
+    // Deník jídel je hlavní účel appky, proto hungry před thirsty.
+    expect(moodFor(mood({ waterMl: 0, waterExpectedMl: 1000, kcalRatio: 0.3, mealPhases: phase(0) }))).toBe('hungry');
+  });
+
+  it('hlad zmizí po zapsání chodu nad 100 kcal', () => {
+    // Fáze s > 100 kcal je uspokojená → není hlad (a voda plná → happy).
+    expect(moodFor(mood({ kcalRatio: 0.3, mealPhases: phase(150) }))).toBe('happy');
+    // Přesně 100 kcal ještě neuspokojí (drobnost), 101 už ano.
+    expect(moodFor(mood({ kcalRatio: 0.3, mealPhases: phase(100) }))).toBe('hungry');
+    expect(moodFor(mood({ kcalRatio: 0.3, mealPhases: phase(101) }))).toBe('happy');
+  });
+
+  it('hlad se nezobrazí, dokud jídelní připomínka nepinkla', () => {
+    expect(moodFor(mood({ kcalRatio: 0.3, mealPhases: phase(0, false) }))).toBe('happy');
+  });
+
+  it('při ≥ 90 % kalorického cíle se hlad nezobrazí (appka netlačí do jídla)', () => {
+    // I když je chod nezapsaný, nad 90 % už avatar do jídla nenutí.
+    expect(moodFor(mood({ kcalRatio: 0.9, mealPhases: phase(0) }))).toBe('happy');
+    expect(moodFor(mood({ kcalRatio: 0.89, mealPhases: phase(0) }))).toBe('hungry');
   });
 
   it('T-31: vše splněno → happy', () => {
     expect(moodFor(mood())).toBe('happy');
   });
 
-  it('T-32: voda 30 % v 10:00 → happy, podmínka platí až po 15:00', () => {
-    expect(moodFor(mood({ waterRatio: 0.3, hour: 10 }))).toBe('happy');
+  it('T-32: před první pitnou připomínkou (plán nic nečeká) → happy', () => {
+    expect(moodFor(mood({ waterMl: 0, waterExpectedMl: 0 }))).toBe('happy');
+  });
+
+  it('žízeň funguje po fázích pitného plánu', () => {
+    // Slot pinkl a plán do teď čeká 500 ml, vypito 0 → žízeň.
+    expect(moodFor(mood({ waterMl: 0, waterExpectedMl: 500 }))).toBe('thirsty');
+    // Uživatel dožene porci (500 ml) → žízeň zmizí.
+    expect(moodFor(mood({ waterMl: 500, waterExpectedMl: 500 }))).toBe('happy');
+    // Další slot, plán čeká 1000 ml, vypito zatím 500 → zase žízeň.
+    expect(moodFor(mood({ waterMl: 500, waterExpectedMl: 1000 }))).toBe('thirsty');
+  });
+
+  it('náskok v pití potlačí žízeň i v dalším slotu', () => {
+    // Vypito 1500 ml, další slot čeká teprve 1000 ml → má náskok → bez žízně.
+    expect(moodFor(mood({ waterMl: 1500, waterExpectedMl: 1000 }))).toBe('happy');
   });
 
   it('žádný záznam v 10:00 → happy, ne sleepy', () => {
@@ -333,24 +378,24 @@ describe('nálada avatara', () => {
     // ne žíznivou postavu. Připomínka pití přijde za minutu sama.
     const context = mood({
       justCelebrated: true,
-      waterRatio: 0.2,
+      waterMl: 0,
+      waterExpectedMl: 1000,
       kcalRatio: 0.2,
+      mealPhases: phase(0),
       entriesToday: 0,
       hour: 20,
     });
     expect(moodFor(context)).toBe('celebrating');
   });
 
-  it('hranice hodin jsou inkluzivní', () => {
+  it('hranice hodiny sleepy je inkluzivní', () => {
     expect(moodFor(mood({ entriesToday: 0, hour: 11 }))).toBe('happy');
     expect(moodFor(mood({ entriesToday: 0, hour: MOOD_RULES.sleepyAfterHour }))).toBe('sleepy');
-    expect(moodFor(mood({ waterRatio: 0.1, hour: 14 }))).toBe('happy');
-    expect(moodFor(mood({ waterRatio: 0.1, hour: MOOD_RULES.thirstyAfterHour }))).toBe('thirsty');
   });
 
-  it('hranice podílu je přesně polovina', () => {
-    expect(moodFor(mood({ waterRatio: 0.5, hour: 16 }))).toBe('happy');
-    expect(moodFor(mood({ waterRatio: 0.49, hour: 16 }))).toBe('thirsty');
+  it('žízeň hlídá přesný rozdíl: vypito == očekáváno není žízeň', () => {
+    expect(moodFor(mood({ waterMl: 800, waterExpectedMl: 800 }))).toBe('happy');
+    expect(moodFor(mood({ waterMl: 799, waterExpectedMl: 800 }))).toBe('thirsty');
   });
 
   it('neexistuje nálada, která uživatele hodnotí', () => {

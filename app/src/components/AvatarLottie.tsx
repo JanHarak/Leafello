@@ -5,10 +5,16 @@ import { Animated, Platform, Pressable } from 'react-native';
 import { AnimatedAvatar } from '@/components/Avatar';
 import { LottiePlayer } from '@/components/LottiePlayer';
 
-// Lottie animace podle nálady. Zatím jen happy; ostatní nálady spadnou na
-// původní animovaný art (AnimatedAvatar).
+// Lottie animace maskota podle nálady. Každý stav má vlastní soubor v
+// assets/avatar/animated/. (avatar-sad.json je k dispozici, ale Mood zatím
+// stav „sad" nemá – přidá se, až vznikne.) Kdyby nějaký stav chyběl, spadne
+// se na původní animovaný art (AnimatedAvatar).
 const SOURCES: Partial<Record<Mood, unknown>> = {
   happy: require('../../assets/avatar/animated/avatar-happy.json'),
+  hungry: require('../../assets/avatar/animated/avatar-hungry.json'),
+  thirsty: require('../../assets/avatar/animated/avatar-thirsty.json'),
+  sleepy: require('../../assets/avatar/animated/avatar-sleepy.json'),
+  celebrating: require('../../assets/avatar/animated/avatar-celebrating.json'),
 };
 
 const USE_NATIVE = Platform.OS !== 'web';

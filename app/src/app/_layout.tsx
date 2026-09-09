@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Loading } from '@/components/Loading';
 import { Tooltip } from '@/components/Tooltip';
 import { t } from '@/i18n';
 import { AuthProvider, useAuth } from '@/lib/auth';
@@ -44,25 +45,32 @@ function Rail() {
   const [pinned, setPinned] = useState(false);
   const expanded = hovered || pinned;
 
-  const items = [{ route: '/' as const, icon: 'home' as const, labelKey: 'home.today' }, ...NAV_ITEMS];
+  const items = [{ route: '/' as const, icon: 'home' as const, labelKey: 'home.dashboard' }, ...NAV_ITEMS];
 
   return (
-    <View
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-      style={[
-        {
-          width: expanded ? RAIL_EXPANDED : RAIL_COLLAPSED,
-          backgroundColor: colors.surface,
-          borderRightWidth: 1,
-          borderRightColor: colors.border,
-          paddingVertical: spacing.md,
-          gap: spacing.xs,
-          overflow: 'hidden',
-        },
-        WIDTH_TRANSITION,
-      ]}
-    >
+    // V layoutu si rail rezervuje místo jen podle ukotvení – při pouhém hoveru
+    // se obsah neposouvá, panel se rozbalí jako overlay nad obsahem.
+    <View style={[{ position: 'relative', width: pinned ? RAIL_EXPANDED : RAIL_COLLAPSED, zIndex: 30 }, WIDTH_TRANSITION]}>
+      <View
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        style={[
+          {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: expanded ? RAIL_EXPANDED : RAIL_COLLAPSED,
+            backgroundColor: colors.surface,
+            borderRightWidth: 1,
+            borderRightColor: colors.border,
+            paddingVertical: spacing.md,
+            gap: spacing.xs,
+            overflow: 'hidden',
+          },
+          WIDTH_TRANSITION,
+        ]}
+      >
       {items.map((item) => {
         const active = pathname === item.route;
         return (
@@ -117,6 +125,7 @@ function Rail() {
           </Text>
         )}
       </Pressable>
+      </View>
     </View>
   );
 }
@@ -153,9 +162,14 @@ function Header() {
         )}
       </View>
 
-      {/* Vlevo: název aplikace */}
+      {/* Vlevo: logo + název aplikace */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent }} />
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{ width: 28, height: 28 }}
+          contentFit="contain"
+          accessibilityLabel={t('app.name')}
+        />
         <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold }}>
           {t('app.name')}
         </Text>
@@ -225,6 +239,7 @@ function Footer() {
         </Pressable>
       </View>
       <Text style={{ color: colors.textFaint, fontSize: fontSize.caption, textAlign: 'center' }}>{t('attribution.off')}</Text>
+      <Text style={{ color: colors.textFaint, fontSize: fontSize.caption, textAlign: 'center' }}>{t('attribution.nutridb')}</Text>
     </View>
   );
 }
@@ -237,6 +252,9 @@ function Shell() {
   const router = useRouter();
   const pathname = usePathname();
   const showBack = pathname !== '/' && pathname !== '';
+  // Recepty potřebují celou šířku (mřížka receptů 1/2/3 sloupce); obrazovka si
+  // vstupní bloky drží ve své šířce sama. Ostatní obrazovky zůstávají na 960.
+  const fullWidth = pathname === '/recipes';
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -249,7 +267,7 @@ function Shell() {
       <View style={{ flex: 1, flexDirection: 'row' }}>
         <Rail />
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <View style={{ flex: 1, width: '100%', maxWidth: CONTENT_MAX_WIDTH }}>
+          <View style={{ flex: 1, width: '100%', maxWidth: fullWidth ? undefined : CONTENT_MAX_WIDTH }}>
             {showBack && (
               <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: 'flex-start' }}>
                 <Tooltip
@@ -274,10 +292,11 @@ function Shell() {
 
 function ThemedRoot() {
   const { mode } = useTheme();
+  const { loading } = useAuth();
   return (
     <>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      <Shell />
+      {loading ? <Loading overlay /> : <Shell />}
     </>
   );
 }

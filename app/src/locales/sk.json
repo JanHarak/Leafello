@@ -9,6 +9,7 @@
     "phaseNote": "Zatiaľ len kostra. Funkcie sa doplnia po fázach podľa docs/zadani.md.",
     "start": "Nastaviť cieľ",
     "today": "Dnes",
+    "addEntry": "pridať záznam",
     "remaining": "Zostáva {n} kcal",
     "goalReached": "Cieľ naplnený",
     "setGoalFirst": "Nastav si cieľ a uvidíš, ako na tom dnes si."
@@ -126,7 +127,8 @@
     }
   },
   "attribution": {
-    "off": "Údaje o potravinách © Open Food Facts contributors, licencia ODbL."
+    "off": "Údaje o potravinách © Open Food Facts contributors, licencia ODbL.",
+    "nutridb": "Zdroj dát: NutriDatabaze.cz – Databáza zloženia potravín ČR (ÚZEI)."
   },
   "photo": {
     "title": "Fotka jedla",
@@ -158,8 +160,41 @@
     "savedList": "Uložené recepty",
     "errorName": "Zadaj názov receptu.",
     "newRecipe": "Nový recept",
+    "groupOther": "Ostatné",
+    "emptySaved": "Zatiaľ žiadne uložené recepty.",
+    "phase": "Fáza dňa (voliteľne)",
+    "instructions": "Postup (voliteľne)",
+    "instructionsPlaceholder": "Napíš postup prípravy…",
     "update": "Uložiť zmeny",
-    "updated": "Zmeny uložené."
+    "updated": "Zmeny uložené.",
+    "tabMine": "Moje recepty",
+    "tabGenerate": "Vygenerovať",
+    "gen": {
+      "intro": "Vyber fázu jedla a suroviny, ktoré máš doma. Výživový poradca ti navrhne 3 zdravé recepty aj s postupom a gramážou.",
+      "selection": "Fáza jedla a suroviny",
+      "ingredientsWord": "surovín",
+      "mealLabel": "Fáza jedla",
+      "custom": "Vlastné suroviny",
+      "customPlaceholder": "Napíš ďalšie suroviny, oddelené čiarkou",
+      "generate": "Vygenerovať recepty",
+      "generating": "Generujem…",
+      "error": "Návrh sa nepodarilo vygenerovať. Skús to prosím znova.",
+      "none": "Zatiaľ žiadny návrh. Skús pridať suroviny.",
+      "needLogin": "Na generovanie receptov sa prosím prihlás.",
+      "steps": "Postup",
+      "logToDiary": "Zapísať do denníka",
+      "logged": "Zapísané ✓",
+      "saveToRecipes": "Uložiť do receptov",
+      "savedToRecipes": "Uložené ✓",
+      "cat": {
+        "sides": "Prílohy",
+        "protein": "Mäso a bielkoviny",
+        "dairy": "Mliečne produkty",
+        "veg": "Zelenina",
+        "fruit": "Ovocie",
+        "spices": "Korenie"
+      }
+    }
   },
   "reminders": {
     "title": "Pripomienky",

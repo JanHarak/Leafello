@@ -1,9 +1,11 @@
+import Feather from '@expo/vector-icons/Feather';
 import { recipePerPortion } from '@dietapp/diary';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { RecipeGenerator } from '@/components/RecipeGenerator';
 import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
@@ -45,6 +47,9 @@ export default function Recipes() {
   const s = styles(colors);
   const { session } = useAuth();
 
+  const [tab, setTab] = useState<'mine' | 'generate'>('mine');
+  const { width } = useWindowDimensions();
+  const wide = width >= 900; // dvousloupcové rozložení Moje recepty (seznam vlevo)
   const [name, setName] = useState('');
   const [servings, setServings] = useState('4');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -53,7 +58,8 @@ export default function Recipes() {
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<Candidate | null>(null);
   const [addGrams, setAddGrams] = useState('100');
-  const [meal, setMeal] = useState<MealType>('lunch');
+  const [meal, setMeal] = useState<MealType | null>(null); // volitelná fáze dne
+  const [instructions, setInstructions] = useState(''); // volitelný postup
   const [logged, setLogged] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -218,6 +224,8 @@ export default function Recipes() {
   function loadSavedRecipe(r: SavedRecipe) {
     setName(r.name);
     setServings(String(r.servings));
+    setMeal(r.meal);
+    setInstructions(r.instructions ?? '');
     setIngredients(
       r.ingredients.map((i) => ({
         grams: i.grams,
@@ -246,6 +254,8 @@ export default function Recipes() {
     setSelected(null);
     setQuery('');
     setCurrentRecipeId(null);
+    setMeal(null);
+    setInstructions('');
     setLogged(false);
     setSavedMsg(null);
   }
@@ -265,6 +275,8 @@ export default function Recipes() {
         name,
         servingsNum,
         ingredients.map((i) => ({ foodId: i.food.foodId as string, grams: i.grams })),
+        instructions,
+        meal,
       );
       setCurrentRecipeId(id);
       setSavedMsg('created');
@@ -289,6 +301,8 @@ export default function Recipes() {
         name,
         servingsNum,
         ingredients.map((i) => ({ foodId: i.food.foodId as string, grams: i.grams })),
+        meal,
+        instructions,
       );
       setSavedMsg('updated');
       setError(null);
@@ -317,7 +331,7 @@ export default function Recipes() {
     try {
       await addDiaryEntry(
         session.user.id,
-        meal,
+        meal ?? 'lunch',
         portionGrams,
         {
           name: name.trim() || t('recipes.title'),
@@ -337,38 +351,61 @@ export default function Recipes() {
     }
   }
 
+  const tabButtons = (
+    <>
+      <TabButton label={t('recipes.tabMine')} active={tab === 'mine'} onPress={() => { setTab('mine'); loadRecipes(); }} c={colors} />
+      <TabButton label={t('recipes.tabGenerate')} active={tab === 'generate'} onPress={() => setTab('generate')} c={colors} />
+    </>
+  );
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        {/* Uložené recepty */}
-        {saved.length > 0 && (
+        {/* Generate: taby na střed + generátor na celou šířku */}
+        {tab === 'generate' && (
           <>
-            <View style={s.savedHeader}>
-              <Text style={s.section}>{t('recipes.savedList')}</Text>
-              <Pressable onPress={newRecipe} accessibilityRole="button">
-                <Text style={s.newLink}>+ {t('recipes.newRecipe')}</Text>
-              </Pressable>
+            <View style={s.centered}>
+              <View style={s.tabRow}>{tabButtons}</View>
             </View>
-            {saved.map((r) => (
-              <Pressable key={r.id} style={s.savedRow} onPress={() => loadSavedRecipe(r)}>
-                <View style={s.resultInfo}>
-                  <Text style={s.resultName} numberOfLines={1}>{r.name}</Text>
-                  <Text style={s.resultBrand}>
-                    {r.servings} {t('recipes.servings').toLowerCase()} · {r.ingredients.length}
-                  </Text>
-                </View>
-                <Pressable onPress={() => removeSavedRecipe(r.id)} accessibilityRole="button" hitSlop={8}>
-                  <Text style={s.remove}>×</Text>
-                </Pressable>
-              </Pressable>
-            ))}
+            <RecipeGenerator onSaved={loadRecipes} />
           </>
         )}
+
+        {/* Moje recepty: vlevo panel s uloženými recepty (na úrovni tabů),
+            vpravo taby + editor */}
+        {tab === 'mine' && (
+          <View style={wide ? s.mineWide : s.centered}>
+            {!wide && <View style={s.tabRow}>{tabButtons}</View>}
+
+            <View style={wide ? s.mineSide : undefined}>
+              <View style={wide ? s.sidebar : undefined}>
+                <SavedRecipeGroups saved={saved} onOpen={loadSavedRecipe} onDelete={removeSavedRecipe} onNew={newRecipe} c={colors} />
+              </View>
+            </View>
+
+            <View style={[wide ? s.mineCenter : s.editorFull, s.editorCol]}>
+              {wide && <View style={s.tabRow}>{tabButtons}</View>}
 
         <TextInput value={name} onChangeText={(v) => { setName(v); setSavedMsg(null); }} placeholder={t('recipes.name')} placeholderTextColor={colors.textFaint} style={s.input} />
         <View style={s.servingsRow}>
           <Text style={s.fieldLabel}>{t('recipes.servings')}</Text>
           <TextInput value={servings} onChangeText={(v) => { setServings(v); markDirty(); }} keyboardType="numeric" style={[s.input, s.servingsInput]} />
+        </View>
+
+        {/* Fáze dne (volitelně) – kategorie receptu */}
+        <Text style={s.fieldLabel}>{t('recipes.phase')}</Text>
+        <View style={s.mealRow}>
+          {MEALS.map((m) => (
+            <Pressable
+              key={m}
+              onPress={() => { setMeal(meal === m ? null : m); markDirty(); }}
+              accessibilityRole="button"
+              accessibilityState={{ selected: meal === m }}
+              style={[s.mealChip, { backgroundColor: meal === m ? colors.accent : colors.surface, borderColor: meal === m ? colors.accent : colors.border }]}
+            >
+              <Text style={{ color: meal === m ? colors.onAccent : colors.text, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{t(`meal.${m}`)}</Text>
+            </Pressable>
+          ))}
         </View>
 
         {/* Vyhledání a přidání ingredience */}
@@ -455,6 +492,17 @@ export default function Recipes() {
           </View>
         ))}
 
+        {/* Postup (volitelně) */}
+        <Text style={s.fieldLabel}>{t('recipes.instructions')}</Text>
+        <TextInput
+          value={instructions}
+          onChangeText={(v) => { setInstructions(v); markDirty(); }}
+          placeholder={t('recipes.instructionsPlaceholder')}
+          placeholderTextColor={colors.textFaint}
+          multiline
+          style={[s.input, s.textarea]}
+        />
+
         {/* Výživa na porci */}
         {perPortion ? (
           <View style={s.card}>
@@ -465,18 +513,6 @@ export default function Recipes() {
             <Text style={s.macros}>
               {t('goal.protein')} {Math.round(perPortion.protein)} {t('goal.unitG')} · {t('goal.carbs')} {Math.round(perPortion.carbs)} {t('goal.unitG')} · {t('goal.fat')} {Math.round(perPortion.fat)} {t('goal.unitG')}
             </Text>
-
-            <View style={s.mealRow}>
-              {MEALS.map((m) => (
-                <Pressable
-                  key={m}
-                  onPress={() => setMeal(m)}
-                  style={[s.mealChip, { backgroundColor: meal === m ? colors.accent : colors.surface, borderColor: meal === m ? colors.accent : colors.border }]}
-                >
-                  <Text style={{ color: meal === m ? colors.onAccent : colors.text, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{t(`meal.${m}`)}</Text>
-                </Pressable>
-              ))}
-            </View>
 
             {session && (
               <>
@@ -499,6 +535,10 @@ export default function Recipes() {
         ) : (
           <Text style={s.muted}>{t('recipes.empty')}</Text>
         )}
+            </View>
+            {wide && <View style={s.mineSide} />}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -520,11 +560,106 @@ function CfField({ label, value, onChange, c }: { label: string; value: string; 
   );
 }
 
+function TabButton({ label, active, onPress, c }: { label: string; active: boolean; onPress: () => void; c: ThemeColors }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      style={{ flex: 1, minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, backgroundColor: active ? c.accent : c.surface, borderWidth: 1, borderColor: active ? c.accent : c.border }}
+    >
+      <Text style={{ color: active ? c.onAccent : c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Uložené recepty seskupené podle fáze dne, každá skupina rozbalovací. */
+function SavedRecipeGroups({
+  saved,
+  onOpen,
+  onDelete,
+  onNew,
+  c,
+}: {
+  saved: SavedRecipe[];
+  onOpen: (r: SavedRecipe) => void;
+  onDelete: (id: string) => void;
+  onNew: () => void;
+  c: ThemeColors;
+}) {
+  const s = styles(c);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const GROUPS: (MealType | 'other')[] = ['breakfast', 'lunch', 'dinner', 'snack', 'other'];
+  const itemsOf = (g: MealType | 'other') => saved.filter((r) => (g === 'other' ? !r.meal : r.meal === g));
+
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <View style={s.savedHeader}>
+        <Text style={s.section}>{t('recipes.savedList')}</Text>
+        <Pressable onPress={onNew} accessibilityRole="button">
+          <Text style={s.newLink}>+ {t('recipes.newRecipe')}</Text>
+        </Pressable>
+      </View>
+      {saved.length === 0 && <Text style={s.muted}>{t('recipes.emptySaved')}</Text>}
+      {GROUPS.map((g) => {
+        const items = itemsOf(g);
+        if (items.length === 0) return null;
+        const isCollapsed = !!collapsed[g];
+        const label = g === 'other' ? t('recipes.groupOther') : t(`meal.${g}`);
+        return (
+          <View key={g} style={{ gap: spacing.xs }}>
+            <Pressable
+              onPress={() => setCollapsed((p) => ({ ...p, [g]: !p[g] }))}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: !isCollapsed }}
+              style={s.groupHeader}
+            >
+              <Text style={s.groupTitle}>{label} · {items.length}</Text>
+              <Feather name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={18} color={c.textMuted} />
+            </Pressable>
+            {!isCollapsed &&
+              items.map((r) => (
+                <Pressable key={r.id} style={s.savedRow} onPress={() => onOpen(r)}>
+                  <View style={s.resultInfo}>
+                    <Text style={s.resultName} numberOfLines={1}>{r.name}</Text>
+                    <Text style={s.resultBrand}>
+                      {r.servings} {t('recipes.servings').toLowerCase()} · {r.ingredients.length}
+                    </Text>
+                  </View>
+                  <Pressable onPress={() => onDelete(r.id)} accessibilityRole="button" hitSlop={8}>
+                    <Text style={s.remove}>×</Text>
+                  </Pressable>
+                </Pressable>
+              ))}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
+    tabRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+    // Vstupní bloky (taby, tvorba, moje recepty) drží současnou šířku a jsou
+    // na střed i na širokém obsahu; jen mřížka receptů využívá celou šířku.
+    centered: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.sm },
+    // „Moje recepty" na širokém: levý panel ukotvený vlevo přes celou šířku,
+    // editor vycentrovaný ve zbylém prostoru.
+    // Editor uprostřed (max 900 px). Levý flex drží seznam u levého okraje,
+    // pravý flex ho vyváží, takže editor sedí na středu obrazovky.
+    mineWide: { flexDirection: 'row', alignItems: 'flex-start', width: '100%', gap: spacing.lg },
+    mineSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
+    sidebar: { width: 300 },
+    mineCenter: { flexGrow: 0, flexShrink: 1, flexBasis: 900, maxWidth: 900, width: '100%' },
+    editorFull: { width: '100%' },
+    editorCol: { gap: spacing.sm },
+    groupHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
+    groupTitle: { color: c.text, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     content: { padding: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxl },
     input: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
+    textarea: { minHeight: 96, paddingTop: spacing.sm, paddingBottom: spacing.sm, textAlignVertical: 'top', lineHeight: fontSize.body * 1.4 },
     servingsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     servingsInput: { flex: 1 },
     fieldLabel: { color: c.textMuted, fontSize: fontSize.caption },

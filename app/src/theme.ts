@@ -44,6 +44,9 @@ const raw = {
   // Jemné zvýraznění při najetí myší (hover) – decentní tón odvozený od accentu.
   hover: '#eaf2fb',
   hoverDark: '#243244',
+  // Jemné transparentní pozadí pod loading overlayem (doplněné rozostřením).
+  scrim: 'rgba(255, 255, 255, 0.3)',
+  scrimDark: 'rgba(0, 0, 0, 0.35)',
 } as const;
 
 export interface ThemeColors {
@@ -64,6 +67,7 @@ export interface ThemeColors {
   macroCarbs: string;
   macroFat: string;
   hover: string;
+  scrim: string;
 }
 
 export const lightColors: ThemeColors = {
@@ -84,6 +88,7 @@ export const lightColors: ThemeColors = {
   macroCarbs: raw.macroCarbs,
   macroFat: raw.macroFat,
   hover: raw.hover,
+  scrim: raw.scrim,
 };
 
 export const darkColors: ThemeColors = {
@@ -104,6 +109,7 @@ export const darkColors: ThemeColors = {
   macroCarbs: raw.macroCarbsDark,
   macroFat: raw.macroFatDark,
   hover: raw.hoverDark,
+  scrim: raw.scrimDark,
 };
 
 /** Mezery. Násobky 4, čitelné názvy podle role, ne čísla v komponentě. */

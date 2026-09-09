@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 
 import { importFoods } from '../packages/off-import/dist/index.js';
+import { pickName, isReasonableName } from './lib/food-quality.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SEARCH_URL = 'https://search.openfoodfacts.org/search';
@@ -72,13 +73,9 @@ function connectionConfig() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** product_name z OFF může být string, nebo chybět; brands string/pole. */
+/** Název se vybírá sdílenou logikou (cs → sk → en → obecný). */
 function nameOf(p) {
-  if (typeof p.product_name === 'string') return p.product_name;
-  if (p.product_name && typeof p.product_name === 'object') {
-    return p.product_name.cs || p.product_name.sk || p.product_name.en || Object.values(p.product_name)[0] || '';
-  }
-  return '';
+  return pickName(p);
 }
 function brandOf(p) {
   if (Array.isArray(p.brands)) return p.brands.join(', ') || null;
@@ -119,7 +116,11 @@ async function fetchCountry(country, target) {
     const json = await res.json();
     const hits = json.hits ?? [];
     if (hits.length === 0) break;
-    for (const p of hits) raws.push(toRaw(p));
+    for (const p of hits) {
+      const raw = toRaw(p);
+      if (!isReasonableName(raw.name)) continue; // filtr kvality (emoji, cizojazyčné, útržky)
+      raws.push(raw);
+    }
     process.stdout.write(`  ${country}: staženo ${raws.length}\r`);
     page += 1;
     await sleep(400); // ohleduplné tempo k veřejnému API

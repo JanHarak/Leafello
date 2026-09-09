@@ -22,3 +22,9 @@ supabase/.temp/
 # OS
 .DS_Store
 Thumbs.db
+
+# Licencovaná/velká zdrojová data importů (needitovat do repa)
+data/NutriDatabaze-*.csv
+data/usda-name-cache.json
+FoodData_Central_*.json
+openfoodfacts-products.jsonl*
