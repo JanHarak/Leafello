@@ -197,7 +197,7 @@ export default function Coach() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%' },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%', maxWidth: 1200, alignSelf: 'center' },
     muted: { color: c.textFaint, fontSize: fontSize.body },
     about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
