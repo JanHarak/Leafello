@@ -143,7 +143,14 @@
     "hwSteps": "Small steps, big changes",
     "hwLife": "A healthy life is a beautiful life",
     "welcomeTo": "Welcome to",
-    "welcomeBack": "back"
+    "welcomeBack": "back",
+    "forgotPassword": "Forgot your password?",
+    "forgotNeedEmail": "Enter your e-mail first, then tap reset password.",
+    "resetSent": "We have e-mailed you a link to reset your password.",
+    "resetTitle": "Set a new password",
+    "resetSubtitle": "Enter a new password for your account.",
+    "newPassword": "New password",
+    "savePassword": "Save password"
   },
   "streak": {
     "days": {

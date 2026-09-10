@@ -12,10 +12,16 @@ import { supabase } from './supabase';
 interface AuthValue {
   session: Session | null;
   loading: boolean;
+  /** Uživatel přišel přes odkaz „obnova hesla" a má nastavit nové heslo. */
+  recovery: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (email: string, password: string) => Promise<{ needsConfirmation: boolean }>;
+  /** Pošle e-mail s odkazem pro obnovu zapomenutého hesla. */
+  resetPassword: (email: string) => Promise<void>;
+  /** Nastaví nové heslo (v recovery session po kliknutí na odkaz). */
+  updatePassword: (newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -30,6 +36,7 @@ function redirectTo(): string {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recovery, setRecovery] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data, error }) => {
@@ -40,6 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       console.log('[auth] change:', event, next?.user?.email ?? 'none');
       setSession(next);
+      // Po kliknutí na odkaz „obnova hesla" Supabase vytvoří dočasnou session
+      // a vyšle tuto událost – přepneme aplikaci na obrazovku pro nové heslo.
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -47,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthValue = {
     session,
     loading,
+    recovery,
     async signInWithGoogle() {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -75,7 +86,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // uživatel musí kliknout na potvrzovací odkaz.
       return { needsConfirmation: !data.session };
     },
+    async resetPassword(email: string) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectTo(),
+      });
+      if (error) throw error;
+    },
+    async updatePassword(newPassword: string) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setRecovery(false);
+    },
     async signOut() {
+      setRecovery(false);
       await supabase.auth.signOut();
     },
   };

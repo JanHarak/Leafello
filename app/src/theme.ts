@@ -132,7 +132,9 @@ export const brandLeaf = {
   inkSoft: '#6B8E7A',
   accent: '#43A047',
   field: '#F4FAF6',
+  fieldHover: '#E6F4EA',
   border: '#D9EBE0',
+  accentHover: '#3C9142',
   error: '#B23B3B',
 } as const;
 

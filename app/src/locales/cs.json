@@ -145,7 +145,14 @@
     "hwSteps": "Malé kroky velké změny",
     "hwLife": "Zdravý život je krásný život",
     "welcomeTo": "Vítej na",
-    "welcomeBack": "zpět!"
+    "welcomeBack": "zpět!",
+    "forgotPassword": "Zapomněli jste heslo?",
+    "forgotNeedEmail": "Nejdřív zadej svůj e-mail a pak klikni na obnovu hesla.",
+    "resetSent": "Odkaz pro obnovu hesla jsme ti poslali e-mailem.",
+    "resetTitle": "Nastavte nové heslo",
+    "resetSubtitle": "Zadej nové heslo ke svému účtu.",
+    "newPassword": "Nové heslo",
+    "savePassword": "Uložit heslo"
   },
   "streak": {
     "days": {

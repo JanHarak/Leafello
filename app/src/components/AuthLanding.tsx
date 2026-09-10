@@ -17,6 +17,16 @@ import { brandLeaf, brandLeafGreens, brandLeafTints, fontFamily, fontSize, fontW
 type Mode = 'signin' | 'signup';
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+// react-native-web přidává do stavu Pressable `hovered`; v RN typech chybí.
+type HoverState = { hovered?: boolean };
+
+/**
+ * Magic link (přihlašovací odkaz e-mailem) je prozatím skrytý, dokud nemáme
+ * vlastní doménu a SMTP – vestavěná Supabase e-mailová služba naráží na rate
+ * limit. Až bude doména + SMTP, přepni na true.
+ */
+const EMAIL_LINK_ENABLED = false;
+
 const MASCOT_LOTTIE = require('../../assets/avatar/animated/leafello_mascot_lottie_login.json');
 const LEAF_CORNER = require('../../assets/leafello-web-assets/decor-background-corner.png');
 const LEAF_CLUSTER = require('../../assets/leafello-web-assets/decor-leaf-cluster.png');
@@ -88,7 +98,7 @@ export function AuthLanding() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const wide = width >= 1300;
-  const { signInWithGoogle, signInWithEmail, signInWithPassword, signUpWithPassword } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signInWithPassword, signUpWithPassword, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
@@ -170,6 +180,20 @@ export function AuthLanding() {
     }
   }
 
+  async function forgotPassword() {
+    reset();
+    if (!EMAIL_RE.test(email)) return setError(t('auth.forgotNeedEmail'));
+    setBusy(true);
+    try {
+      await resetPassword(email);
+      setNotice(t('auth.resetSent'));
+    } catch {
+      setError(t('auth.invalidEmail'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const card = (
     <View style={s.card}>
       {/* Místo statického loga animovaný brand (loading animace) */}
@@ -180,7 +204,7 @@ export function AuthLanding() {
       </Text>
       <Text style={s.subtitle}>{t('auth.subtitle')}</Text>
 
-      <Pressable style={s.google} onPress={() => signInWithGoogle()} accessibilityRole="button">
+      <Pressable style={({ hovered }: HoverState) => [s.google, hovered && s.googleHover]} onPress={() => signInWithGoogle()} accessibilityRole="button">
         <GoogleG size={18} />
         <Text style={s.googleText}>{t('auth.google')}</Text>
       </Pressable>
@@ -197,7 +221,7 @@ export function AuthLanding() {
           onPress={() => { setMode('signin'); reset(); }}
           accessibilityRole="button"
           accessibilityState={{ selected: mode === 'signin' }}
-          style={[s.tab, mode === 'signin' && s.tabActive]}
+          style={({ hovered }: HoverState) => [s.tab, mode === 'signin' && s.tabActive, hovered && mode !== 'signin' && s.tabHover]}
         >
           <Text style={mode === 'signin' ? s.tabTextActive : s.tabText}>{t('auth.tabSignIn')}</Text>
         </Pressable>
@@ -205,7 +229,7 @@ export function AuthLanding() {
           onPress={() => { setMode('signup'); reset(); }}
           accessibilityRole="button"
           accessibilityState={{ selected: mode === 'signup' }}
-          style={[s.tab, mode === 'signup' && s.tabActive]}
+          style={({ hovered }: HoverState) => [s.tab, mode === 'signup' && s.tabActive, hovered && mode !== 'signup' && s.tabHover]}
         >
           <Text style={mode === 'signup' ? s.tabTextActive : s.tabText}>{t('auth.tabSignUp')}</Text>
         </Pressable>
@@ -257,13 +281,23 @@ export function AuthLanding() {
         </View>
       )}
 
-      <Pressable style={[s.primary, busy && s.disabled]} onPress={submitPassword} disabled={busy} accessibilityRole="button">
+      <Pressable style={({ hovered }: HoverState) => [s.primary, busy && s.disabled, hovered && !busy && s.primaryHover]} onPress={submitPassword} disabled={busy} accessibilityRole="button">
         <Text style={s.primaryText}>{mode === 'signin' ? t('auth.signIn') : t('auth.register')}</Text>
       </Pressable>
 
-      <Pressable style={s.magic} onPress={sendMagicLink} disabled={busy} accessibilityRole="button">
-        <Text style={s.magicText}>{t('auth.sendLink')}</Text>
-      </Pressable>
+      {mode === 'signin' && (
+        <Pressable style={s.forgot} onPress={forgotPassword} disabled={busy} accessibilityRole="button">
+          {({ hovered }: HoverState) => (
+            <Text style={[s.forgotText, hovered && s.forgotTextHover]}>{t('auth.forgotPassword')}</Text>
+          )}
+        </Pressable>
+      )}
+
+      {EMAIL_LINK_ENABLED && (
+        <Pressable style={({ hovered }: HoverState) => [s.magic, hovered && s.magicHover]} onPress={sendMagicLink} disabled={busy} accessibilityRole="button">
+          <Text style={s.magicText}>{t('auth.sendLink')}</Text>
+        </Pressable>
+      )}
 
       {notice && <Text style={s.notice}>{notice}</Text>}
       {error && <Text style={s.error}>{error}</Text>}
@@ -407,6 +441,7 @@ const styles = StyleSheet.create({
   subtitle: { color: brandLeaf.inkSoft, fontSize: fontSize.body, textAlign: 'center', lineHeight: fontSize.body * 1.5, marginBottom: spacing.sm },
 
   google: { minHeight: touchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, backgroundColor: brandLeaf.card, borderWidth: 1, borderColor: brandLeaf.border, borderRadius: radius.pill },
+  googleHover: { backgroundColor: brandLeaf.fieldHover, borderColor: brandLeaf.accent },
   googleText: { color: brandLeaf.ink, fontSize: fontSize.body, fontWeight: fontWeight.medium },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.xs },
@@ -416,6 +451,7 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: 'row', gap: spacing.sm },
   tab: { flex: 1, minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, borderWidth: 1, borderColor: brandLeaf.border, backgroundColor: brandLeaf.field },
   tabActive: { backgroundColor: brandLeaf.accent, borderColor: brandLeaf.accent },
+  tabHover: { backgroundColor: brandLeaf.fieldHover, borderColor: brandLeaf.accent },
   tabText: { color: brandLeaf.ink, fontSize: fontSize.body, fontWeight: fontWeight.medium },
   tabTextActive: { color: brandLeaf.card, fontSize: fontSize.body, fontWeight: fontWeight.bold },
 
@@ -423,10 +459,15 @@ const styles = StyleSheet.create({
   fieldInput: { flex: 1, color: brandLeaf.ink, fontSize: fontSize.body },
 
   primary: { minHeight: touchTarget, backgroundColor: brandLeaf.accent, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
+  primaryHover: { backgroundColor: brandLeaf.accentHover },
   primaryText: { color: brandLeaf.card, fontSize: fontSize.body, fontWeight: fontWeight.bold },
   disabled: { opacity: 0.5 },
   magic: { minHeight: touchTarget, borderWidth: 1, borderColor: brandLeaf.border, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  magicHover: { backgroundColor: brandLeaf.fieldHover, borderColor: brandLeaf.accent },
   magicText: { color: brandLeaf.ink, fontSize: fontSize.body, fontWeight: fontWeight.medium },
+  forgot: { alignSelf: 'center', paddingVertical: spacing.xs },
+  forgotText: { color: brandLeaf.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
+  forgotTextHover: { textDecorationLine: 'underline' },
 
   notice: { color: brandLeaf.accent, fontSize: fontSize.body, textAlign: 'center', paddingVertical: spacing.xs },
   error: { color: brandLeaf.error, fontSize: fontSize.body, textAlign: 'center', paddingVertical: spacing.xs },

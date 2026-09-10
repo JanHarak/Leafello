@@ -8,6 +8,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 
 import { AuthLanding } from '@/components/AuthLanding';
 import { Loading } from '@/components/Loading';
+import { ResetPassword } from '@/components/ResetPassword';
 import { Tooltip } from '@/components/Tooltip';
 import { t } from '@/i18n';
 import { AuthProvider, useAuth } from '@/lib/auth';
@@ -294,14 +295,22 @@ function Shell() {
 
 function ThemedRoot() {
   const { mode } = useTheme();
-  const { loading, session } = useAuth();
+  const { loading, session, recovery } = useAuth();
   const pathname = usePathname();
   // Právní stránky jsou veřejné (odkazy z patičky loginu), zbytek je za gatem.
   const publicRoute = pathname.startsWith('/legal');
   return (
     <>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      {loading ? <Loading overlay /> : session || publicRoute ? <Shell /> : <AuthLanding />}
+      {loading ? (
+        <Loading overlay />
+      ) : recovery ? (
+        <ResetPassword />
+      ) : session || publicRoute ? (
+        <Shell />
+      ) : (
+        <AuthLanding />
+      )}
     </>
   );
 }
