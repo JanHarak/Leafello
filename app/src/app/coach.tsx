@@ -14,8 +14,8 @@ import { useLocale } from '@/lib/locale';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
-const AV_START = require('../../assets/avatar/avatar-coach-start.png');
-const AV_RESULT = require('../../assets/avatar/avatar-coach-result.png');
+const AV_START = require('../../assets/avatar/avatar-coach-start.svg');
+const AV_RESULT = require('../../assets/avatar/avatar-coach-result.svg');
 
 export default function Coach() {
   const { colors } = useTheme();
@@ -150,30 +150,41 @@ export default function Coach() {
     </View>
   );
 
+  const aboutCard = (
+    <View style={s.about}>
+      <Text style={s.aboutTitle}>{t('coach.aboutTitle')}</Text>
+      <Text style={s.aboutBody}>{t('coach.aboutBody')}</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.content}>
-        <View style={s.about}>
-          <Text style={s.aboutTitle}>{t('coach.aboutTitle')}</Text>
-          <Text style={s.aboutBody}>{t('coach.aboutBody')}</Text>
-        </View>
-
         {!session ? (
-          <Text style={s.muted}>{t('auth.subtitle')}</Text>
+          <View style={s.block960}>
+            {aboutCard}
+            <Text style={s.muted}>{t('auth.subtitle')}</Text>
+          </View>
         ) : wide ? (
           <>
-            {generateBtn}
-            {error && <Text style={s.error}>{error}</Text>}
-            <View style={s.row}>
-              {archivePanel}
-              <View style={s.center}>
+            {/* Box + tlačítko na střed (960) */}
+            <View style={s.block960}>
+              {aboutCard}
+              {generateBtn}
+              {error && <Text style={s.error}>{error}</Text>}
+            </View>
+            {/* Výstup na střed (960), archiv vlevo mimo, avatar vpravo mimo */}
+            <View style={s.wideRow}>
+              <View style={s.sideLeft}>{archivePanel}</View>
+              <View style={s.centerCol}>
                 {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
               </View>
-              {selected && <View style={s.rightCol}>{resultAvatar}</View>}
+              <View style={s.sideRight}>{selected ? resultAvatar : null}</View>
             </View>
           </>
         ) : (
-          <>
+          <View style={s.block960}>
+            {aboutCard}
             {generateBtn}
             {selected ? (
               <>
@@ -185,7 +196,7 @@ export default function Coach() {
             )}
             {error && <Text style={s.error}>{error}</Text>}
             {archivePanel}
-          </>
+          </View>
         )}
         <AppFooter />
       </ScrollView>
@@ -197,15 +208,19 @@ export default function Coach() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%', maxWidth: 1200, alignSelf: 'center' },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%' },
     muted: { color: c.textFaint, fontSize: fontSize.body },
+    // Střed (box, tlačítko, výstup) je na 960 jako ostatní sekce.
+    block960: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.md },
     about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
 
-    row: { flexDirection: 'row', gap: spacing.lg, alignItems: 'stretch' },
-    center: { flex: 1, gap: spacing.md },
-    rightCol: { flex: 1, minWidth: 320, alignItems: 'center', justifyContent: 'center' },
+    // Výstup na 960 vycentrovaný spacery; archiv vlevo mimo, avatar vpravo mimo.
+    wideRow: { flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
+    sideLeft: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
+    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%' },
+    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-end', justifyContent: 'center' },
 
     // Archiv (vlevo)
     archive: { width: 240, gap: spacing.sm },
@@ -218,10 +233,10 @@ const styles = (c: ThemeColors) =>
     archiveDelete: { padding: spacing.md },
 
     startWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
-    startAvatar: { width: 300, height: 300 },
+    startAvatar: { width: 380, height: 380 },
     resultAvatar: { width: 380, height: 380 },
 
-    card: { maxWidth: 680, backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
+    card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
     headline: { flex: 1, color: c.text, fontSize: fontSize.title, fontWeight: fontWeight.bold },
     summary: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
