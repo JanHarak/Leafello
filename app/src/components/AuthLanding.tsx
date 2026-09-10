@@ -339,6 +339,7 @@ export function AuthLanding() {
       {wide && <Text style={[s.hand, s.handTopRight]}>{t('auth.hwSteps')} ♥</Text>}
 
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+        <View style={s.main}>
         <View style={wide ? s.row : s.stack}>
           {wide && (
             <View style={s.sideLeft}>
@@ -376,22 +377,23 @@ export function AuthLanding() {
             ))}
           </View>
         )}
-      </ScrollView>
-
-      {/* Patička – jen jemný bílý horní border jako decentní oddělení */}
-      <View style={s.footer}>
-        <View style={s.footerLinks}>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
-            <Text style={s.footerLink}>{t('legal.privacy')}</Text>
-          </Pressable>
-          <Text style={s.footerDot}>·</Text>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
-            <Text style={s.footerLink}>{t('legal.terms')}</Text>
-          </Pressable>
         </View>
-        <Text style={s.footerText}>{t('attribution.off')}</Text>
-        <Text style={s.footerText}>{t('attribution.nutridb')}</Text>
-      </View>
+
+        {/* Patička uvnitř scrollu – na krátké stránce sedí dole, jinak doscrolluje */}
+        <View style={s.footer}>
+          <View style={s.footerLinks}>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
+              <Text style={s.footerLink}>{t('legal.privacy')}</Text>
+            </Pressable>
+            <Text style={s.footerDot}>·</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
+              <Text style={s.footerLink}>{t('legal.terms')}</Text>
+            </Pressable>
+          </View>
+          <Text style={s.footerText}>{t('attribution.off')}</Text>
+          <Text style={s.footerText}>{t('attribution.nutridb')}</Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -414,7 +416,8 @@ const styles = StyleSheet.create({
   handNearSleep: { position: 'absolute', top: 180, right: -160, maxWidth: 160, zIndex: 5 },
   handUnderCards: { position: 'absolute', fontSize: 32, top: 380, left: 60, maxWidth: 210, zIndex: 5, transform: [{ rotate: '-30deg' }] },
 
-  scroll: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, paddingTop: 96 },
+  scroll: { flexGrow: 1, alignItems: 'center', padding: spacing.xl, paddingTop: 96, paddingBottom: 0 },
+  main: { flexGrow: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xxl },
   stack: { width: '100%', alignItems: 'center' },
   sideLeft: { width: 360, alignItems: 'center', justifyContent: 'center' },
@@ -475,7 +478,7 @@ const styles = StyleSheet.create({
   leafDivider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
   tagline: { color: brandLeaf.accent, fontFamily: fontFamily.hand, fontSize: fontSize.subtitle, textAlign: 'center', marginTop: spacing.sm },
 
-  footer: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, gap: spacing.xs, alignItems: 'center' },
+  footer: { width: '100%', marginTop: spacing.xxl, marginBottom: 0, paddingVertical: spacing.md, paddingHorizontal: spacing.lg, gap: spacing.xs, alignItems: 'center' },
   footerLinks: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   footerLink: { color: brandLeaf.ink, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
   footerDot: { color: brandLeaf.inkSoft, fontSize: fontSize.caption },

@@ -177,7 +177,9 @@
     "logSelected": "Zapísať vybrané do denníka",
     "logged": "Zapísané do denníka.",
     "aboutTitle": "Ako funguje fotoanalýza",
-    "aboutBody": "Vyber fotku svojho jedla a aplikácia pomocou AI odhadne jednotlivé potraviny, ich gramáž a výživové hodnoty. Odhad si pri každej položke skontroluj a prípadne uprav gramáž, potom vybrané položky jedným tlačidlom zapíšeš do denníka. Ide o odhad, nie presné meranie – ber ho ako pomôcku."
+    "aboutBody": "Vyber fotku svojho jedla a aplikácia pomocou AI odhadne jednotlivé potraviny, ich gramáž a výživové hodnoty. Odhad si pri každej položke skontroluj a prípadne uprav gramáž, potom vybrané položky jedným tlačidlom zapíšeš do denníka. Ide o odhad, nie presné meranie – ber ho ako pomôcku.",
+    "takePhoto": "Odfotiť",
+    "fromLibrary": "Vybrať z galérie"
   },
   "recipes": {
     "title": "Recepty",
@@ -353,5 +355,19 @@
     "install": "Nainštalovať",
     "dismiss": "Teraz nie",
     "iosHint": "Pridaj Leafello na plochu: klepni na Zdieľať a potom Pridať na plochu."
+  },
+  "barcode": {
+    "tabPhoto": "Fotka",
+    "tabScan": "Čiarový kód",
+    "scan": "Skenovať kód",
+    "stop": "Zastaviť skenovanie",
+    "webOnly": "Skenovanie kamerou je zatiaľ len na webe. Zadaj kód ručne nižšie.",
+    "manualLabel": "Alebo zadaj kód ručne",
+    "manualPlaceholder": "Napr. 8594001020304",
+    "lookup": "Dohľadať",
+    "notFound": "Produkt s týmto kódom sa nenašiel. Skús potravinu vyhľadať ručne.",
+    "searchPlaceholder": "Hľadať potravinu…",
+    "cameraDenied": "Prístup ku kamere bol odmietnutý alebo nie je dostupný. Zadaj kód ručne.",
+    "log": "Zapísať do denníka"
   }
 }

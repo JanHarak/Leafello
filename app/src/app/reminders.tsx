@@ -18,6 +18,7 @@ import {
 } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 type MealKey = 'breakfast' | 'lunch' | 'dinner';
 
@@ -254,6 +255,7 @@ export default function Reminders() {
             <Text style={s.saveTimesText}>{t('reminders.saveTimes')}</Text>
           </Pressable>
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -262,8 +264,8 @@ export default function Reminders() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.sm },
-    intro: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.sm, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
+    intro: { color: c.textMuted, fontSize: fontSize.body, paddingBottom: 64, lineHeight: fontSize.body * 1.5 },
     toggle: { minHeight: touchTarget, borderRadius: radius.pill, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginTop: spacing.md },
     toggleText: { fontSize: fontSize.body, fontWeight: fontWeight.bold },
     enabled: { color: c.accent, fontSize: fontSize.body },

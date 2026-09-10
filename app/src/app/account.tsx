@@ -13,6 +13,7 @@ import { useLocale } from '@/lib/locale';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 /** Doručí JSON export: na webu jako stažený soubor, jinak přes systémové sdílení. */
 async function deliverExport(filename: string, json: string, shareTitle: string): Promise<void> {
@@ -211,6 +212,7 @@ export default function Account() {
             {error && <Text style={s.error}>{error}</Text>}
           </>
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -219,7 +221,7 @@ export default function Account() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.lg },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.lg, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     muted: { color: c.textFaint, fontSize: fontSize.body },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },

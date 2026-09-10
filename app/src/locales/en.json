@@ -175,7 +175,9 @@
     "logSelected": "Log selected to diary",
     "logged": "Logged to diary.",
     "aboutTitle": "How photo analysis works",
-    "aboutBody": "Pick a photo of your meal and the app uses AI to estimate the individual foods, their weight and nutrition. Review each item, adjust the grams if needed, then log the selected items to your diary with one tap. It is an estimate, not a precise measurement – treat it as a helper."
+    "aboutBody": "Pick a photo of your meal and the app uses AI to estimate the individual foods, their weight and nutrition. Review each item, adjust the grams if needed, then log the selected items to your diary with one tap. It is an estimate, not a precise measurement – treat it as a helper.",
+    "takePhoto": "Take photo",
+    "fromLibrary": "Choose from gallery"
   },
   "recipes": {
     "title": "Recipes",
@@ -351,5 +353,19 @@
     "install": "Install",
     "dismiss": "Not now",
     "iosHint": "Add Leafello to your home screen: tap Share, then Add to Home Screen."
+  },
+  "barcode": {
+    "tabPhoto": "Photo",
+    "tabScan": "Barcode",
+    "scan": "Scan barcode",
+    "stop": "Stop scanning",
+    "webOnly": "Camera scanning is web-only for now. Enter the code manually below.",
+    "manualLabel": "Or enter the code manually",
+    "manualPlaceholder": "e.g. 8594001020304",
+    "lookup": "Look up",
+    "notFound": "No product found for this code. Try searching for the food manually.",
+    "searchPlaceholder": "Search food…",
+    "cameraDenied": "Camera access was denied or is unavailable. Enter the code manually.",
+    "log": "Add to diary"
   }
 }

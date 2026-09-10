@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { addDiaryEntry, createUserFood, deleteDiaryEntry, listTodayEntries, searchFoods, updateDiaryEntry } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -432,6 +433,7 @@ export default function Diary() {
             </View>
           ))
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -480,7 +482,7 @@ function Choice({ label, active, onPress, c }: { label: string; active: boolean;
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxl },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     summary: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm },
     summaryLabel: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     summaryKcal: { color: c.accent, fontSize: 36, fontWeight: fontWeight.bold },

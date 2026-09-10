@@ -24,6 +24,7 @@ import { useAuth } from '@/lib/auth';
 import { saveProfileAndGoal, upsertWeight } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'high', 'very_high'];
 const RATES = [0, 0.25, 0.5, 0.75, 1];
@@ -185,6 +186,7 @@ export default function Onboarding() {
         <Pressable style={s.primaryButton} onPress={compute}>
           <Text style={s.primaryButtonText}>{t('onboarding.submit')}</Text>
         </Pressable>
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -235,7 +237,7 @@ function Macro({ label, value, c }: { label: string; value: string; c: ThemeColo
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.xs, paddingBottom: spacing.xxl },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.xs, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     title: { color: c.text, fontSize: fontSize.title, fontWeight: fontWeight.bold },
     subtitle: { color: c.textMuted, fontSize: fontSize.body, marginTop: spacing.xs },
     optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

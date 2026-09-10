@@ -26,7 +26,6 @@ const WIDTH_TRANSITION: any = Platform.OS === 'web' ? { transitionProperty: 'wid
 const RAIL_COLLAPSED = 64;
 const RAIL_EXPANDED = 210;
 const HEADER_HEIGHT = 60;
-const CONTENT_MAX_WIDTH = 960;
 
 function titleForPath(path: string): string {
   if (path === '/' || path === '') return '';
@@ -215,35 +214,6 @@ function Header() {
   );
 }
 
-function Footer() {
-  const { colors } = useTheme();
-  const router = useRouter();
-  return (
-    <View
-      style={{
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        backgroundColor: colors.surface,
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        alignItems: 'center',
-        gap: 2,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/privacy')}>
-          <Text style={{ color: colors.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{t('legal.privacy')}</Text>
-        </Pressable>
-        <Text style={{ color: colors.textFaint, fontSize: fontSize.caption }}>·</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/legal/terms')}>
-          <Text style={{ color: colors.accent, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{t('legal.terms')}</Text>
-        </Pressable>
-      </View>
-      <Text style={{ color: colors.textFaint, fontSize: fontSize.caption, textAlign: 'center' }}>{t('attribution.off')}</Text>
-      <Text style={{ color: colors.textFaint, fontSize: fontSize.caption, textAlign: 'center' }}>{t('attribution.nutridb')}</Text>
-    </View>
-  );
-}
 
 function Shell() {
   const { colors } = useTheme();
@@ -254,9 +224,6 @@ function Shell() {
   const router = useRouter();
   const pathname = usePathname();
   const showBack = pathname !== '/' && pathname !== '';
-  // Recepty potřebují celou šířku (mřížka receptů 1/2/3 sloupce); obrazovka si
-  // vstupní bloky drží ve své šířce sama. Ostatní obrazovky zůstávají na 960.
-  const fullWidth = pathname === '/recipes';
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -268,8 +235,8 @@ function Shell() {
       <Header />
       <View style={{ flex: 1, flexDirection: 'row' }}>
         {session ? <Rail /> : null}
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <View style={{ flex: 1, width: '100%', maxWidth: fullWidth ? undefined : CONTENT_MAX_WIDTH }}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, width: '100%' }}>
             {showBack && (
               <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, alignItems: 'flex-start' }}>
                 <Tooltip
@@ -287,7 +254,6 @@ function Shell() {
           </View>
         </View>
       </View>
-      <Footer />
     </View>
   );
 }

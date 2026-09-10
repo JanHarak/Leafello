@@ -21,6 +21,7 @@ import {
 } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -353,8 +354,8 @@ export default function Recipes() {
 
   const tabButtons = (
     <>
-      <TabButton label={t('recipes.tabMine')} active={tab === 'mine'} onPress={() => { setTab('mine'); loadRecipes(); }} c={colors} />
-      <TabButton label={t('recipes.tabGenerate')} active={tab === 'generate'} onPress={() => setTab('generate')} c={colors} />
+      <TabButton icon="bookmark" label={t('recipes.tabMine')} active={tab === 'mine'} onPress={() => { setTab('mine'); loadRecipes(); }} c={colors} />
+      <TabButton icon="zap" label={t('recipes.tabGenerate')} active={tab === 'generate'} onPress={() => setTab('generate')} c={colors} />
     </>
   );
 
@@ -539,6 +540,7 @@ export default function Recipes() {
             {wide && <View style={s.mineSide} />}
           </View>
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -560,15 +562,30 @@ function CfField({ label, value, onChange, c }: { label: string; value: string; 
   );
 }
 
-function TabButton({ label, active, onPress, c }: { label: string; active: boolean; onPress: () => void; c: ThemeColors }) {
+function TabButton({ icon, label, active, onPress, c }: { icon: React.ComponentProps<typeof Feather>['name']; label: string; active: boolean; onPress: () => void; c: ThemeColors }) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      style={{ flex: 1, minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, backgroundColor: active ? c.accent : c.surface, borderWidth: 1, borderColor: active ? c.accent : c.border }}
+      style={{
+        flex: 1,
+        flexDirection: 'row',
+        gap: spacing.sm,
+        minHeight: touchTarget,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: radius.pill,
+        backgroundColor: active ? c.surface : undefined,
+        shadowColor: c.text,
+        shadowOpacity: active ? 0.12 : 0,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: active ? 2 : 0,
+      }}
     >
-      <Text style={{ color: active ? c.onAccent : c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>{label}</Text>
+      <Feather name={icon} size={18} color={active ? c.accent : c.textMuted} />
+      <Text style={{ color: active ? c.text : c.textMuted, fontSize: fontSize.body, fontWeight: active ? fontWeight.bold : fontWeight.medium }}>{label}</Text>
     </Pressable>
   );
 }
@@ -641,7 +658,7 @@ function SavedRecipeGroups({
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    tabRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+    tabRow: { flexDirection: 'row', gap: spacing.xs, padding: spacing.xs, marginBottom: spacing.sm, backgroundColor: c.surfaceElevated, borderRadius: radius.pill, borderWidth: 1, borderColor: c.border },
     // Vstupní bloky (taby, tvorba, moje recepty) drží současnou šířku a jsou
     // na střed i na širokém obsahu; jen mřížka receptů využívá celou šířku.
     centered: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.sm },
@@ -657,7 +674,7 @@ const styles = (c: ThemeColors) =>
     editorCol: { gap: spacing.sm },
     groupHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
     groupTitle: { color: c.text, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
-    content: { padding: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxl },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.sm, paddingBottom: 0 },
     input: { minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },
     textarea: { minHeight: 96, paddingTop: spacing.sm, paddingBottom: spacing.sm, textAlignVertical: 'top', lineHeight: fontSize.body * 1.4 },
     servingsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

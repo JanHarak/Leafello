@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { deleteWeight, getActiveGoal, listWeights, upsertWeight, type WeightRow } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 /** 7denní klouzavý průměr přes seřazené hodnoty. */
 function movingAverage(values: number[], window = 7): number[] {
@@ -196,6 +197,7 @@ export default function Weight() {
               ))}
           </>
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -204,7 +206,7 @@ export default function Weight() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.md },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     muted: { color: c.textFaint, fontSize: fontSize.body },
     inputRow: { flexDirection: 'row', gap: spacing.sm },
     input: { flex: 1, minHeight: touchTarget, borderWidth: 1, borderColor: c.border, borderRadius: radius.md, paddingHorizontal: spacing.md, color: c.text, backgroundColor: c.surface, fontSize: fontSize.body },

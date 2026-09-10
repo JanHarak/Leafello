@@ -28,6 +28,7 @@ import {
 } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -643,6 +644,7 @@ export default function Plans() {
             {error && <Text style={s.error}>{error}</Text>}
           </>
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -651,7 +653,7 @@ export default function Plans() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxl },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.sm, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     muted: { color: c.textFaint, fontSize: fontSize.body, marginTop: spacing.sm },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.sm },
     cardTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },

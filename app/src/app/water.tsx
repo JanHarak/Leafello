@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { addWater, getActiveGoal, getTodayWaterMl } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 const QUICK = [200, 330, 500];
 
@@ -131,6 +132,7 @@ export default function Water() {
             {error && <Text style={s.error}>{error}</Text>}
           </>
         )}
+        <AppFooter />
       </ScrollView>
     </SafeAreaView>
   );
@@ -139,7 +141,7 @@ export default function Water() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { padding: spacing.xl, gap: spacing.lg },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.lg, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     muted: { color: c.textFaint, fontSize: fontSize.body },
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm },
     label: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },

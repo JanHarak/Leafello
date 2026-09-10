@@ -43,6 +43,7 @@ import {
   type GoalRow,
 } from '@/lib/db';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { AppFooter } from '@/components/AppFooter';
 
 interface Consumed {
   kcal: number;
@@ -328,6 +329,7 @@ export default function HomeScreen() {
           </Tooltip>
         ))}
       </View>
+          <AppFooter />
         </ScrollView>
       )}
     </View>
@@ -434,7 +436,7 @@ function EscalationCard({ colors }: { colors: ThemeColors }) {
 
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
-    content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
+    content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', justifyContent: 'center', flexGrow: 1, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
     caption: { color: c.textMuted, fontSize: fontSize.body, textAlign: 'center' },
     level: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     levelBar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', width: 220, backgroundColor: c.surfaceElevated },

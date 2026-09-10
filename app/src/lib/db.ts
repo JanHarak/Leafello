@@ -294,6 +294,88 @@ export async function searchFoods(q: string, limit = 20): Promise<FoodRow[]> {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Skenování čárového kódu (F-04): dohledání potraviny podle EAN/UPC          */
+/* -------------------------------------------------------------------------- */
+
+/** Potravina dohledaná podle čárového kódu (z naší DB nebo z Open Food Facts). */
+export interface BarcodeProduct {
+  name: string;
+  brand: string | null;
+  kcal_100g: number;
+  protein_100g: number;
+  carbs_100g: number;
+  fat_100g: number;
+  /** id řádku ve foods, pokud pochází z naší databáze (jinak undefined). */
+  foodId?: string;
+}
+
+/** Najde potravinu ve foods podle čárového kódu. RLS pustí OFF i vlastní. */
+export async function getFoodByBarcode(barcode: string): Promise<BarcodeProduct | null> {
+  const code = barcode.trim();
+  if (!code) return null;
+  const { data, error } = await supabase
+    .from('foods')
+    .select('id, name, brand, kcal_100g, protein_100g, carbs_100g, fat_100g, fiber_100g')
+    .eq('barcode', code)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const f = mapFoodRow(data as Record<string, unknown>);
+  return {
+    name: f.name,
+    brand: f.brand,
+    kcal_100g: f.kcal_100g,
+    protein_100g: f.protein_100g,
+    carbs_100g: f.carbs_100g,
+    fat_100g: f.fat_100g,
+    foodId: f.id,
+  };
+}
+
+interface OffResponse {
+  status?: number;
+  product?: { product_name?: string; brands?: string; nutriments?: Record<string, unknown> };
+}
+
+function offNum(v: unknown): number {
+  const x = Number(v);
+  return Number.isFinite(x) && x >= 0 ? x : 0;
+}
+
+/**
+ * Živě dohledá produkt v Open Food Facts podle čárového kódu (veřejné API,
+ * podporuje CORS). Vrátí null, když produkt neexistuje nebo nemá kcal na 100 g.
+ */
+export async function lookupBarcodeOFF(barcode: string): Promise<BarcodeProduct | null> {
+  const code = barcode.trim();
+  if (!code) return null;
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,brands,nutriments`;
+  let json: OffResponse;
+  try {
+    const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!resp.ok) return null;
+    json = (await resp.json()) as OffResponse;
+  } catch {
+    return null;
+  }
+  if (json.status !== 1 || !json.product) return null;
+  const p = json.product;
+  const n = p.nutriments ?? {};
+  const kcal = offNum(n['energy-kcal_100g']);
+  const name = String(p.product_name ?? '').trim();
+  if (kcal <= 0 || !name) return null;
+  return {
+    name,
+    brand: p.brands ? String(p.brands) : null,
+    kcal_100g: kcal,
+    protein_100g: offNum(n['proteins_100g']),
+    carbs_100g: offNum(n['carbohydrates_100g']),
+    fat_100g: offNum(n['fat_100g']),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
 /* Recepty (F-11): uložení a znovupoužití                                      */
 /* -------------------------------------------------------------------------- */
 
