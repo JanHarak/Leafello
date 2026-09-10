@@ -348,7 +348,9 @@
     "delete": "Zmazať",
     "edit": "Upraviť",
     "save": "Uložiť",
-    "done": "Hotovo"
+    "done": "Hotovo",
+    "on": "Zapnuté",
+    "off": "Vypnuté"
   },
   "pwa": {
     "prompt": "Nainštaluj si Leafello na plochu pre rýchlejší prístup.",
@@ -369,5 +371,20 @@
     "searchPlaceholder": "Hľadať potravinu…",
     "cameraDenied": "Prístup ku kamere bol odmietnutý alebo nie je dostupný. Zadaj kód ručne.",
     "log": "Zapísať do denníka"
+  },
+  "coach": {
+    "open": "AI kouč",
+    "aboutTitle": "Týždenný prehľad",
+    "aboutBody": "Nechaj si od kouča zhrnúť posledný týždeň – váhu, kalórie, sériu aj pitie – a dostaň pár konkrétnych tipov na ten ďalší.",
+    "generate": "Vygenerovať prehľad",
+    "regenerate": "Vygenerovať nový prehľad",
+    "generating": "Generujem…",
+    "empty": "Zatiaľ žiadny prehľad. Vygeneruj si prvé týždenné zhrnutie.",
+    "generatedAt": "Vygenerované {date}",
+    "winsTitle": "Čo sa podarilo",
+    "tipsTitle": "Tipy na ďalší týždeň",
+    "failed": "Prehľad sa nepodarilo vygenerovať. Skús to prosím znova.",
+    "weeklyLabel": "Týždenný prehľad automaticky",
+    "weeklyDesc": "Raz týždenne ti kouč prehľad vygeneruje sám."
   }
 }

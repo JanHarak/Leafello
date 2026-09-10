@@ -346,7 +346,9 @@
     "delete": "Delete",
     "edit": "Edit",
     "save": "Save",
-    "done": "Done"
+    "done": "Done",
+    "on": "On",
+    "off": "Off"
   },
   "pwa": {
     "prompt": "Install Leafello on your home screen for quick access.",
@@ -367,5 +369,20 @@
     "searchPlaceholder": "Search food…",
     "cameraDenied": "Camera access was denied or is unavailable. Enter the code manually.",
     "log": "Add to diary"
+  },
+  "coach": {
+    "open": "AI coach",
+    "aboutTitle": "Weekly review",
+    "aboutBody": "Let the coach sum up your last week – weight, calories, streak and water – and give you a couple of concrete tips for the next one.",
+    "generate": "Generate review",
+    "regenerate": "Generate new review",
+    "generating": "Generating…",
+    "empty": "No review yet. Generate your first weekly summary.",
+    "generatedAt": "Generated {date}",
+    "winsTitle": "What went well",
+    "tipsTitle": "Tips for next week",
+    "failed": "Could not generate the review. Please try again.",
+    "weeklyLabel": "Automatic weekly review",
+    "weeklyDesc": "Once a week the coach generates a review for you automatically."
   }
 }

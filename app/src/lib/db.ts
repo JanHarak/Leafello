@@ -948,3 +948,56 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
   await supabase.auth.signOut();
   return data ?? { status: 'deleted' };
 }
+
+/* -------------------------------------------------------------------------- */
+/* AI kouč (F-15): týdenní přehled                                             */
+/* -------------------------------------------------------------------------- */
+
+export interface CoachSummary {
+  headline: string;
+  summary: string;
+  wins?: string[];
+  tips: string[];
+}
+
+export interface CoachSummaryRow {
+  period_start: string;
+  period_end: string;
+  summary: CoachSummary;
+  created_at: string;
+}
+
+/** Poslední uložený týdenní přehled uživatele (cache). RLS pustí jen vlastní. */
+export async function getCoachSummary(): Promise<CoachSummaryRow | null> {
+  const { data, error } = await supabase
+    .from('coach_summaries')
+    .select('period_start, period_end, summary, created_at')
+    .maybeSingle();
+  if (error) throw error;
+  return (data as CoachSummaryRow | null) ?? null;
+}
+
+/** Vygeneruje nový týdenní přehled přes edge funkci a uloží ho (cache). */
+export async function generateWeeklyCoach(): Promise<CoachSummaryRow> {
+  const { data, error } = await supabase.functions.invoke('weekly-coach', { body: {} });
+  if (error) throw error;
+  if (!data || data.status === 'failed') throw new Error(data?.error ?? 'failed');
+  return {
+    period_start: data.period_start,
+    period_end: data.period_end,
+    summary: data.summary as CoachSummary,
+    created_at: new Date().toISOString(),
+  };
+}
+
+/** Přepínač automatického týdenního přehledu (cron) v profilu. */
+export async function getCoachWeekly(): Promise<boolean> {
+  const { data, error } = await supabase.from('profiles').select('coach_weekly').maybeSingle();
+  if (error) throw error;
+  return Boolean((data as { coach_weekly?: boolean } | null)?.coach_weekly);
+}
+
+export async function setCoachWeekly(userId: string, on: boolean): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ coach_weekly: on }).eq('id', userId);
+  if (error) throw error;
+}

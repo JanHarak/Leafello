@@ -2,13 +2,13 @@ import { Image } from 'expo-image';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LANGUAGES, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { deleteAccount, exportMyData } from '@/lib/db';
+import { deleteAccount, exportMyData, getCoachWeekly, setCoachWeekly } from '@/lib/db';
 import { useLocale } from '@/lib/locale';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
@@ -45,6 +45,25 @@ export default function Account() {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coachWeekly, setCoachWeeklyState] = useState(false);
+
+  useEffect(() => {
+    if (!session) return;
+    getCoachWeekly()
+      .then(setCoachWeeklyState)
+      .catch(() => {});
+  }, [session]);
+
+  async function toggleCoachWeekly() {
+    if (!session) return;
+    const next = !coachWeekly;
+    setCoachWeeklyState(next); // optimisticky
+    try {
+      await setCoachWeekly(session.user.id, next);
+    } catch {
+      setCoachWeeklyState(!next); // vrať zpět při chybě
+    }
+  }
 
   async function onChangeIcon() {
     if (!session || iconBusy) return;
@@ -164,6 +183,21 @@ export default function Account() {
                   );
                 })}
               </View>
+            </View>
+
+            <View style={s.card}>
+              <Text style={s.cardTitle}>{t('coach.weeklyLabel')}</Text>
+              <Text style={s.desc}>{t('coach.weeklyDesc')}</Text>
+              <Pressable
+                accessibilityRole="switch"
+                accessibilityState={{ checked: coachWeekly }}
+                onPress={toggleCoachWeekly}
+                style={[s.langButton, { alignSelf: 'flex-start', borderColor: coachWeekly ? colors.accent : colors.border, backgroundColor: coachWeekly ? colors.accent : colors.surface }]}
+              >
+                <Text style={{ color: coachWeekly ? colors.onAccent : colors.text, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>
+                  {coachWeekly ? t('common.on') : t('common.off')}
+                </Text>
+              </Pressable>
             </View>
 
             <View style={s.card}>
