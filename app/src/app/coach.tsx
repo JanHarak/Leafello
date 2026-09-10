@@ -197,7 +197,7 @@ export default function Coach() {
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%' },
     muted: { color: c.textFaint, fontSize: fontSize.body },
     about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
@@ -205,7 +205,7 @@ const styles = (c: ThemeColors) =>
 
     row: { flexDirection: 'row', gap: spacing.lg, alignItems: 'stretch' },
     center: { flex: 1, gap: spacing.md },
-    rightCol: { width: 280, alignItems: 'center', justifyContent: 'center' },
+    rightCol: { flex: 1, minWidth: 320, alignItems: 'center', justifyContent: 'center' },
 
     // Archiv (vlevo)
     archive: { width: 240, gap: spacing.sm },
@@ -218,10 +218,10 @@ const styles = (c: ThemeColors) =>
     archiveDelete: { padding: spacing.md },
 
     startWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
-    startAvatar: { width: 240, height: 240 },
-    resultAvatar: { width: 260, height: 260 },
+    startAvatar: { width: 300, height: 300 },
+    resultAvatar: { width: 380, height: 380 },
 
-    card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
+    card: { maxWidth: 680, backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
     headline: { flex: 1, color: c.text, fontSize: fontSize.title, fontWeight: fontWeight.bold },
     summary: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
