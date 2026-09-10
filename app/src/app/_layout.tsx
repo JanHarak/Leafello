@@ -2,11 +2,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { Image } from 'expo-image';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthLanding } from '@/components/AuthLanding';
+import { InstallPrompt } from '@/components/InstallPrompt';
 import { Loading } from '@/components/Loading';
 import { ResetPassword } from '@/components/ResetPassword';
 import { Tooltip } from '@/components/Tooltip';
@@ -15,7 +16,7 @@ import { AuthProvider, useAuth } from '@/lib/auth';
 import { LocaleProvider, useLocale } from '@/lib/locale';
 import { NAV_ITEMS } from '@/lib/nav';
 import { ThemeProvider, useTheme } from '@/lib/theme';
-import { fontSize, fontWeight, radius, spacing, touchTarget } from '@/theme';
+import { brandLeaf, fontSize, fontWeight, radius, spacing, touchTarget } from '@/theme';
 import '@/global.css';
 
 // react-native-web umí CSS přechody; na nativu se ignorují (mobil řešíme později).
@@ -190,17 +191,15 @@ function Header() {
         {session ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={t('account.title')}
             onPress={() => router.push('/account')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, height: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border }}
+            style={{ width: touchTarget, height: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border }}
           >
             {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={{ width: 26, height: 26, borderRadius: 13 }} accessibilityLabel="avatar" />
+              <Image source={{ uri: avatarUrl }} style={{ width: 28, height: 28, borderRadius: 14 }} accessibilityLabel="avatar" />
             ) : (
               <Feather name="user" size={18} color={colors.textMuted} />
             )}
-            <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSize.caption, fontWeight: fontWeight.medium, maxWidth: 160 }}>
-              {session.user.email ?? t('account.title')}
-            </Text>
           </Pressable>
         ) : (
           <Pressable
@@ -311,11 +310,47 @@ function ThemedRoot() {
       ) : (
         <AuthLanding />
       )}
+      <InstallPrompt />
     </>
   );
 }
 
 export default function RootLayout() {
+  // PWA: doplň do <head> manifest + ikony/meta (web.output "single" nepoužívá
+  // +html.tsx, tak je vkládáme za běhu) a zaregistruj service worker.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const head = document.head;
+    const ensure = (selector: string, make: () => HTMLElement) => {
+      if (!head.querySelector(selector)) head.appendChild(make());
+    };
+    const meta = (name: string, content: string) => {
+      const m = document.createElement('meta');
+      m.name = name;
+      m.content = content;
+      return m;
+    };
+    ensure('link[rel="manifest"]', () => {
+      const l = document.createElement('link');
+      l.rel = 'manifest';
+      l.href = '/manifest.webmanifest';
+      return l;
+    });
+    ensure('link[rel="apple-touch-icon"]', () => {
+      const l = document.createElement('link');
+      l.rel = 'apple-touch-icon';
+      l.href = '/icons/apple-touch-icon.png';
+      return l;
+    });
+    ensure('meta[name="theme-color"]', () => meta('theme-color', brandLeaf.accent));
+    ensure('meta[name="mobile-web-app-capable"]', () => meta('mobile-web-app-capable', 'yes'));
+    ensure('meta[name="apple-mobile-web-app-capable"]', () => meta('apple-mobile-web-app-capable', 'yes'));
+    ensure('meta[name="apple-mobile-web-app-status-bar-style"]', () => meta('apple-mobile-web-app-status-bar-style', 'default'));
+    ensure('meta[name="apple-mobile-web-app-title"]', () => meta('apple-mobile-web-app-title', 'Leafello'));
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }, []);
+
   return (
     <ThemeProvider>
       <LocaleProvider>

@@ -345,5 +345,11 @@
     "edit": "Edit",
     "save": "Save",
     "done": "Done"
+  },
+  "pwa": {
+    "prompt": "Install Leafello on your home screen for quick access.",
+    "install": "Install",
+    "dismiss": "Not now",
+    "iosHint": "Add Leafello to your home screen: tap Share, then Add to Home Screen."
   }
 }

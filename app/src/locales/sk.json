@@ -347,5 +347,11 @@
     "edit": "Upraviť",
     "save": "Uložiť",
     "done": "Hotovo"
+  },
+  "pwa": {
+    "prompt": "Nainštaluj si Leafello na plochu pre rýchlejší prístup.",
+    "install": "Nainštalovať",
+    "dismiss": "Teraz nie",
+    "iosHint": "Pridaj Leafello na plochu: klepni na Zdieľať a potom Pridať na plochu."
   }
 }
