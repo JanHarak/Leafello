@@ -1,9 +1,9 @@
+import Feather from '@expo/vector-icons/Feather';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { t } from '@/i18n';
-import { useTheme } from '@/lib/theme';
-import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
+import { brandLeaf, fontSize, fontWeight, radius, spacing, touchTarget } from '@/theme';
 
 /** Událost beforeinstallprompt (Chrome/Android) – v TS typech chybí. */
 type BeforeInstallPromptEvent = Event & {
@@ -33,8 +33,7 @@ function isStandalone(): boolean {
  * „Přidat na plochu". Odmítnutí si pamatuje v localStorage. Jen web + mobil.
  */
 export function InstallPrompt() {
-  const { colors } = useTheme();
-  const s = styles(colors);
+  const s = styles;
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
   const [iosHint, setIosHint] = useState(false);
@@ -84,49 +83,43 @@ export function InstallPrompt() {
 
   return (
     <View style={s.bar}>
-      <Text style={s.text}>{iosHint ? t('pwa.iosHint') : t('pwa.prompt')}</Text>
-      <View style={s.actions}>
-        {!iosHint && (
-          <Pressable onPress={install} style={s.install} accessibilityRole="button">
-            <Text style={s.installText}>{t('pwa.install')}</Text>
-          </Pressable>
-        )}
-        <Pressable onPress={dismiss} style={s.close} accessibilityRole="button">
-          <Text style={s.closeText}>{t('pwa.dismiss')}</Text>
+      <View style={s.headline}>
+        <Feather name="download" size={24} color={brandLeaf.card} />
+        <Text style={s.text}>{iosHint ? t('pwa.iosHint') : t('pwa.prompt')}</Text>
+        <Pressable onPress={dismiss} style={s.close} accessibilityRole="button" accessibilityLabel={t('pwa.dismiss')} hitSlop={8}>
+          <Feather name="x" size={22} color={brandLeaf.card} />
         </Pressable>
       </View>
+      {!iosHint && (
+        <Pressable onPress={install} style={s.install} accessibilityRole="button">
+          <Text style={s.installText}>{t('pwa.install')}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
 
-const styles = (c: ThemeColors) =>
-  StyleSheet.create({
-    bar: {
-      position: 'absolute',
-      left: spacing.md,
-      right: spacing.md,
-      bottom: spacing.md,
-      zIndex: 100,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.md,
-      backgroundColor: c.surfaceElevated,
-      borderColor: c.border,
-      borderWidth: 1,
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-      shadowColor: c.text,
-      shadowOpacity: 0.15,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 6,
-    },
-    text: { flex: 1, color: c.text, fontSize: fontSize.caption, lineHeight: fontSize.caption * 1.4 },
-    actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    install: { minHeight: touchTarget, paddingHorizontal: spacing.lg, borderRadius: radius.pill, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
-    installText: { color: c.onAccent, fontSize: fontSize.caption, fontWeight: fontWeight.bold },
-    close: { minHeight: touchTarget, paddingHorizontal: spacing.sm, alignItems: 'center', justifyContent: 'center' },
-    closeText: { color: c.textMuted, fontSize: fontSize.caption, fontWeight: fontWeight.medium },
-  });
+const styles = StyleSheet.create({
+  bar: {
+    position: 'absolute',
+    left: spacing.md,
+    right: spacing.md,
+    top: spacing.md,
+    zIndex: 100,
+    gap: spacing.md,
+    backgroundColor: brandLeaf.accent,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    shadowColor: brandLeaf.ink,
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  headline: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  text: { flex: 1, color: brandLeaf.card, fontSize: fontSize.body, fontWeight: fontWeight.medium, lineHeight: fontSize.body * 1.4 },
+  close: { padding: spacing.xs },
+  install: { minHeight: touchTarget, borderRadius: radius.pill, backgroundColor: brandLeaf.card, alignItems: 'center', justifyContent: 'center' },
+  installText: { color: brandLeaf.accent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
+});

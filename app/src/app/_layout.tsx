@@ -330,6 +330,14 @@ export default function RootLayout() {
       m.content = content;
       return m;
     };
+    // Zamkni viewport – ať nejde appku na mobilu odzoomovat (žádný rám okolo).
+    const viewport = head.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      viewport.setAttribute(
+        'content',
+        'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+      );
+    }
     ensure('link[rel="manifest"]', () => {
       const l = document.createElement('link');
       l.rel = 'manifest';

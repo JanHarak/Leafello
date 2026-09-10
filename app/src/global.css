@@ -9,10 +9,13 @@
 }
 
 /*
- * Globální zmenšení celé webové aplikace na 80 % (z původních 100 %), aby se
- * na obrazovku vešlo více obsahu. Platí jen na webu; na nativu se CSS ignoruje.
- * Hodnotu 0.8 uprav podle potřeby (1 = původní velikost).
+ * Zmenšení webové aplikace na 80 %, aby se na velké obrazovce vešlo více
+ * obsahu. JEN pro desktop/tablet (min-width 1024px) – na mobilu by 80 % zoom
+ * nechal appku menší než viewport (rám kolem + možnost odzoomovat). Na mobilu
+ * tedy zůstává 100 %. Platí jen na webu; na nativu se CSS ignoruje.
  */
-:root {
-  zoom: 0.8;
+@media (min-width: 1024px) {
+  :root {
+    zoom: 0.8;
+  }
 }
