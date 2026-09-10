@@ -1,0 +1,36 @@
+name: Supabase request (daily)
+
+# Provede jeden HTTP request na Supabase. Slouží hlavně jako denní „keep-alive",
+# aby se free-tier projekt neuspal, ale endpoint jde přenastavit repo proměnnou
+# SUPABASE_REQUEST_PATH. Žádný test report se negeneruje – jen se provede request.
+on:
+  schedule:
+    - cron: '0 6 * * *' # každý den v 06:00 UTC
+  workflow_dispatch: {} # ruční spuštění z GitHub Actions
+
+jobs:
+  request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          REQUEST_PATH: ${{ vars.SUPABASE_REQUEST_PATH || '/rest/v1/' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "Chybí GitHub secrets SUPABASE_URL / SUPABASE_ANON_KEY."
+            exit 1
+          fi
+          url="${SUPABASE_URL%/}${REQUEST_PATH}"
+          echo "Volám: ${url}"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${url}")
+          echo "HTTP status: ${code}"
+          case "${code}" in
+            2*|3*) echo "Request OK." ;;
+            *) echo "Request selhal (HTTP ${code})."; exit 1 ;;
+          esac
