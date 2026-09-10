@@ -46,7 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       console.log('[auth] change:', event, next?.user?.email ?? 'none');
-      setSession(next);
+      // Supabase re-emituje událost i při návratu na tab (visibilitychange).
+      // Když je to stejná session (stejný token i uživatel), nech starou
+      // referenci – jinak by se všude zbytečně přenačítala data.
+      setSession((prev) =>
+        prev?.access_token === next?.access_token && prev?.user?.id === next?.user?.id ? prev : next,
+      );
       // Po kliknutí na odkaz „obnova hesla" Supabase vytvoří dočasnou session
       // a vyšle tuto událost – přepneme aplikaci na obrazovku pro nové heslo.
       if (event === 'PASSWORD_RECOVERY') setRecovery(true);

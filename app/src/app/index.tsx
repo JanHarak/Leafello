@@ -55,6 +55,9 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { session } = useAuth();
+  // Stabilní identifikátor uživatele – načítání dat závisí na něm, ne na celé
+  // referenci `session` (ta se mění i při obnově tokenu / návratu na tab).
+  const userId = session?.user?.id;
 
   const [goal, setGoal] = useState<GoalRow | null>(null);
   const [consumed, setConsumed] = useState<Consumed | null>(null);
@@ -207,7 +210,10 @@ export default function HomeScreen() {
       return () => {
         active = false;
       };
-    }, [session]),
+      // Schválně jen `userId`: nová reference `session` (obnova tokenu, návrat
+      // na tab) není důvod k přenačtení; skutečná změna uživatele mění userId.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId]),
   );
 
   const mood: Mood | null =
