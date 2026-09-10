@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
         failed += 1;
         continue;
       }
-      await admin.from('coach_summaries').upsert({
+      await admin.from('coach_summaries').insert({
         user_id: userId,
         period_start: result.period_start,
         period_end: result.period_end,

@@ -961,33 +961,41 @@ export interface CoachSummary {
 }
 
 export interface CoachSummaryRow {
+  id: string;
   period_start: string;
   period_end: string;
   summary: CoachSummary;
   created_at: string;
 }
 
-/** Poslední uložený týdenní přehled uživatele (cache). RLS pustí jen vlastní. */
-export async function getCoachSummary(): Promise<CoachSummaryRow | null> {
+/** Archiv týdenních přehledů uživatele (nejnovější první). RLS jen vlastní. */
+export async function listCoachSummaries(): Promise<CoachSummaryRow[]> {
   const { data, error } = await supabase
     .from('coach_summaries')
-    .select('period_start, period_end, summary, created_at')
-    .maybeSingle();
+    .select('id, period_start, period_end, summary, created_at')
+    .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data as CoachSummaryRow | null) ?? null;
+  return (data ?? []) as CoachSummaryRow[];
 }
 
-/** Vygeneruje nový týdenní přehled přes edge funkci a uloží ho (cache). */
+/** Vygeneruje nový týdenní přehled přes edge funkci a uloží ho do archivu. */
 export async function generateWeeklyCoach(): Promise<CoachSummaryRow> {
   const { data, error } = await supabase.functions.invoke('weekly-coach', { body: {} });
   if (error) throw error;
   if (!data || data.status === 'failed') throw new Error(data?.error ?? 'failed');
   return {
+    id: data.id,
     period_start: data.period_start,
     period_end: data.period_end,
     summary: data.summary as CoachSummary,
-    created_at: new Date().toISOString(),
+    created_at: data.created_at ?? new Date().toISOString(),
   };
+}
+
+/** Smaže jeden přehled z archivu (RLS pustí jen vlastní). */
+export async function deleteCoachSummary(id: string): Promise<void> {
+  const { error } = await supabase.from('coach_summaries').delete().eq('id', id);
+  if (error) throw error;
 }
 
 /** Přepínač automatického týdenního přehledu (cron) v profilu. */

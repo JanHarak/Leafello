@@ -39,12 +39,23 @@ Deno.serve(async (req: Request) => {
   const result = await buildWeeklySummary(admin, userId, geminiKey, GEMINI_MODEL);
   if (!result) return json(200, { status: 'failed', error: 'generation' });
 
-  await admin.from('coach_summaries').upsert({
-    user_id: userId,
+  const { data: inserted } = await admin
+    .from('coach_summaries')
+    .insert({
+      user_id: userId,
+      period_start: result.period_start,
+      period_end: result.period_end,
+      summary: result.summary,
+    })
+    .select('id, created_at')
+    .single();
+
+  return json(200, {
+    status: 'ok',
+    id: inserted?.id,
     period_start: result.period_start,
     period_end: result.period_end,
+    created_at: inserted?.created_at,
     summary: result.summary,
   });
-
-  return json(200, { status: 'ok', period_start: result.period_start, period_end: result.period_end, summary: result.summary });
 });

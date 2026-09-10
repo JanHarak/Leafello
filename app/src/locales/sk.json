@@ -385,6 +385,8 @@
     "tipsTitle": "Tipy na ďalší týždeň",
     "failed": "Prehľad sa nepodarilo vygenerovať. Skús to prosím znova.",
     "weeklyLabel": "Týždenný prehľad automaticky",
-    "weeklyDesc": "Raz týždenne ti kouč prehľad vygeneruje sám."
+    "weeklyDesc": "Raz týždenne ti kouč prehľad vygeneruje sám.",
+    "archiveTitle": "Archív",
+    "delete": "Zmazať"
   }
 }

@@ -375,7 +375,7 @@
     "log": "Zapsat do deníku"
   },
   "coach": {
-    "open": "AI kouč",
+    "open": "Kouč Fitlístek",
     "aboutTitle": "Týdenní přehled",
     "aboutBody": "Nech si od kouče shrnout poslední týden – váhu, kalorie, sérii i pití – a dostaň pár konkrétních tipů na ten příští.",
     "generate": "Vygenerovat přehled",
@@ -387,6 +387,8 @@
     "tipsTitle": "Tipy na příští týden",
     "failed": "Přehled se nepodařilo vygenerovat. Zkus to prosím znovu.",
     "weeklyLabel": "Týdenní přehled automaticky",
-    "weeklyDesc": "Jednou týdně ti kouč přehled vygeneruje sám."
+    "weeklyDesc": "Jednou týdně ti kouč přehled vygeneruje sám.",
+    "archiveTitle": "Archiv",
+    "delete": "Smazat"
   }
 }

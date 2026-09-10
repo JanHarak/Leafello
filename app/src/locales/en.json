@@ -383,6 +383,8 @@
     "tipsTitle": "Tips for next week",
     "failed": "Could not generate the review. Please try again.",
     "weeklyLabel": "Automatic weekly review",
-    "weeklyDesc": "Once a week the coach generates a review for you automatically."
+    "weeklyDesc": "Once a week the coach generates a review for you automatically.",
+    "archiveTitle": "Archive",
+    "delete": "Delete"
   }
 }
