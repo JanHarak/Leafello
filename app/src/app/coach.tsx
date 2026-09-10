@@ -161,15 +161,17 @@ export default function Coach() {
         {!session ? (
           <Text style={s.muted}>{t('auth.subtitle')}</Text>
         ) : wide ? (
-          <View style={s.row}>
-            {archivePanel}
-            <View style={s.center}>
-              {generateBtn}
-              {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
-              {error && <Text style={s.error}>{error}</Text>}
+          <>
+            {generateBtn}
+            {error && <Text style={s.error}>{error}</Text>}
+            <View style={s.row}>
+              {archivePanel}
+              <View style={s.center}>
+                {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
+              </View>
+              {selected && <View style={s.rightCol}>{resultAvatar}</View>}
             </View>
-            {selected && <View style={s.rightCol}>{resultAvatar}</View>}
-          </View>
+          </>
         ) : (
           <>
             {generateBtn}
@@ -201,9 +203,9 @@ const styles = (c: ThemeColors) =>
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
 
-    row: { flexDirection: 'row', gap: spacing.lg, alignItems: 'flex-start' },
+    row: { flexDirection: 'row', gap: spacing.lg, alignItems: 'stretch' },
     center: { flex: 1, gap: spacing.md },
-    rightCol: { width: 200, alignItems: 'center', justifyContent: 'flex-start' },
+    rightCol: { width: 280, alignItems: 'center', justifyContent: 'center' },
 
     // Archiv (vlevo)
     archive: { width: 240, gap: spacing.sm },
@@ -215,9 +217,9 @@ const styles = (c: ThemeColors) =>
     archiveHeadline: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.medium },
     archiveDelete: { padding: spacing.md },
 
-    startWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
-    startAvatar: { width: 220, height: 220 },
-    resultAvatar: { width: 200, height: 200 },
+    startWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
+    startAvatar: { width: 240, height: 240 },
+    resultAvatar: { width: 260, height: 260 },
 
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
