@@ -440,20 +440,23 @@ export default function Plans() {
             <Text style={s.planTitle}>{plan.name}</Text>
 
             {/* Výběr dne */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.dayScroll}>
+            <View style={s.dayGrid}>
               {plan.end_date
                 ? dateRange(plan.start_date, plan.end_date).map((d) => {
                     const active = d === selectedDate;
                     const count = items.filter((i) => i.planDate === d).length;
                     return (
-                      <Pressable key={d} onPress={() => { setSelectedDate(d); setTransferredMsg(null); }} style={[s.dayChip, { backgroundColor: active ? colors.accent : colors.surface, borderColor: active ? colors.accent : colors.border }]}>
-                        <Text style={{ color: active ? colors.onAccent : colors.text, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{fmtDay(d)}</Text>
+                      <View key={d} style={s.dayCell}>
+                      <Pressable accessibilityRole="button" accessibilityLabel={fmtDay(d)} accessibilityState={{ selected: active }} onPress={() => { setSelectedDate(d); setTransferredMsg(null); }} style={[s.dayChip, { backgroundColor: active ? colors.accent : colors.surface, borderColor: active ? colors.accent : colors.border }]}>
+                        <Text numberOfLines={1} style={{ color: active ? colors.onAccent : colors.text, fontSize: fontSize.caption, fontWeight: fontWeight.medium }}>{new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short' })}</Text>
+                        <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: active ? colors.onAccent : colors.text, fontSize: fontSize.caption }}>{Number(d.slice(8))}.{Number(d.slice(5, 7))}.</Text>
                         {count > 0 && <Text style={{ color: active ? colors.onAccent : colors.textFaint, fontSize: fontSize.caption }}>{count}</Text>}
                       </Pressable>
+                      </View>
                     );
                   })
                 : null}
-            </ScrollView>
+            </View>
 
             {selectedDate && (
               <>
@@ -680,8 +683,9 @@ const styles = (c: ThemeColors) =>
     resultKcal: { color: c.textFaint, fontSize: fontSize.caption, flexShrink: 0 },
     back: { color: c.accent, fontSize: fontSize.body, fontWeight: fontWeight.medium },
     planTitle: { color: c.text, fontSize: fontSize.title, fontWeight: fontWeight.bold },
-    dayScroll: { gap: spacing.sm, paddingVertical: spacing.sm },
-    dayChip: { minWidth: 64, minHeight: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+    dayGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingVertical: spacing.xs, flexGrow: 0 },
+    dayCell: { width: `${100 / 7}%`, padding: 2 },
+    dayChip: { minHeight: 64, paddingVertical: spacing.xs, paddingHorizontal: 2, borderRadius: radius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
     dayHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm },
     dayKcal: { color: c.accent, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     section: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
