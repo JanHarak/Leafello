@@ -1,0 +1,35 @@
+name: Weekly AI coach
+
+# Jednou týdně spustí edge funkci weekly-coach-cron, která vygeneruje týdenní
+# přehled uživatelům s zapnutým „Týdenní přehled automaticky" (profiles.coach_weekly).
+# Vyžaduje GitHub secrets: SUPABASE_URL, SUPABASE_ANON_KEY, COACH_CRON_SECRET
+# (COACH_CRON_SECRET musí mít stejnou hodnotu i v Supabase → Edge Functions secrets).
+on:
+  schedule:
+    - cron: '0 7 * * 1' # každé pondělí 07:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly-coach-cron
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          COACH_CRON_SECRET: ${{ secrets.COACH_CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${COACH_CRON_SECRET}" ]; then
+            echo "Chybí GitHub secrets SUPABASE_URL / COACH_CRON_SECRET."
+            exit 1
+          fi
+          url="${SUPABASE_URL%/}/functions/v1/weekly-coach-cron"
+          echo "Volám: ${url}"
+          resp=$(curl -sS -X POST "${url}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "x-cron-secret: ${COACH_CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            -w $'\nHTTP %{http_code}')
+          echo "${resp}"
+          echo "${resp}" | grep -q 'HTTP 200' || { echo "Cron selhal."; exit 1; }
