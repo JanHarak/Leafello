@@ -401,6 +401,8 @@
     "dailyGenerate": "Vygenerovat denní přehled",
     "dailyRegenerate": "Vygenerovat nový denní přehled",
     "dailyEmpty": "Zatím žádný denní přehled. Vygeneruj si dnešní shrnutí.",
-    "dailyTipsTitle": "Tipy na dnešek"
+    "dailyTipsTitle": "Tipy na dnešek",
+    "dailyDoneToday": "Dnešní přehled už máš. Další můžeš vygenerovat zítra, nebo po smazání toho dnešního.",
+    "weeklyNextAvailable": "Další týdenní přehled bude dostupný {date}."
   }
 }

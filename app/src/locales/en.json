@@ -397,6 +397,8 @@
     "dailyGenerate": "Generate daily review",
     "dailyRegenerate": "Generate new daily review",
     "dailyEmpty": "No daily review yet. Generate today's summary.",
-    "dailyTipsTitle": "Tips for today"
+    "dailyTipsTitle": "Tips for today",
+    "dailyDoneToday": "You already have today's review. Generate another tomorrow, or after deleting today's.",
+    "weeklyNextAvailable": "Next weekly review will be available {date}."
   }
 }

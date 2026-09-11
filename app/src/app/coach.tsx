@@ -94,8 +94,19 @@ export default function Coach() {
 
   const daily = tab === 'daily';
 
+  // Dostupnost generování:
+  // - denní: jen když dnešní přehled ještě není (jinak až zítra / po smazání),
+  // - týdenní: nejdřív 7 dní od posledního týdenního přehledu.
+  const today = todayISO();
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const dailyDoneToday = lists.daily[0]?.period_end === today;
+  const lastWeekly = lists.weekly[0];
+  const weeklyLockedUntil = lastWeekly ? new Date(new Date(lastWeekly.created_at).getTime() + WEEK_MS) : null;
+  const weeklyLocked = weeklyLockedUntil ? weeklyLockedUntil.getTime() > Date.now() : false;
+  const canGenerate = daily ? !dailyDoneToday : !weeklyLocked;
+
   const tabsBar = (
-    <View style={s.tabs}>
+    <View style={s.tabRow}>
       {(['daily', 'weekly'] as CoachKind[]).map((k) => {
         const active = tab === k;
         return (
@@ -109,6 +120,7 @@ export default function Coach() {
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
           >
+            <Feather name={k === 'daily' ? 'sun' : 'calendar'} size={18} color={active ? colors.accent : colors.textMuted} />
             <Text style={[s.tabText, active && s.tabTextActive]}>{t(k === 'daily' ? 'coach.tabDaily' : 'coach.tabWeekly')}</Text>
           </Pressable>
         );
@@ -120,18 +132,18 @@ export default function Coach() {
     <Pressable style={[s.button, busy && s.dim]} onPress={generate} disabled={busy}>
       <Feather name="refresh-cw" size={18} color={colors.onAccent} />
       <Text style={s.buttonText}>
-        {busy
-          ? t('coach.generating')
-          : daily
-            ? list.length
-              ? t('coach.dailyRegenerate')
-              : t('coach.dailyGenerate')
-            : list.length
-              ? t('coach.regenerate')
-              : t('coach.generate')}
+        {busy ? t('coach.generating') : daily ? t('coach.dailyGenerate') : list.length ? t('coach.regenerate') : t('coach.generate')}
       </Text>
     </Pressable>
   );
+
+  // Když generovat nelze, místo tlačítka jemná poznámka proč.
+  const lockNote = (
+    <Text style={s.muted}>
+      {daily ? t('coach.dailyDoneToday') : t('coach.weeklyNextAvailable', { date: weeklyLockedUntil ? fmtDate(weeklyLockedUntil.toISOString()) : '' })}
+    </Text>
+  );
+  const action = canGenerate ? generateBtn : lockNote;
 
   const summaryCard = selected && (
     <View style={s.card}>
@@ -227,7 +239,7 @@ export default function Coach() {
                 <View style={s.sideLeft}>{archivePanel}</View>
                 <View style={s.centerCol}>
                   {aboutCard}
-                  {generateBtn}
+                  {action}
                   {error && <Text style={s.error}>{error}</Text>}
                   {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
                 </View>
@@ -236,7 +248,7 @@ export default function Coach() {
             ) : (
               <View style={s.block960}>
                 {aboutCard}
-                {generateBtn}
+                {action}
                 {selected ? (
                   <>
                     {summaryCard}
@@ -266,12 +278,12 @@ const styles = (c: ThemeColors) =>
     // Střed (box, tlačítko, výstup) je na 960 jako ostatní sekce.
     block960: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.md },
 
-    // Segmentový přepínač denní / týdenní.
-    tabs: { flexDirection: 'row', backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
-    tab: { flex: 1, minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill },
-    tabActive: { backgroundColor: c.accent },
+    // Segmentový přepínač denní / týdenní – konzistentní se sekcí Recepty.
+    tabRow: { flexDirection: 'row', gap: spacing.xs, padding: spacing.xs, backgroundColor: c.surfaceElevated, borderRadius: radius.pill, borderWidth: 1, borderColor: c.border },
+    tab: { flex: 1, flexDirection: 'row', gap: spacing.sm, minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill },
+    tabActive: { backgroundColor: c.surface, shadowColor: c.text, shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
     tabText: { color: c.textMuted, fontSize: fontSize.body, fontWeight: fontWeight.medium },
-    tabTextActive: { color: c.onAccent, fontWeight: fontWeight.bold },
+    tabTextActive: { color: c.text, fontWeight: fontWeight.bold },
     about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
