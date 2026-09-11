@@ -1033,3 +1033,35 @@ export async function setCoachWeekly(userId: string, on: boolean): Promise<void>
   const { error } = await supabase.from('profiles').update({ coach_weekly: on }).eq('id', userId);
   if (error) throw error;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Web push – odběry prohlížečů (F-13)                                         */
+/* -------------------------------------------------------------------------- */
+
+export interface PushSubscriptionInput {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  userAgent?: string | null;
+}
+
+/** Uloží/aktualizuje odběr web push (jeden řádek na endpoint). */
+export async function upsertPushSubscription(userId: string, sub: PushSubscriptionInput): Promise<void> {
+  const { error } = await supabase.from('push_subscriptions').upsert(
+    {
+      user_id: userId,
+      endpoint: sub.endpoint,
+      p256dh: sub.p256dh,
+      auth: sub.auth,
+      user_agent: sub.userAgent ?? null,
+    },
+    { onConflict: 'endpoint' },
+  );
+  if (error) throw error;
+}
+
+/** Smaže odběr web push podle endpointu (RLS pustí jen vlastní). */
+export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<void> {
+  const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+  if (error) throw error;
+}
