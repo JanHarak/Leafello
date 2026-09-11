@@ -1,6 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { dailyTotals, entrySnapshot, type Nutrition } from '@dietapp/diary';
@@ -16,6 +17,8 @@ import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 import { AppFooter } from '@/components/AppFooter';
 import { DayNav } from '@/components/DayNav';
+
+const AV_DIARY = require('../../assets/avatar/avatar-diary.png');
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -47,6 +50,9 @@ export default function Diary() {
   const { session } = useAuth();
   const { lang } = useLocale();
   const shift = useContentShift();
+  const { width } = useWindowDimensions();
+  const wide = width >= 900; // vpravo avatar mimo obsah, stejně jako v sekci kouč
+  const avatarSize = Math.round(Math.min(560, Math.max(300, width * 0.28)));
   // Prohlížený den (ISO). Default dnešek; šipkami se lze posouvat do minulosti a zpět.
   const [dateISO, setDateISO] = useState<string>(todayISO);
   const isToday = dateISO === todayISO();
@@ -299,9 +305,8 @@ export default function Diary() {
     }
   }
 
-  return (
-    <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
+  const body = (
+    <>
         {/* Navigace mezi dny (sdílená s pitným režimem) */}
         <DayNav dateISO={dateISO} onChange={setDateISO} />
 
@@ -451,6 +456,23 @@ export default function Diary() {
             </View>
           ))
         )}
+    </>
+  );
+
+  return (
+    <SafeAreaView style={s.safe}>
+      <ScrollView contentContainerStyle={[s.content, { paddingRight: spacing.xl + shift }]} keyboardShouldPersistTaps="handled">
+        {wide ? (
+          <View style={s.wideRow}>
+            <View style={s.sideLeft} />
+            <View style={s.centerCol}>{body}</View>
+            <View style={s.sideRight}>
+              <Image source={AV_DIARY} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+            </View>
+          </View>
+        ) : (
+          <View style={s.block960}>{body}</View>
+        )}
         <AppFooter />
       </ScrollView>
     </SafeAreaView>
@@ -500,7 +522,15 @@ function Choice({ label, active, onPress, c }: { label: string; active: boolean;
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
-    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
+    content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%' },
+    // Obsah na 960 na střed; na širokém webu vpravo mimo obsah avatar (jako kouč).
+    block960: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.md },
+    // flexGrow: řádek vyplní volnou výšku, aby se avatar (sideRight) svisle
+    // vycentroval i když je obsah kratší než obrázek.
+    wideRow: { flexGrow: 1, flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
+    sideLeft: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
+    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%', gap: spacing.md },
+    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
     summary: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm },
     summaryLabel: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     summaryKcal: { color: c.accent, fontSize: 36, fontWeight: fontWeight.bold },

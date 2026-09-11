@@ -26,6 +26,8 @@ export default function Coach() {
   const shift = useContentShift();
   const { width } = useWindowDimensions();
   const wide = width >= 900;
+  // Avatar se přizpůsobí šířce okna – na velkých obrazovkách je větší.
+  const avatarSize = Math.round(Math.min(560, Math.max(300, width * 0.28)));
 
   // Denní a týdenní přehled mají samostatný archiv i vybraný výstup (tab).
   const [tab, setTab] = useState<CoachKind>('daily');
@@ -184,10 +186,10 @@ export default function Coach() {
   );
 
   const startAvatar = (
-    <Image source={AV_START} style={s.startAvatar} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+    <Image source={AV_START} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
   );
   const resultAvatar = (
-    <Image source={AV_RESULT} style={s.resultAvatar} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+    <Image source={AV_RESULT} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
   );
 
   const archivePanel = (
@@ -289,7 +291,9 @@ const styles = (c: ThemeColors) =>
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
 
     // Výstup na 960 vycentrovaný spacery; archiv vlevo mimo, avatar vpravo mimo.
-    wideRow: { flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
+    // flexGrow: řádek vyplní volnou výšku, aby se avatar (sideRight) svisle
+    // vycentroval i když je obsah kratší než obrázek.
+    wideRow: { flexGrow: 1, flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
     sideLeft: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
     centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%', gap: spacing.md },
     sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
@@ -305,8 +309,6 @@ const styles = (c: ThemeColors) =>
     archiveDelete: { padding: spacing.md },
 
     startWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
-    startAvatar: { width: 380, height: 380 },
-    resultAvatar: { width: 380, height: 380 },
 
     card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
     cardHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },

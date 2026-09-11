@@ -1,5 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
 import { recipePerPortion } from '@dietapp/diary';
+import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
@@ -23,6 +24,8 @@ import {
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 import { AppFooter } from '@/components/AppFooter';
+
+const AV_RECEPTY = require('../../assets/avatar/avatar-recepty.png');
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -53,6 +56,7 @@ export default function Recipes() {
   const [tab, setTab] = useState<'mine' | 'generate'>('mine');
   const { width } = useWindowDimensions();
   const wide = width >= 900; // dvousloupcové rozložení Moje recepty (seznam vlevo)
+  const avatarSize = Math.round(Math.min(560, Math.max(300, width * 0.28)));
   const [name, setName] = useState('');
   const [servings, setServings] = useState('4');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -539,7 +543,11 @@ export default function Recipes() {
           <Text style={s.muted}>{t('recipes.empty')}</Text>
         )}
             </View>
-            {wide && <View style={s.mineSide} />}
+            {wide && (
+              <View style={s.avatarSide}>
+                <Image source={AV_RECEPTY} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+              </View>
+            )}
           </View>
         )}
         <AppFooter />
@@ -668,8 +676,12 @@ const styles = (c: ThemeColors) =>
     // editor vycentrovaný ve zbylém prostoru.
     // Editor uprostřed (max 900 px). Levý flex drží seznam u levého okraje,
     // pravý flex ho vyváží, takže editor sedí na středu obrazovky.
-    mineWide: { flexDirection: 'row', alignItems: 'flex-start', width: '100%', gap: spacing.lg },
+    // flexGrow: řádek vyplní volnou výšku, aby se avatar vpravo svisle
+    // vycentroval i při kratším obsahu editoru.
+    mineWide: { flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', width: '100%', gap: spacing.lg },
     mineSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
+    // Pravý sloupec s avatarem – svisle na střed, u pravého okraje (jako kouč).
+    avatarSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
     sidebar: { width: 300 },
     mineCenter: { flexGrow: 0, flexShrink: 1, flexBasis: 900, maxWidth: 900, width: '100%' },
     editorFull: { width: '100%' },

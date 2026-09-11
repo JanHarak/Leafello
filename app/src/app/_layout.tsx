@@ -10,7 +10,6 @@ import { AuthLanding } from '@/components/AuthLanding';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { Loading } from '@/components/Loading';
 import { ResetPassword } from '@/components/ResetPassword';
-import { Tooltip } from '@/components/Tooltip';
 import { t } from '@/i18n';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ContentShiftContext } from '@/lib/layout';
@@ -222,11 +221,8 @@ function Shell() {
   // Konzumace jazyka tady zajistí překreslení obsahu po přepnutí jazyka.
   useLocale();
   const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const pathname = usePathname();
   const { width } = useWindowDimensions();
   const [railPinned, setRailPinned] = useState(false);
-  const showBack = pathname !== '/' && pathname !== '';
 
   // Rail vlevo rezervuje svou šířku (ukotvený je širší). Obsah zabírá celou
   // plochu napravo od menu (scrollbar u kraje). Aby se centrovaný blok sekce
@@ -235,26 +231,6 @@ function Shell() {
   // aby se blok (max 960) nezačal zužovat.
   const railW = session ? (railPinned ? RAIL_EXPANDED : RAIL_COLLAPSED) : 0;
   const shift = Platform.OS === 'web' && width - railW * 2 >= CONTENT_MAX_WIDTH ? railW : 0;
-  // Šipka zpět: jen na širokém webu, kde je vedle vycentrovaného obsahu volný
-  // okraj. Tam ji „přeložíme“ přes okraj (absolutně), aby obsah začínal nahoře
-  // na její úrovni. Na mobilu / úzkém webu ji vůbec nezobrazujeme (navigaci
-  // řeší levé menu a tlačítko zpět v prohlížeči).
-  const showBackOverlay = showBack && shift > 0;
-
-  const goBack = () => {
-    if (router.canGoBack()) router.back();
-    else router.push('/');
-  };
-
-  const backButton = (
-    <Tooltip
-      label={t('common.back')}
-      onPress={goBack}
-      style={{ width: touchTarget, height: touchTarget, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' }}
-    >
-      <Feather name="arrow-left" size={20} color={colors.text} />
-    </Tooltip>
-  );
 
   return (
     <ContentShiftContext.Provider value={shift}>
@@ -267,9 +243,6 @@ function Shell() {
             <View style={{ flex: 1 }}>
               <Slot />
             </View>
-            {showBackOverlay && (
-              <View style={{ position: 'absolute', top: spacing.md, left: spacing.lg, zIndex: 20 }}>{backButton}</View>
-            )}
           </View>
         </View>
       </View>

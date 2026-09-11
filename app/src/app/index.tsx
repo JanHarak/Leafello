@@ -240,6 +240,7 @@ export default function HomeScreen() {
         <Loading overlay />
       ) : (
         <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]}>
+      <View style={s.centerBlock}>
       {escalated ? (
         <EscalationCard colors={colors} />
       ) : session && goal && consumed && mood ? (
@@ -330,6 +331,7 @@ export default function HomeScreen() {
             <Feather name={item.icon} size={26} color={colors.accent} />
           </Tooltip>
         ))}
+      </View>
       </View>
           <AppFooter />
         </ScrollView>
@@ -438,7 +440,9 @@ function EscalationCard({ colors }: { colors: ThemeColors }) {
 
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
-    content: { padding: spacing.xl, gap: spacing.lg, alignItems: 'center', justifyContent: 'center', flexGrow: 1, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
+    content: { padding: spacing.xl, gap: spacing.lg, flexGrow: 1, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
+    // Blok přehledu se svisle vycentruje ve volné ploše; patička zůstává dole.
+    centerBlock: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
     caption: { color: c.textMuted, fontSize: fontSize.body, textAlign: 'center' },
     level: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     levelBar: { height: 6, borderRadius: radius.pill, overflow: 'hidden', width: 220, backgroundColor: c.surfaceElevated },
