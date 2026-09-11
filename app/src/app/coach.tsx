@@ -166,22 +166,17 @@ export default function Coach() {
             <Text style={s.muted}>{t('auth.subtitle')}</Text>
           </View>
         ) : wide ? (
-          <>
-            {/* Box + tlačítko na střed (960) */}
-            <View style={s.block960}>
+          /* Archiv vlevo mimo (na úrovni boxu), box+tlačítko+výstup na střed (960), avatar vpravo mimo */
+          <View style={s.wideRow}>
+            <View style={s.sideLeft}>{archivePanel}</View>
+            <View style={s.centerCol}>
               {aboutCard}
               {generateBtn}
               {error && <Text style={s.error}>{error}</Text>}
+              {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
             </View>
-            {/* Výstup na střed (960), archiv vlevo mimo, avatar vpravo mimo */}
-            <View style={s.wideRow}>
-              <View style={s.sideLeft}>{archivePanel}</View>
-              <View style={s.centerCol}>
-                {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
-              </View>
-              <View style={s.sideRight}>{selected ? resultAvatar : null}</View>
-            </View>
-          </>
+            <View style={s.sideRight}>{selected ? resultAvatar : null}</View>
+          </View>
         ) : (
           <View style={s.block960}>
             {aboutCard}
@@ -219,8 +214,8 @@ const styles = (c: ThemeColors) =>
     // Výstup na 960 vycentrovaný spacery; archiv vlevo mimo, avatar vpravo mimo.
     wideRow: { flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
     sideLeft: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
-    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%' },
-    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-end', justifyContent: 'center' },
+    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%', gap: spacing.md },
+    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
 
     // Archiv (vlevo)
     archive: { width: 240, gap: spacing.sm },
