@@ -13,6 +13,7 @@ import {
   DEFAULT_REMINDER_TIMES,
   getActiveGoal,
   getReminderPrefs,
+  sendTestPush,
   setReminderPrefs,
   setReminderTimes,
   type ReminderChannel,
@@ -142,6 +143,15 @@ export default function Reminders() {
     }
   }
 
+  async function onTestPush() {
+    try {
+      await sendTestPush();
+      setNote(t('reminders.pushTestSent'));
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   function setTime<K extends keyof ReminderTimes>(key: K, value: ReminderTimes[K]) {
     setTimes((prev) => ({ ...prev, [key]: value }));
   }
@@ -217,8 +227,13 @@ export default function Reminders() {
                     ? t('reminders.pushEnabled')
                     : pushStatus === 'denied'
                       ? t('reminders.pushBlocked')
-                      : t('reminders.pushEnabling')}
+                      : t('reminders.pushNotYet')}
               </Text>
+            )}
+            {(channel === 'push' || channel === 'both') && pushStatus === 'subscribed' && (
+              <Pressable style={s.testBtn} onPress={onTestPush} accessibilityRole="button">
+                <Text style={s.testBtnText}>{t('reminders.pushTest')}</Text>
+              </Pressable>
             )}
           </>
         )}
@@ -309,4 +324,6 @@ const styles = (c: ThemeColors) =>
     row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: touchTarget, paddingHorizontal: spacing.md, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
     time: { color: c.text, fontSize: fontSize.body, fontWeight: fontWeight.bold },
     detail: { color: c.textMuted, fontSize: fontSize.body },
+    testBtn: { minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, borderWidth: 1, borderColor: c.accent, backgroundColor: c.surface, marginTop: spacing.sm },
+    testBtnText: { color: c.accent, fontSize: fontSize.body, fontWeight: fontWeight.medium },
   });

@@ -1065,3 +1065,9 @@ export async function deletePushSubscriptionByEndpoint(endpoint: string): Promis
   const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
   if (error) throw error;
 }
+
+/** Pošle testovací push na vlastní odběry (ověření). */
+export async function sendTestPush(): Promise<void> {
+  const { error } = await supabase.functions.invoke('push-test', { body: {} });
+  if (error) throw error;
+}
