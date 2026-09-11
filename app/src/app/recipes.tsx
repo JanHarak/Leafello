@@ -382,6 +382,7 @@ export default function Recipes() {
         {/* Moje recepty: vlevo panel s uloženými recepty (na úrovni tabů),
             vpravo taby + editor */}
         {tab === 'mine' && (
+          <>
           <View style={wide ? s.mineWide : s.centered}>
             {!wide && <View style={s.tabRow}>{tabButtons}</View>}
 
@@ -552,6 +553,13 @@ export default function Recipes() {
               </View>
             )}
           </View>
+          {/* Na užším/mobilním zobrazení avatar spadne pod blok (jako u kouče). */}
+          {!showAvatar && (
+            <View style={s.belowWrap}>
+              <Image source={AV_RECEPTY} style={s.belowAvatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+            </View>
+          )}
+          </>
         )}
         <AppFooter />
       </ScrollView>
@@ -688,6 +696,9 @@ const styles = (c: ThemeColors) =>
     avatarSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-start', justifyContent: 'center' },
     // Avatar vyplní pravý pruh (width:100 % → procenta, responzivní), strop 720.
     avatarImg: { width: '100%', maxWidth: 720, aspectRatio: 1 },
+    // Avatar pod blokem (užší/mobilní zobrazení) – na střed, střídmá velikost.
+    belowWrap: { alignItems: 'center', paddingVertical: spacing.lg },
+    belowAvatarImg: { width: '100%', maxWidth: 400, aspectRatio: 1 },
     sidebar: { width: 300 },
     mineCenter: { flexGrow: 0, flexShrink: 1, flexBasis: 900, maxWidth: 900, width: '100%' },
     editorFull: { width: '100%' },

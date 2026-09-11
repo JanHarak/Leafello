@@ -472,7 +472,13 @@ export default function Diary() {
             </View>
           </View>
         ) : (
-          <View style={s.block960}>{body}</View>
+          <View style={s.block960}>
+            {body}
+            {/* Na užším/mobilním zobrazení avatar spadne pod blok (jako u kouče). */}
+            <View style={s.belowWrap}>
+              <Image source={AV_DIARY} style={s.belowAvatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+            </View>
+          </View>
         )}
         <AppFooter />
       </ScrollView>
@@ -535,6 +541,9 @@ const styles = (c: ThemeColors) =>
     centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, gap: spacing.md },
     gutter: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-start', justifyContent: 'center' },
     avatarImg: { width: '100%', maxWidth: 720, aspectRatio: 1 },
+    // Avatar pod blokem (užší/mobilní zobrazení) – na střed, střídmá velikost.
+    belowWrap: { alignItems: 'center', paddingVertical: spacing.lg },
+    belowAvatarImg: { width: '100%', maxWidth: 400, aspectRatio: 1 },
     summary: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm },
     summaryLabel: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     summaryKcal: { color: c.accent, fontSize: 36, fontWeight: fontWeight.bold },
