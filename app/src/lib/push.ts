@@ -47,7 +47,7 @@ export async function subscribeWebPush(userId: string): Promise<boolean> {
   if (!sub) {
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,
     });
   }
   const json = sub.toJSON();
