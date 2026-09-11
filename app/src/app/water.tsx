@@ -7,11 +7,14 @@ import { waterSchedule } from '@dietapp/reminders';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { dayLabel, todayISO } from '@/lib/date';
 import { useContentShift } from '@/lib/layout';
-import { addWater, getActiveGoal, getTodayWaterMl } from '@/lib/db';
+import { useLocale } from '@/lib/locale';
+import { addWater, getActiveGoal, getWaterMlForDay } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 import { AppFooter } from '@/components/AppFooter';
+import { DayNav } from '@/components/DayNav';
 
 const QUICK = [200, 330, 500];
 
@@ -20,6 +23,10 @@ export default function Water() {
   const s = styles(colors);
   const { session } = useAuth();
   const shift = useContentShift();
+  const { lang } = useLocale();
+  // Prohlížený den (ISO). Default dnešek; šipkami se lze posouvat do minulosti a zpět.
+  const [dateISO, setDateISO] = useState<string>(todayISO);
+  const isToday = dateISO === todayISO();
 
   const [todayMl, setTodayMl] = useState(0);
   const [goalMl, setGoalMl] = useState<number | null>(null);
@@ -30,24 +37,24 @@ export default function Water() {
     if (!session) return;
     (async () => {
       try {
-        const [ml, goal] = await Promise.all([getTodayWaterMl(), getActiveGoal()]);
+        const [ml, goal] = await Promise.all([getWaterMlForDay(dateISO), getActiveGoal()]);
         setTodayMl(ml);
         setGoalMl(goal?.water_ml ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
-  }, [session]);
+  }, [session, dateISO]);
 
   useFocusEffect(load);
 
   async function add(ml: number) {
     if (!session || !Number.isFinite(ml) || ml <= 0) return;
     try {
-      await addWater(session.user.id, Math.round(ml));
+      await addWater(session.user.id, Math.round(ml), isToday ? undefined : dateISO);
       setError(null);
       setCustom('');
-      const total = await getTodayWaterMl();
+      const total = await getWaterMlForDay(dateISO);
       setTodayMl(total);
     } catch (e) {
       console.error('Zápis vody selhal:', e);
@@ -77,8 +84,11 @@ export default function Water() {
           <Text style={s.muted}>{t('auth.subtitle')}</Text>
         ) : (
           <>
+            {/* Navigace mezi dny (sdílená s deníkem) */}
+            <DayNav dateISO={dateISO} onChange={setDateISO} />
+
             <View style={s.card}>
-              <Text style={s.label}>{t('water.today')}</Text>
+              <Text style={s.label}>{isToday ? t('water.today') : dayLabel(dateISO, lang).label}</Text>
               <Text style={s.big}>
                 {todayMl}{' '}
                 <Text style={s.unit}>

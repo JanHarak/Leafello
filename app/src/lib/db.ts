@@ -515,8 +515,12 @@ export async function deleteRecipe(recipeId: string): Promise<void> {
 /* Pitný režim (F-08)                                                          */
 /* -------------------------------------------------------------------------- */
 
-export async function addWater(userId: string, ml: number): Promise<void> {
-  const { error } = await supabase.from('water_logs').insert({ user_id: userId, ml });
+export async function addWater(userId: string, ml: number, dateISO?: string): Promise<void> {
+  // Bez data → teď (dnešek). S datem (procházení dní) uložíme na poledne UTC
+  // daného dne, ať záznam padne do správného dne.
+  const row: { user_id: string; ml: number; logged_at?: string } = { user_id: userId, ml };
+  if (dateISO) row.logged_at = `${dateISO}T12:00:00Z`;
+  const { error } = await supabase.from('water_logs').insert(row);
   if (error) throw error;
 }
 
@@ -528,6 +532,19 @@ export async function getTodayWaterMl(): Promise<number> {
     .from('water_logs')
     .select('ml')
     .gte('logged_at', start.toISOString());
+  if (error) throw error;
+  return (data ?? []).reduce((sum, r) => sum + (r.ml as number), 0);
+}
+
+/** Součet vypité vody za daný den (ISO `YYYY-MM-DD`, hranice v UTC). */
+export async function getWaterMlForDay(dateISO: string): Promise<number> {
+  const next = new Date(`${dateISO}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('ml')
+    .gte('logged_at', `${dateISO}T00:00:00Z`)
+    .lt('logged_at', next.toISOString());
   if (error) throw error;
   return (data ?? []).reduce((sum, r) => sum + (r.ml as number), 0);
 }
