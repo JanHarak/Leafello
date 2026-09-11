@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WeightChart } from '@/components/WeightChart';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import { deleteWeight, getActiveGoal, listWeights, upsertWeight, type WeightRow } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
@@ -24,6 +25,7 @@ export default function Weight() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
+  const shift = useContentShift();
 
   const [rows, setRows] = useState<WeightRow[]>([]);
   const [targetKg, setTargetKg] = useState<number | null>(null);
@@ -119,7 +121,7 @@ export default function Weight() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
         {!session ? (
           <Text style={s.muted}>{t('auth.subtitle')}</Text>
         ) : (

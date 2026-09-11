@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import {
   DEFAULT_REMINDER_TIMES,
   getActiveGoal,
@@ -35,6 +36,7 @@ export default function Reminders() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
+  const shift = useContentShift();
 
   const [goalMl, setGoalMl] = useState<number | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -165,7 +167,7 @@ export default function Reminders() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
         <Text style={s.intro}>{t('reminders.intro')}</Text>
 
         <Pressable style={[s.toggle, { backgroundColor: enabled ? colors.surface : colors.accent, borderColor: colors.accent }]} onPress={toggle}>

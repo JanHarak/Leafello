@@ -9,6 +9,7 @@ import { RecipeGenerator } from '@/components/RecipeGenerator';
 import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import {
   addDiaryEntry,
   createUserFood,
@@ -47,6 +48,7 @@ export default function Recipes() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
+  const shift = useContentShift();
 
   const [tab, setTab] = useState<'mine' | 'generate'>('mine');
   const { width } = useWindowDimensions();
@@ -361,7 +363,7 @@ export default function Recipes() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { paddingRight: spacing.xl + shift }]} keyboardShouldPersistTaps="handled">
         {/* Generate: taby na střed + generátor na celou šířku */}
         {tab === 'generate' && (
           <>

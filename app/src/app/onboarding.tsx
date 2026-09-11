@@ -21,6 +21,7 @@ import {
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import { saveProfileAndGoal, upsertWeight } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
@@ -41,6 +42,7 @@ interface GoalResult {
 export default function Onboarding() {
   const { colors } = useTheme();
   const s = styles(colors);
+  const shift = useContentShift();
 
   const [sex, setSex] = useState<Sex>('female');
   const [birthDate, setBirthDate] = useState('');
@@ -115,7 +117,7 @@ export default function Onboarding() {
   if (goal) {
     return (
       <SafeAreaView style={s.safe}>
-        <ScrollView contentContainerStyle={s.content}>
+        <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]}>
           <Text style={s.title}>{t('goal.title')}</Text>
 
           <View style={s.goalCard}>
@@ -152,7 +154,7 @@ export default function Onboarding() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
         <Text style={s.title}>{t('onboarding.title')}</Text>
         <Text style={s.subtitle}>{t('onboarding.subtitle')}</Text>
 

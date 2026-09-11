@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthLanding } from '@/components/AuthLanding';
@@ -13,6 +13,7 @@ import { ResetPassword } from '@/components/ResetPassword';
 import { Tooltip } from '@/components/Tooltip';
 import { t } from '@/i18n';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { ContentShiftContext } from '@/lib/layout';
 import { LocaleProvider, useLocale } from '@/lib/locale';
 import { NAV_ITEMS } from '@/lib/nav';
 import { ThemeProvider, useTheme } from '@/lib/theme';
@@ -26,6 +27,7 @@ const WIDTH_TRANSITION: any = Platform.OS === 'web' ? { transitionProperty: 'wid
 const RAIL_COLLAPSED = 64;
 const RAIL_EXPANDED = 210;
 const HEADER_HEIGHT = 60;
+const CONTENT_MAX_WIDTH = 960;
 
 function titleForPath(path: string): string {
   if (path === '/' || path === '') return '';
@@ -39,12 +41,11 @@ function titleForPath(path: string): string {
   return t('app.name');
 }
 
-function Rail() {
+function Rail({ pinned, setPinned }: { pinned: boolean; setPinned: (fn: (p: boolean) => boolean) => void }) {
   const { colors } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [hovered, setHovered] = useState(false);
-  const [pinned, setPinned] = useState(false);
   const expanded = hovered || pinned;
 
   const items = [{ route: '/' as const, icon: 'home' as const, labelKey: 'home.dashboard' }, ...NAV_ITEMS];
@@ -155,7 +156,7 @@ function Header() {
         borderBottomColor: colors.border,
       }}
     >
-      {/* Střed: název sekce, vycentrovaný nezávisle na šířce postranních bloků */}
+      {/* Střed: název sekce, vycentrovaný na střed viewportu nezávisle na menu. */}
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
         {title !== '' && (
           <Text numberOfLines={1} style={{ color: colors.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold }}>
@@ -223,7 +224,17 @@ function Shell() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
+  const { width } = useWindowDimensions();
+  const [railPinned, setRailPinned] = useState(false);
   const showBack = pathname !== '/' && pathname !== '';
+
+  // Rail vlevo rezervuje svou šířku (ukotvený je širší). Obsah zabírá celou
+  // plochu napravo od menu (scrollbar u kraje). Aby se centrovaný blok sekce
+  // trefil na skutečný střed viewportu (kam míří i titulek v hlavičce),
+  // posuneme ho doleva o šířku railu – jen na webu a jen když je dost místa,
+  // aby se blok (max 960) nezačal zužovat.
+  const railW = session ? (railPinned ? RAIL_EXPANDED : RAIL_COLLAPSED) : 0;
+  const shift = Platform.OS === 'web' && width - railW * 2 >= CONTENT_MAX_WIDTH ? railW : 0;
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -231,10 +242,11 @@ function Shell() {
   };
 
   return (
+    <ContentShiftContext.Provider value={shift}>
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <Header />
       <View style={{ flex: 1, flexDirection: 'row' }}>
-        {session ? <Rail /> : null}
+        {session ? <Rail pinned={railPinned} setPinned={setRailPinned} /> : null}
         <View style={{ flex: 1 }}>
           <View style={{ flex: 1, width: '100%' }}>
             {showBack && (
@@ -255,6 +267,7 @@ function Shell() {
         </View>
       </View>
     </View>
+    </ContentShiftContext.Provider>
   );
 }
 

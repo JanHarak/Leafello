@@ -27,6 +27,7 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { Tooltip } from '@/components/Tooltip';
 import { plural, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import { NAV_ITEMS } from '@/lib/nav';
 import { useTheme } from '@/lib/theme';
 import {
@@ -231,13 +232,14 @@ export default function HomeScreen() {
       : null;
 
   const s = styles(colors);
+  const shift = useContentShift();
 
   return (
     <View style={{ flex: 1 }}>
       {session && loadingData ? (
         <Loading overlay />
       ) : (
-        <ScrollView contentContainerStyle={s.content}>
+        <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]}>
       {escalated ? (
         <EscalationCard colors={colors} />
       ) : session && goal && consumed && mood ? (

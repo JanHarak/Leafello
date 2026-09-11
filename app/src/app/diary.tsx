@@ -9,12 +9,23 @@ import { SAMPLE_FOODS } from '@/data/sampleFoods';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { addDiaryEntry, createUserFood, deleteDiaryEntry, listTodayEntries, searchFoods, updateDiaryEntry } from '@/lib/db';
+import { useContentShift } from '@/lib/layout';
+import { useLocale } from '@/lib/locale';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 import { AppFooter } from '@/components/AppFooter';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+/** Dnešní den jako ISO `YYYY-MM-DD` (shodně s tím, jak deník ukládá entry_date). */
+const todayISO = () => new Date().toISOString().slice(0, 10);
+/** Posun ISO dne o `n` dnů. Kotví se na poledne UTC, aby nepřeskočil přes hranici měsíce/DST. */
+const shiftISO = (iso: string, n: number) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
 
 interface Entry {
   id: string;
@@ -41,6 +52,11 @@ export default function Diary() {
   const s = styles(colors);
 
   const { session } = useAuth();
+  const { lang } = useLocale();
+  const shift = useContentShift();
+  // Prohlížený den (ISO). Default dnešek; šipkami se lze posouvat do minulosti a zpět.
+  const [dateISO, setDateISO] = useState<string>(todayISO);
+  const isToday = dateISO === todayISO();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Candidate[]>([]);
@@ -58,7 +74,7 @@ export default function Diary() {
   const [editMeal, setEditMeal] = useState<MealType>('breakfast');
 
   async function reload() {
-    const rows = await listTodayEntries();
+    const rows = await listTodayEntries(dateISO);
     setEntries(
       rows.map((r) => ({
         id: r.id,
@@ -76,7 +92,7 @@ export default function Diary() {
     );
   }
 
-  // Přihlášený uživatel: načti dnešní záznamy z DB. Odhlášený: lokální stav.
+  // Přihlášený uživatel: načti záznamy prohlíženého dne z DB. Odhlášený: lokální stav.
   useEffect(() => {
     if (session) {
       reload().catch((e) => {
@@ -86,7 +102,8 @@ export default function Diary() {
     } else {
       setEntries([]);
     }
-  }, [session]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, dateISO]);
 
   // Hledání: přihlášený uživatel v DB (F-04, s debounce), odhlášený v ukázkách.
   useEffect(() => {
@@ -140,6 +157,21 @@ export default function Diary() {
 
   const totals = useMemo(() => dailyTotals(entries.map((e) => e.snapshot)), [entries]);
 
+  // Popisek prohlíženého dne: „Dnes“ / „Včera“ / plné datum. Když padne relativní
+  // slovo, plné datum jde do podtitulu (relSub), jinak je relLabel rovnou datum.
+  const fullDate = new Date(`${dateISO}T12:00:00Z`).toLocaleDateString(lang, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const relLabel = isToday
+    ? t('diary.today')
+    : dateISO === shiftISO(todayISO(), -1)
+      ? t('diary.yesterday')
+      : fullDate;
+  const relSub = relLabel === fullDate ? '' : fullDate;
+
   async function addEntry() {
     if (!selected) return;
     const g = Number(grams);
@@ -162,6 +194,8 @@ export default function Diary() {
             fat: snapshot.fat,
           },
           selected.foodId,
+          undefined,
+          isToday ? undefined : dateISO,
         );
         await reload();
         setDbError(null);
@@ -286,10 +320,38 @@ export default function Diary() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
+        {/* Navigace mezi dny: šipka vlevo = předchozí den, vpravo (jen v minulosti) = dopředu */}
+        <View style={s.dateNav}>
+          <Pressable
+            style={s.dateArrow}
+            onPress={() => setDateISO((d) => shiftISO(d, -1))}
+            accessibilityRole="button"
+            accessibilityLabel={t('diary.prevDay')}
+          >
+            <Feather name="chevron-left" size={22} color={colors.text} />
+          </Pressable>
+          <View style={s.dateLabelWrap}>
+            <Text style={s.dateLabel}>{relLabel}</Text>
+            {relSub ? <Text style={s.dateSub}>{relSub}</Text> : null}
+          </View>
+          {isToday ? (
+            <View style={s.dateSpacer} />
+          ) : (
+            <Pressable
+              style={s.dateArrow}
+              onPress={() => setDateISO((d) => shiftISO(d, 1))}
+              accessibilityRole="button"
+              accessibilityLabel={t('diary.nextDay')}
+            >
+              <Feather name="chevron-right" size={22} color={colors.text} />
+            </Pressable>
+          )}
+        </View>
+
         {/* Denní souhrn */}
         <View style={s.summary}>
-          <Text style={s.summaryLabel}>{t('diary.summary')}</Text>
+          <Text style={s.summaryLabel}>{isToday ? t('diary.summary') : relLabel}</Text>
           <Text style={s.summaryKcal}>
             {totals.kcal} <Text style={s.summaryUnit}>{t('goal.unitKcal')}</Text>
           </Text>
@@ -483,6 +545,12 @@ const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
     content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, maxWidth: 960, width: '100%', alignSelf: 'center' },
+    dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+    dateArrow: { width: touchTarget, height: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface },
+    dateSpacer: { width: touchTarget, height: touchTarget },
+    dateLabelWrap: { flex: 1, alignItems: 'center' },
+    dateLabel: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold, textTransform: 'capitalize' },
+    dateSub: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'capitalize' },
     summary: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm },
     summaryLabel: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     summaryKcal: { color: c.accent, fontSize: 36, fontWeight: fontWeight.bold },

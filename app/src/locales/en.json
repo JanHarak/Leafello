@@ -64,7 +64,11 @@
     "grams": "Grams (g)",
     "add": "Add to diary",
     "empty": "No entries yet. Search a food and add it.",
-    "searching": "Searching…"
+    "searching": "Searching…",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "prevDay": "Previous day",
+    "nextDay": "Next day"
   },
   "meal": {
     "breakfast": "Breakfast",
@@ -385,6 +389,14 @@
     "weeklyLabel": "Automatic weekly review",
     "weeklyDesc": "Once a week the coach generates a review for you automatically.",
     "archiveTitle": "Archive",
-    "delete": "Delete"
+    "delete": "Delete",
+    "tabDaily": "Daily",
+    "tabWeekly": "Weekly",
+    "dailyAboutTitle": "Daily review",
+    "dailyAboutBody": "Let the coach sum up today – what you logged, how you're hitting your goal and water – and get a quick tip for the rest of the day.",
+    "dailyGenerate": "Generate daily review",
+    "dailyRegenerate": "Generate new daily review",
+    "dailyEmpty": "No daily review yet. Generate today's summary.",
+    "dailyTipsTitle": "Tips for today"
   }
 }

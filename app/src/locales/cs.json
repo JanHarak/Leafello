@@ -66,7 +66,11 @@
     "grams": "Gramáž (g)",
     "add": "Přidat do deníku",
     "empty": "Zatím žádný záznam. Vyhledej potravinu a přidej ji.",
-    "searching": "Hledám…"
+    "searching": "Hledám…",
+    "today": "Dnes",
+    "yesterday": "Včera",
+    "prevDay": "Předchozí den",
+    "nextDay": "Další den"
   },
   "meal": {
     "breakfast": "Snídaně",
@@ -76,7 +80,7 @@
   },
   "water": {
     "title": "Pitný režim",
-    "open": "Voda",
+    "open": "Pitný režim",
     "add": "Přidat",
     "custom": "Vlastní (ml)",
     "today": "Dnes vypito",
@@ -389,6 +393,14 @@
     "weeklyLabel": "Týdenní přehled automaticky",
     "weeklyDesc": "Jednou týdně ti kouč přehled vygeneruje sám.",
     "archiveTitle": "Archiv",
-    "delete": "Smazat"
+    "delete": "Smazat",
+    "tabDaily": "Denní",
+    "tabWeekly": "Týdenní",
+    "dailyAboutTitle": "Denní přehled",
+    "dailyAboutBody": "Nech si od kouče shrnout dnešek – co máš zapsané, jak plníš cíl a pití – a dostaň rychlý tip na zbytek dne.",
+    "dailyGenerate": "Vygenerovat denní přehled",
+    "dailyRegenerate": "Vygenerovat nový denní přehled",
+    "dailyEmpty": "Zatím žádný denní přehled. Vygeneruj si dnešní shrnutí.",
+    "dailyTipsTitle": "Tipy na dnešek"
   }
 }

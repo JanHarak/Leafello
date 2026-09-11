@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import {
   addDiaryEntry,
   addMealPlanItem,
@@ -102,6 +103,7 @@ export default function Plans() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
+  const shift = useContentShift();
 
   const [plans, setPlans] = useState<MealPlanRow[]>([]);
   const [plan, setPlan] = useState<MealPlanRow | null>(null);
@@ -383,7 +385,7 @@ export default function Plans() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
         {!session ? (
           <Text style={s.muted}>{t('plans.needSignIn')}</Text>
         ) : !plan ? (

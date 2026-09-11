@@ -7,6 +7,7 @@ import { waterSchedule } from '@dietapp/reminders';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import { addWater, getActiveGoal, getTodayWaterMl } from '@/lib/db';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
@@ -18,6 +19,7 @@ export default function Water() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
+  const shift = useContentShift();
 
   const [todayMl, setTodayMl] = useState(0);
   const [goalMl, setGoalMl] = useState<number | null>(null);
@@ -70,7 +72,7 @@ export default function Water() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
         {!session ? (
           <Text style={s.muted}>{t('auth.subtitle')}</Text>
         ) : (

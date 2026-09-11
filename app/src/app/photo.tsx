@@ -12,6 +12,7 @@ import { CameraCapture } from '@/components/CameraCapture';
 import { Loading } from '@/components/Loading';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import { addDiaryEntry, getFoodByBarcode, lookupBarcodeOFF, searchFoods, type BarcodeProduct, type FoodRow } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
@@ -38,6 +39,7 @@ export default function Photo() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
+  const shift = useContentShift();
 
   const [tab, setTab] = useState<Tab>('photo');
 
@@ -298,7 +300,7 @@ export default function Photo() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]} keyboardShouldPersistTaps="handled">
         <View style={s.about}>
           <Text style={s.aboutTitle}>{t('photo.aboutTitle')}</Text>
           <Text style={s.aboutBody}>{t('photo.aboutBody')}</Text>

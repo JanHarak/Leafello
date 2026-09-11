@@ -1,7 +1,10 @@
 /**
- * Sdílená logika AI kouče (Deno): spočítá agregáty za posledních 7 dní a nechá
- * Gemini napsat strukturovaný týdenní přehled. Používá ji on-demand funkce
- * `weekly-coach` i cron `weekly-coach-cron`. Neukládá – ukládá volající.
+ * Sdílená logika AI kouče (Deno): spočítá agregáty a nechá Gemini napsat
+ * strukturovaný přehled. Umí dva režimy (`kind`):
+ *   - 'weekly' – posledních 7 dní, trendy (on-demand i cron),
+ *   - 'daily'  – jen dnešek, rychlé shrnutí a tip (jen on-demand, ručně).
+ * Používají ji edge funkce `weekly-coach` a `weekly-coach-cron`. Neukládá –
+ * ukládá volající.
  *
  * Bezpečnost: podporující tón kouče, nikdy hladovění/extrémy, nehodnotí postavu.
  */
@@ -22,6 +25,8 @@ const r0 = (n: number) => Math.round(n);
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
+export type CoachKind = 'daily' | 'weekly';
+
 export interface WeeklySummaryResult {
   period_start: string;
   period_end: string;
@@ -29,20 +34,23 @@ export interface WeeklySummaryResult {
 }
 
 /**
- * Vytvoří týdenní přehled pro jednoho uživatele. Vrací null, když se generování
- * nepovede (chyba Gemini nebo parsování) – volající to může přeskočit.
+ * Vytvoří přehled (denní nebo týdenní) pro jednoho uživatele. Vrací null, když
+ * se generování nepovede (chyba Gemini nebo parsování) – volající to přeskočí.
  */
-export async function buildWeeklySummary(
+export async function buildCoachSummary(
   admin: any,
   userId: string,
   geminiKey: string,
   model: string,
+  kind: CoachKind = 'weekly',
 ): Promise<WeeklySummaryResult | null> {
+  const daily = kind === 'daily';
+  const windowDays = daily ? 1 : 7;
   const today = new Date();
   const end = iso(today);
   const startD = new Date(today);
-  startD.setDate(startD.getDate() - 6);
-  const start = iso(startD); // 7denní okno včetně dneška
+  startD.setDate(startD.getDate() - (windowDays - 1));
+  const start = iso(startD); // okno včetně dneška (1 den / 7 dní)
   const weightFromD = new Date(today);
   weightFromD.setDate(weightFromD.getDate() - 13);
   const weightFrom = iso(weightFromD);
@@ -92,37 +100,62 @@ export async function buildWeeklySummary(
   const toTarget = lastW && goal?.target_weight_kg != null ? lastW.weight_kg - goal.target_weight_kg : null;
 
   const facts: string[] = [];
-  facts.push(`Zapsané dny (deník) za posledních 7 dní: ${loggedDays} ze 7.`);
-  if (loggedDays > 0) {
-    facts.push(`Průměrný denní příjem: ${r0(avgKcal)} kcal (bílkoviny ${r0(avgProtein)} g, sacharidy ${r0(avgCarbs)} g, tuky ${r0(avgFat)} g).`);
-  }
-  if (goal) {
-    facts.push(`Denní cíl: ${goal.kcal_target} kcal (B ${goal.protein_g} g, S ${goal.carbs_g} g, T ${goal.fat_g} g, pití ${goal.water_ml} ml).`);
-    if (loggedDays > 0) facts.push(`Plnění kalorického cíle: průměrně ${r0((avgKcal / goal.kcal_target) * 100)} % denního cíle.`);
-  }
-  facts.push(`Aktuální série (streak): ${streakDays} dní.`);
-  facts.push(`Dny se splněným pitným cílem: ${waterGoalDays} ze 7.`);
-  if (weightChange != null) {
-    const dir = weightChange < 0 ? 'úbytek' : weightChange > 0 ? 'přírůstek' : 'beze změny';
-    facts.push(`Váha: ${r1(lastW.weight_kg)} kg, za sledované období ${dir} ${r1(Math.abs(weightChange))} kg.`);
-  } else if (lastW) {
-    facts.push(`Poslední zvážení: ${r1(lastW.weight_kg)} kg.`);
+  if (daily) {
+    const waterToday = waterByDate[end] ?? 0;
+    facts.push(
+      loggedDays > 0
+        ? `Dnešní příjem (deník): ${r0(avgKcal)} kcal (bílkoviny ${r0(avgProtein)} g, sacharidy ${r0(avgCarbs)} g, tuky ${r0(avgFat)} g).`
+        : 'Dnes si uživatel zatím nic nezapsal do deníku.',
+    );
+    if (goal) {
+      facts.push(`Denní cíl: ${goal.kcal_target} kcal (B ${goal.protein_g} g, S ${goal.carbs_g} g, T ${goal.fat_g} g, pití ${goal.water_ml} ml).`);
+      if (loggedDays > 0) facts.push(`Plnění kalorického cíle dnes: ${r0((avgKcal / goal.kcal_target) * 100)} %.`);
+    }
+    facts.push(goal?.water_ml ? `Dnešní pití: ${r0(waterToday)} ml z cíle ${goal.water_ml} ml.` : `Dnešní pití: ${r0(waterToday)} ml.`);
+    facts.push(`Aktuální série (streak): ${streakDays} dní.`);
+    if (lastW) facts.push(`Poslední zvážení: ${r1(lastW.weight_kg)} kg.`);
+    if (toTarget != null) facts.push(`Do cílové hmotnosti (${r1(goal!.target_weight_kg)} kg) zbývá ${r1(Math.abs(toTarget))} kg.`);
   } else {
-    facts.push('Váhu si uživatel v tomto období nezapsal.');
-  }
-  if (toTarget != null) {
-    facts.push(`Do cílové hmotnosti (${r1(goal!.target_weight_kg)} kg) zbývá ${r1(Math.abs(toTarget))} kg.`);
+    facts.push(`Zapsané dny (deník) za posledních 7 dní: ${loggedDays} ze 7.`);
+    if (loggedDays > 0) {
+      facts.push(`Průměrný denní příjem: ${r0(avgKcal)} kcal (bílkoviny ${r0(avgProtein)} g, sacharidy ${r0(avgCarbs)} g, tuky ${r0(avgFat)} g).`);
+    }
+    if (goal) {
+      facts.push(`Denní cíl: ${goal.kcal_target} kcal (B ${goal.protein_g} g, S ${goal.carbs_g} g, T ${goal.fat_g} g, pití ${goal.water_ml} ml).`);
+      if (loggedDays > 0) facts.push(`Plnění kalorického cíle: průměrně ${r0((avgKcal / goal.kcal_target) * 100)} % denního cíle.`);
+    }
+    facts.push(`Aktuální série (streak): ${streakDays} dní.`);
+    facts.push(`Dny se splněným pitným cílem: ${waterGoalDays} ze 7.`);
+    if (weightChange != null) {
+      const dir = weightChange < 0 ? 'úbytek' : weightChange > 0 ? 'přírůstek' : 'beze změny';
+      facts.push(`Váha: ${r1(lastW.weight_kg)} kg, za sledované období ${dir} ${r1(Math.abs(weightChange))} kg.`);
+    } else if (lastW) {
+      facts.push(`Poslední zvážení: ${r1(lastW.weight_kg)} kg.`);
+    } else {
+      facts.push('Váhu si uživatel v tomto období nezapsal.');
+    }
+    if (toTarget != null) {
+      facts.push(`Do cílové hmotnosti (${r1(goal!.target_weight_kg)} kg) zbývá ${r1(Math.abs(toTarget))} kg.`);
+    }
   }
 
-  const prompt =
-    'Jsi laskavý a povzbudivý výživový kouč. Na základě FAKT o posledním týdnu napiš uživateli ' +
-    'krátké české shrnutí týdne a 1–2 konkrétní, splnitelné tipy na příští týden. ' +
-    'Vrať: headline (krátký povzbudivý nadpis, 2–4 slova), summary (2–4 věty, shrnutí týdne s ' +
-    'konkrétními čísly z fakt), wins (1–3 krátké body, co se povedlo), tips (1–2 konkrétní tipy). ' +
-    'Piš přátelsky, ve druhé osobě (ty). NIKDY nedoporučuj hladovění ani extrémní omezování, ' +
-    'nehodnoť postavu ani hmotnost a nestraš. Pokud uživatel skoro nezapisoval, jemně ho povzbuď ' +
-    'k pravidelnějšímu zápisu. Vycházej jen z uvedených fakt, nic si nevymýšlej.\n\nFAKTA:\n- ' +
-    facts.join('\n- ');
+  const prompt = daily
+    ? 'Jsi laskavý a povzbudivý výživový kouč. Na základě FAKT o DNEŠNÍM dni napiš uživateli ' +
+      'krátké české shrnutí dneška a 1–2 konkrétní, splnitelné tipy na zbytek dne nebo na zítřek. ' +
+      'Vrať: headline (krátký povzbudivý nadpis, 2–4 slova), summary (2–3 věty s konkrétními čísly ' +
+      'z fakt), wins (0–2 krátké body, co se dnes povedlo), tips (1–2 konkrétní tipy). ' +
+      'Piš přátelsky, ve druhé osobě (ty). NIKDY nedoporučuj hladovění ani extrémní omezování, ' +
+      'nehodnoť postavu ani hmotnost a nestraš. Pokud si uživatel dnes nic nezapsal, jemně ho ' +
+      'povzbuď k zápisu. Vycházej jen z uvedených fakt, nic si nevymýšlej.\n\nFAKTA:\n- ' +
+      facts.join('\n- ')
+    : 'Jsi laskavý a povzbudivý výživový kouč. Na základě FAKT o posledním týdnu napiš uživateli ' +
+      'krátké české shrnutí týdne a 1–2 konkrétní, splnitelné tipy na příští týden. ' +
+      'Vrať: headline (krátký povzbudivý nadpis, 2–4 slova), summary (2–4 věty, shrnutí týdne s ' +
+      'konkrétními čísly z fakt), wins (1–3 krátké body, co se povedlo), tips (1–2 konkrétní tipy). ' +
+      'Piš přátelsky, ve druhé osobě (ty). NIKDY nedoporučuj hladovění ani extrémní omezování, ' +
+      'nehodnoť postavu ani hmotnost a nestraš. Pokud uživatel skoro nezapisoval, jemně ho povzbuď ' +
+      'k pravidelnějšímu zápisu. Vycházej jen z uvedených fakt, nic si nevymýšlej.\n\nFAKTA:\n- ' +
+      facts.join('\n- ');
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
   const res = await fetch(url, {

@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LANGUAGES, t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
+import { useContentShift } from '@/lib/layout';
 import { deleteAccount, exportMyData, getCoachWeekly, setCoachWeekly } from '@/lib/db';
 import { useLocale } from '@/lib/locale';
 import { supabase } from '@/lib/supabase';
@@ -36,6 +37,7 @@ export default function Account() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session, signOut } = useAuth();
+  const shift = useContentShift();
   const { lang, setLang } = useLocale();
   const router = useRouter();
 
@@ -134,7 +136,7 @@ export default function Account() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content}>
+      <ScrollView contentContainerStyle={[s.content, { marginRight: shift }]}>
         {!session ? (
           <Text style={s.muted}>{t('account.needSignIn')}</Text>
         ) : (

@@ -96,13 +96,13 @@ export interface DiaryEntryRow {
   snapshot: DiarySnapshot;
 }
 
-/** Záznamy deníku pro dnešek. */
-export async function listTodayEntries(): Promise<DiaryEntryRow[]> {
-  const today = new Date().toISOString().slice(0, 10);
+/** Záznamy deníku pro daný den (ISO `YYYY-MM-DD`); bez argumentu pro dnešek. */
+export async function listTodayEntries(dateISO?: string): Promise<DiaryEntryRow[]> {
+  const day = dateISO ?? new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from('diary_entries')
     .select('id, meal, grams, snapshot')
-    .eq('entry_date', today)
+    .eq('entry_date', day)
     .order('created_at', { ascending: true });
   if (error) throw error;
   return (data ?? []) as DiaryEntryRow[];
@@ -119,6 +119,7 @@ export async function addDiaryEntry(
   snapshot: DiarySnapshot,
   foodId?: string,
   recipeId?: string,
+  entryDate?: string,
 ): Promise<void> {
   const { error } = await supabase.from('diary_entries').insert({
     user_id: userId,
@@ -127,6 +128,7 @@ export async function addDiaryEntry(
     snapshot,
     ...(foodId ? { food_id: foodId } : {}),
     ...(recipeId ? { recipe_id: recipeId } : {}),
+    ...(entryDate ? { entry_date: entryDate } : {}),
   });
   if (error) throw error;
 }
@@ -960,31 +962,36 @@ export interface CoachSummary {
   tips: string[];
 }
 
+export type CoachKind = 'daily' | 'weekly';
+
 export interface CoachSummaryRow {
   id: string;
+  kind: CoachKind;
   period_start: string;
   period_end: string;
   summary: CoachSummary;
   created_at: string;
 }
 
-/** Archiv týdenních přehledů uživatele (nejnovější první). RLS jen vlastní. */
-export async function listCoachSummaries(): Promise<CoachSummaryRow[]> {
+/** Archiv přehledů daného druhu (nejnovější první). RLS jen vlastní. */
+export async function listCoachSummaries(kind: CoachKind = 'weekly'): Promise<CoachSummaryRow[]> {
   const { data, error } = await supabase
     .from('coach_summaries')
-    .select('id, period_start, period_end, summary, created_at')
+    .select('id, kind, period_start, period_end, summary, created_at')
+    .eq('kind', kind)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as CoachSummaryRow[];
 }
 
-/** Vygeneruje nový týdenní přehled přes edge funkci a uloží ho do archivu. */
-export async function generateWeeklyCoach(): Promise<CoachSummaryRow> {
-  const { data, error } = await supabase.functions.invoke('weekly-coach', { body: {} });
+/** Vygeneruje nový přehled (denní/týdenní) přes edge funkci a uloží do archivu. */
+export async function generateWeeklyCoach(kind: CoachKind = 'weekly'): Promise<CoachSummaryRow> {
+  const { data, error } = await supabase.functions.invoke('weekly-coach', { body: { kind } });
   if (error) throw error;
   if (!data || data.status === 'failed') throw new Error(data?.error ?? 'failed');
   return {
     id: data.id,
+    kind: (data.kind as CoachKind) ?? kind,
     period_start: data.period_start,
     period_end: data.period_end,
     summary: data.summary as CoachSummary,

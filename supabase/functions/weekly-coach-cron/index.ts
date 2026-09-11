@@ -11,7 +11,7 @@
  */
 // @ts-nocheck – Deno runtime, ne Node/Vitest.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { buildWeeklySummary } from '../_shared/coach.ts';
+import { buildCoachSummary } from '../_shared/coach.ts';
 
 const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-lite-latest';
 
@@ -37,13 +37,14 @@ Deno.serve(async (req: Request) => {
   let failed = 0;
   for (const userId of ids) {
     try {
-      const result = await buildWeeklySummary(admin, userId, geminiKey, GEMINI_MODEL);
+      const result = await buildCoachSummary(admin, userId, geminiKey, GEMINI_MODEL, 'weekly');
       if (!result) {
         failed += 1;
         continue;
       }
       await admin.from('coach_summaries').insert({
         user_id: userId,
+        kind: 'weekly',
         period_start: result.period_start,
         period_end: result.period_end,
         summary: result.summary,

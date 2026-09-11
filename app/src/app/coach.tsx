@@ -9,53 +9,67 @@ import { AppFooter } from '@/components/AppFooter';
 import { Loading } from '@/components/Loading';
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
-import { deleteCoachSummary, generateWeeklyCoach, listCoachSummaries, type CoachSummaryRow } from '@/lib/db';
+import { deleteCoachSummary, generateWeeklyCoach, listCoachSummaries, type CoachKind, type CoachSummaryRow } from '@/lib/db';
+import { useContentShift } from '@/lib/layout';
 import { useLocale } from '@/lib/locale';
 import { useTheme } from '@/lib/theme';
 import { fontSize, fontWeight, radius, spacing, touchTarget, type ThemeColors } from '@/theme';
 
-const AV_START = require('../../assets/avatar/avatar-coach-start.svg');
-const AV_RESULT = require('../../assets/avatar/avatar-coach-result.svg');
+const AV_START = require('../../assets/avatar/avatar-coach-start.png');
+const AV_RESULT = require('../../assets/avatar/avatar-coach-result.png');
 
 export default function Coach() {
   const { colors } = useTheme();
   const s = styles(colors);
   const { session } = useAuth();
   const { lang } = useLocale();
+  const shift = useContentShift();
   const { width } = useWindowDimensions();
   const wide = width >= 900;
 
-  const [list, setList] = useState<CoachSummaryRow[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Denní a týdenní přehled mají samostatný archiv i vybraný výstup (tab).
+  const [tab, setTab] = useState<CoachKind>('daily');
+  const [lists, setLists] = useState<Record<CoachKind, CoachSummaryRow[]>>({ daily: [], weekly: [] });
+  const [selectedIds, setSelectedIds] = useState<Record<CoachKind, string | null>>({ daily: null, weekly: null });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const todayISO = () => new Date().toISOString().slice(0, 10);
 
   useFocusEffect(
     useCallback(() => {
       if (!session) {
-        setList([]);
-        setSelectedId(null);
+        setLists({ daily: [], weekly: [] });
+        setSelectedIds({ daily: null, weekly: null });
         return;
       }
-      listCoachSummaries()
-        .then((rows) => {
-          setList(rows);
-          setSelectedId((prev) => prev ?? rows[0]?.id ?? null);
+      const today = todayISO();
+      Promise.all([listCoachSummaries('daily'), listCoachSummaries('weekly')])
+        .then(([daily, weekly]) => {
+          setLists({ daily, weekly });
+          setSelectedIds((prev) => ({
+            // Denní přehled se sám ukáže jen pro dnešek; jiný den → výchozí stav.
+            daily: prev.daily ?? (daily[0]?.period_end === today ? daily[0].id : null),
+            weekly: prev.weekly ?? weekly[0]?.id ?? null,
+          }));
         })
         .catch(() => {});
     }, [session]),
   );
 
+  const list = lists[tab];
+  const selectedId = selectedIds[tab];
   const selected = list.find((r) => r.id === selectedId) ?? null;
+  const setSelected = (id: string | null) => setSelectedIds((prev) => ({ ...prev, [tab]: id }));
 
   async function generate() {
     if (!session || busy) return;
     setBusy(true);
     setError(null);
     try {
-      const row = await generateWeeklyCoach();
-      setList((prev) => [row, ...prev]);
-      setSelectedId(row.id);
+      const row = await generateWeeklyCoach(tab);
+      setLists((prev) => ({ ...prev, [tab]: [row, ...prev[tab]] }));
+      setSelectedIds((prev) => ({ ...prev, [tab]: row.id }));
     } catch {
       setError(t('coach.failed'));
     } finally {
@@ -66,10 +80,10 @@ export default function Coach() {
   async function remove(id: string) {
     try {
       await deleteCoachSummary(id);
-      setList((prev) => {
-        const next = prev.filter((r) => r.id !== id);
-        setSelectedId((cur) => (cur === id ? next[0]?.id ?? null : cur));
-        return next;
+      setLists((prev) => {
+        const next = prev[tab].filter((r) => r.id !== id);
+        setSelectedIds((cur) => (cur[tab] === id ? { ...cur, [tab]: next[0]?.id ?? null } : cur));
+        return { ...prev, [tab]: next };
       });
     } catch {
       setError(t('coach.failed'));
@@ -78,10 +92,44 @@ export default function Coach() {
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' });
 
+  const daily = tab === 'daily';
+
+  const tabsBar = (
+    <View style={s.tabs}>
+      {(['daily', 'weekly'] as CoachKind[]).map((k) => {
+        const active = tab === k;
+        return (
+          <Pressable
+            key={k}
+            style={[s.tab, active && s.tabActive]}
+            onPress={() => {
+              setTab(k);
+              setError(null);
+            }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+          >
+            <Text style={[s.tabText, active && s.tabTextActive]}>{t(k === 'daily' ? 'coach.tabDaily' : 'coach.tabWeekly')}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+
   const generateBtn = (
     <Pressable style={[s.button, busy && s.dim]} onPress={generate} disabled={busy}>
       <Feather name="refresh-cw" size={18} color={colors.onAccent} />
-      <Text style={s.buttonText}>{busy ? t('coach.generating') : list.length ? t('coach.regenerate') : t('coach.generate')}</Text>
+      <Text style={s.buttonText}>
+        {busy
+          ? t('coach.generating')
+          : daily
+            ? list.length
+              ? t('coach.dailyRegenerate')
+              : t('coach.dailyGenerate')
+            : list.length
+              ? t('coach.regenerate')
+              : t('coach.generate')}
+      </Text>
     </Pressable>
   );
 
@@ -109,7 +157,7 @@ export default function Coach() {
 
       {selected.summary.tips.length > 0 && (
         <View style={s.block}>
-          <Text style={s.blockTitle}>{t('coach.tipsTitle')}</Text>
+          <Text style={s.blockTitle}>{t(daily ? 'coach.dailyTipsTitle' : 'coach.tipsTitle')}</Text>
           {selected.summary.tips.map((tip, i) => (
             <View key={i} style={s.li}>
               <Feather name="arrow-right" size={16} color={colors.accent} />
@@ -123,20 +171,24 @@ export default function Coach() {
     </View>
   );
 
-  const startAvatar = <Image source={AV_START} style={s.startAvatar} contentFit="contain" accessibilityLabel="" />;
-  const resultAvatar = <Image source={AV_RESULT} style={s.resultAvatar} contentFit="contain" accessibilityLabel="" />;
+  const startAvatar = (
+    <Image source={AV_START} style={s.startAvatar} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+  );
+  const resultAvatar = (
+    <Image source={AV_RESULT} style={s.resultAvatar} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+  );
 
   const archivePanel = (
     <View style={s.archive}>
       <Text style={s.archiveTitle}>{t('coach.archiveTitle')}</Text>
       {list.length === 0 ? (
-        <Text style={s.muted}>{t('coach.empty')}</Text>
+        <Text style={s.muted}>{t(daily ? 'coach.dailyEmpty' : 'coach.empty')}</Text>
       ) : (
         list.map((r) => {
           const active = r.id === selectedId;
           return (
             <View key={r.id} style={[s.archiveItem, active && s.archiveItemActive]}>
-              <Pressable style={s.archiveItemMain} onPress={() => setSelectedId(r.id)} accessibilityRole="button">
+              <Pressable style={s.archiveItemMain} onPress={() => setSelected(r.id)} accessibilityRole="button">
                 <Text style={s.archiveDate}>{fmtDate(r.created_at)}</Text>
                 <Text style={s.archiveHeadline} numberOfLines={1}>{r.summary.headline}</Text>
               </Pressable>
@@ -152,46 +204,52 @@ export default function Coach() {
 
   const aboutCard = (
     <View style={s.about}>
-      <Text style={s.aboutTitle}>{t('coach.aboutTitle')}</Text>
-      <Text style={s.aboutBody}>{t('coach.aboutBody')}</Text>
+      <Text style={s.aboutTitle}>{t(daily ? 'coach.dailyAboutTitle' : 'coach.aboutTitle')}</Text>
+      <Text style={s.aboutBody}>{t(daily ? 'coach.dailyAboutBody' : 'coach.aboutBody')}</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.content}>
+      <ScrollView contentContainerStyle={[s.content, { paddingRight: spacing.xl + shift }]}>
         {!session ? (
           <View style={s.block960}>
             {aboutCard}
             <Text style={s.muted}>{t('auth.subtitle')}</Text>
           </View>
-        ) : wide ? (
-          /* Archiv vlevo mimo (na úrovni boxu), box+tlačítko+výstup na střed (960), avatar vpravo mimo */
-          <View style={s.wideRow}>
-            <View style={s.sideLeft}>{archivePanel}</View>
-            <View style={s.centerCol}>
-              {aboutCard}
-              {generateBtn}
-              {error && <Text style={s.error}>{error}</Text>}
-              {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
-            </View>
-            <View style={s.sideRight}>{selected ? resultAvatar : null}</View>
-          </View>
         ) : (
-          <View style={s.block960}>
-            {aboutCard}
-            {generateBtn}
-            {selected ? (
-              <>
-                {summaryCard}
-                <View style={s.startWrap}>{resultAvatar}</View>
-              </>
+          <>
+            {/* Přepínač denní / týdenní – nad obsahem, na střed */}
+            <View style={s.block960}>{tabsBar}</View>
+            {wide ? (
+              /* Archiv vlevo mimo (na úrovni boxu), box+tlačítko+výstup na střed (960), avatar vpravo mimo */
+              <View style={s.wideRow}>
+                <View style={s.sideLeft}>{archivePanel}</View>
+                <View style={s.centerCol}>
+                  {aboutCard}
+                  {generateBtn}
+                  {error && <Text style={s.error}>{error}</Text>}
+                  {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
+                </View>
+                <View style={s.sideRight}>{selected ? resultAvatar : null}</View>
+              </View>
             ) : (
-              <View style={s.startWrap}>{startAvatar}</View>
+              <View style={s.block960}>
+                {aboutCard}
+                {generateBtn}
+                {selected ? (
+                  <>
+                    {summaryCard}
+                    <View style={s.startWrap}>{resultAvatar}</View>
+                  </>
+                ) : (
+                  <View style={s.startWrap}>{startAvatar}</View>
+                )}
+                {error && <Text style={s.error}>{error}</Text>}
+                {archivePanel}
+              </View>
             )}
-            {error && <Text style={s.error}>{error}</Text>}
-            {archivePanel}
-          </View>
+          </>
         )}
         <AppFooter />
       </ScrollView>
@@ -207,6 +265,13 @@ const styles = (c: ThemeColors) =>
     muted: { color: c.textFaint, fontSize: fontSize.body },
     // Střed (box, tlačítko, výstup) je na 960 jako ostatní sekce.
     block960: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.md },
+
+    // Segmentový přepínač denní / týdenní.
+    tabs: { flexDirection: 'row', backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.pill, padding: spacing.xs, gap: spacing.xs },
+    tab: { flex: 1, minHeight: touchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill },
+    tabActive: { backgroundColor: c.accent },
+    tabText: { color: c.textMuted, fontSize: fontSize.body, fontWeight: fontWeight.medium },
+    tabTextActive: { color: c.onAccent, fontWeight: fontWeight.bold },
     about: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },

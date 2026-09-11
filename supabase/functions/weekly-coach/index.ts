@@ -7,7 +7,7 @@
  */
 // @ts-nocheck – Deno runtime, ne Node/Vitest.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { buildWeeklySummary } from '../_shared/coach.ts';
+import { buildCoachSummary, type CoachKind } from '../_shared/coach.ts';
 
 const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-lite-latest';
 
@@ -35,14 +35,24 @@ Deno.serve(async (req: Request) => {
   const userId = userData?.user?.id ?? '';
   if (!userId) return json(401, { error: 'unauthorized' });
 
+  // Režim: 'daily' nebo 'weekly' (výchozí). Bere se z těla requestu.
+  let kind: CoachKind = 'weekly';
+  try {
+    const body = await req.json();
+    if (body?.kind === 'daily') kind = 'daily';
+  } catch {
+    // prázdné/nevalidní tělo → weekly
+  }
+
   const admin = createClient(supabaseUrl, serviceKey);
-  const result = await buildWeeklySummary(admin, userId, geminiKey, GEMINI_MODEL);
+  const result = await buildCoachSummary(admin, userId, geminiKey, GEMINI_MODEL, kind);
   if (!result) return json(200, { status: 'failed', error: 'generation' });
 
   const { data: inserted } = await admin
     .from('coach_summaries')
     .insert({
       user_id: userId,
+      kind,
       period_start: result.period_start,
       period_end: result.period_end,
       summary: result.summary,
@@ -53,6 +63,7 @@ Deno.serve(async (req: Request) => {
   return json(200, {
     status: 'ok',
     id: inserted?.id,
+    kind,
     period_start: result.period_start,
     period_end: result.period_end,
     created_at: inserted?.created_at,
