@@ -16,6 +16,13 @@
  */
 // @ts-nocheck – Deno runtime, ne Node/Vitest.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import webpush from 'npm:web-push@3';
+
+const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? '';
+const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? '';
+const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:admin@leafello.app';
+const pushEnabled = VAPID_PUBLIC !== '' && VAPID_PRIVATE !== '';
+if (pushEnabled) webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 
 const TZ = 'Europe/Prague';
 const WINDOW_MIN = 15; // tolerance: pošli, když slot právě proběhl v tomto okně
@@ -80,9 +87,17 @@ Deno.serve(async (req: Request) => {
   const planned: string[] = [];
 
   for (const p of prefs ?? []) {
-    if (!p.email) continue;
-    // Push kanál zatím neposílá e-mail; e-mail jde u 'email' a 'both'.
-    if (p.channel === 'push') continue;
+    const wantEmail = (p.channel === 'email' || p.channel === 'both') && !!p.email;
+    const wantPush = (p.channel === 'push' || p.channel === 'both') && pushEnabled;
+
+    // Odběry web push (jen když je chceme).
+    const subs = wantPush
+      ? ((await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('user_id', p.user_id)).data ?? [])
+      : [];
+
+    // Nic k doručení → přeskoč uživatele.
+    if (!wantEmail && subs.length === 0) continue;
+
     const { data: goal } = await admin
       .from('goals')
       .select('water_ml')
@@ -101,21 +116,45 @@ Deno.serve(async (req: Request) => {
       .eq('sent_on', date);
     let budget = MAX_DAILY - (sentToday ?? 0);
 
+    const sendPush = async (title: string, body: string): Promise<void> => {
+      for (const subRow of subs) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: subRow.endpoint, keys: { p256dh: subRow.p256dh, auth: subRow.auth } },
+            JSON.stringify({ title, body, url: '/' }),
+          );
+        } catch (e) {
+          const status = (e as { statusCode?: number }).statusCode;
+          if (status === 404 || status === 410) {
+            await admin.from('push_subscriptions').delete().eq('id', subRow.id);
+          } else {
+            console.error('[send-reminders] push selhal', subRow.id, status);
+          }
+        }
+      }
+    };
+
     const deliver = async (slot: string, subject: string, body: string): Promise<void> => {
-      if (!resendKey) {
-        // Bez providera jen ohlásíme (sloty se neoznačí, po přidání klíče jdou hned).
+      // Bez e-mailu i bez push odběrů není jak doručit.
+      if (!wantEmail && subs.length === 0) return;
+      // E-mail-only bez providera: jen ohlásíme (jako dosud), nic neoznačíme.
+      if (wantEmail && !resendKey && subs.length === 0) {
         planned.push(`${p.email}:${slot}`);
         return;
       }
       if (budget <= 0) return;
-      // Idempotence: unikátní (user, slot, den). Konflikt = už odesláno.
+      // Idempotence: unikátní (user, slot, den). Jeden zápis gatuje e-mail i
+      // push (u 'both' jdou oba, ale mark je jeden).
       const ins = await admin.from('reminder_sends').insert({ user_id: p.user_id, slot, sent_on: date }).select('slot');
       if (ins.error) return;
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to: p.email, subject, html: `<p>${body}</p>` }),
-      }).catch(() => {});
+      if (wantEmail && resendKey) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from, to: p.email, subject, html: `<p>${body}</p>` }),
+        }).catch(() => {});
+      }
+      if (subs.length > 0) await sendPush(subject, body);
       budget -= 1;
       sent += 1;
     };
