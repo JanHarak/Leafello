@@ -1,13 +1,14 @@
 import { waterSchedule } from '@dietapp/reminders';
 import { useFocusEffect } from 'expo-router';
 import * as Notifications from 'expo-notifications';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAuth } from '@/lib/auth';
 import { useContentShift } from '@/lib/layout';
+import { getPushStatus, pushSupported, subscribeWebPush, type PushStatus } from '@/lib/push';
 import {
   DEFAULT_REMINDER_TIMES,
   getActiveGoal,
@@ -44,6 +45,11 @@ export default function Reminders() {
   const [times, setTimes] = useState<ReminderTimes>(DEFAULT_REMINDER_TIMES);
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [pushStatus, setPushStatus] = useState<PushStatus>('unsupported');
+
+  useEffect(() => {
+    getPushStatus().then(setPushStatus).catch(() => setPushStatus('unsupported'));
+  }, []);
 
   const CHANNELS: { key: ReminderChannel; label: string }[] = [
     { key: 'email', label: t('reminders.channelEmail') },
@@ -128,6 +134,12 @@ export default function Reminders() {
         setNote(e instanceof Error ? e.message : String(e));
       }
     }
+    // Web push: při volbě push/both vyžádej povolení a vytvoř odběr.
+    if ((ch === 'push' || ch === 'both') && session && pushSupported()) {
+      setPushStatus('default');
+      const ok = await subscribeWebPush(session.user.id);
+      setPushStatus(ok ? 'subscribed' : Notification.permission === 'denied' ? 'denied' : 'default');
+    }
   }
 
   function setTime<K extends keyof ReminderTimes>(key: K, value: ReminderTimes[K]) {
@@ -197,7 +209,17 @@ export default function Reminders() {
                 );
               })}
             </View>
-            {(channel === 'push' || channel === 'both') && <Text style={s.note}>{t('reminders.pushNote')}</Text>}
+            {(channel === 'push' || channel === 'both') && (
+              <Text style={s.note}>
+                {!pushSupported()
+                  ? t('reminders.pushUnsupported')
+                  : pushStatus === 'subscribed'
+                    ? t('reminders.pushEnabled')
+                    : pushStatus === 'denied'
+                      ? t('reminders.pushBlocked')
+                      : t('reminders.pushEnabling')}
+              </Text>
+            )}
           </>
         )}
 
