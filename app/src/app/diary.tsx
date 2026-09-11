@@ -51,8 +51,9 @@ export default function Diary() {
   const { lang } = useLocale();
   const shift = useContentShift();
   const { width } = useWindowDimensions();
-  const wide = width >= 900; // vpravo avatar mimo obsah, stejně jako v sekci kouč
-  const avatarSize = Math.round(Math.min(560, Math.max(300, width * 0.28)));
+  // Avatar vyplní pravý volný pruh přes flex (width:100 %), takže je přirozeně
+  // responzivní. Ukážeme ho jen na dost širokém okně, aby nebyl titěrný.
+  const showAvatar = width >= 1440;
   // Prohlížený den (ISO). Default dnešek; šipkami se lze posouvat do minulosti a zpět.
   const [dateISO, setDateISO] = useState<string>(todayISO);
   const isToday = dateISO === todayISO();
@@ -461,13 +462,13 @@ export default function Diary() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={[s.content, { paddingRight: spacing.xl + shift }]} keyboardShouldPersistTaps="handled">
-        {wide ? (
-          <View style={s.wideRow}>
-            <View style={s.sideLeft} />
+      <ScrollView contentContainerStyle={[s.content, { transform: [{ translateX: -shift / 2 }] }]} keyboardShouldPersistTaps="handled">
+        {showAvatar ? (
+          <View style={s.rowWide}>
+            <View style={s.spacer} />
             <View style={s.centerCol}>{body}</View>
-            <View style={s.sideRight}>
-              <Image source={AV_DIARY} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+            <View style={s.gutter}>
+              <Image source={AV_DIARY} style={s.avatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
             </View>
           </View>
         ) : (
@@ -522,15 +523,18 @@ function Choice({ label, active, onPress, c }: { label: string; active: boolean;
 const styles = (c: ThemeColors) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.background },
+    // Obsah je na celou šířku; blok (centerCol/block960) se vycentruje pomocí
+    // symetrických pruhů (spacer vlevo = gutter s avatarem vpravo) a celé se to
+    // posune doleva o půlku šířky menu (translateX -shift/2), takže střed bloku
+    // sedí pod titulkem v hlavičce – nezávisle na sbaleném/rozbaleném menu.
+    // Avatar vyplní pravý pruh přes width:100 % (procenta → responzivní).
     content: { flexGrow: 1, padding: spacing.xl, gap: spacing.md, paddingBottom: 0, width: '100%' },
-    // Obsah na 960 na střed; na širokém webu vpravo mimo obsah avatar (jako kouč).
     block960: { width: '100%', maxWidth: 960, alignSelf: 'center', gap: spacing.md },
-    // flexGrow: řádek vyplní volnou výšku, aby se avatar (sideRight) svisle
-    // vycentroval i když je obsah kratší než obrázek.
-    wideRow: { flexGrow: 1, flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
-    sideLeft: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
-    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%', gap: spacing.md },
-    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
+    rowWide: { flexGrow: 1, flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
+    spacer: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
+    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, gap: spacing.md },
+    gutter: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-start', justifyContent: 'center' },
+    avatarImg: { width: '100%', maxWidth: 720, aspectRatio: 1 },
     summary: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.xl, gap: spacing.sm },
     summaryLabel: { color: c.textFaint, fontSize: fontSize.caption, textTransform: 'uppercase', letterSpacing: 1, fontWeight: fontWeight.medium },
     summaryKcal: { color: c.accent, fontSize: 36, fontWeight: fontWeight.bold },

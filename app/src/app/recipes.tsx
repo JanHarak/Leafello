@@ -56,7 +56,8 @@ export default function Recipes() {
   const [tab, setTab] = useState<'mine' | 'generate'>('mine');
   const { width } = useWindowDimensions();
   const wide = width >= 900; // dvousloupcové rozložení Moje recepty (seznam vlevo)
-  const avatarSize = Math.round(Math.min(560, Math.max(300, width * 0.28)));
+  // Avatar vpravo v volném pruhu vedle editoru, jen když je pruh dost široký.
+  const showAvatar = width >= 1440;
   const [name, setName] = useState('');
   const [servings, setServings] = useState('4');
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -545,7 +546,9 @@ export default function Recipes() {
             </View>
             {wide && (
               <View style={s.avatarSide}>
-                <Image source={AV_RECEPTY} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+                {showAvatar ? (
+                  <Image source={AV_RECEPTY} style={s.avatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+                ) : null}
               </View>
             )}
           </View>
@@ -676,12 +679,15 @@ const styles = (c: ThemeColors) =>
     // editor vycentrovaný ve zbylém prostoru.
     // Editor uprostřed (max 900 px). Levý flex drží seznam u levého okraje,
     // pravý flex ho vyváží, takže editor sedí na středu obrazovky.
-    // flexGrow: řádek vyplní volnou výšku, aby se avatar vpravo svisle
-    // vycentroval i při kratším obsahu editoru.
+    // Editor je na střed viewportu díky symetrickým pruhům: vlevo seznam,
+    // vpravo avatar (oba flexGrow:1, stejně široké). Avatar má width:100 %
+    // svého pruhu (maxWidth 420), takže se drží ve volném pruhu a nikdy
+    // nepřekrývá editor. flexGrow řádku vyplní výšku pro svislé vycentrování.
     mineWide: { flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', width: '100%', gap: spacing.lg },
     mineSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
-    // Pravý sloupec s avatarem – svisle na střed, u pravého okraje (jako kouč).
-    avatarSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
+    avatarSide: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-start', justifyContent: 'center' },
+    // Avatar vyplní pravý pruh (width:100 % → procenta, responzivní), strop 720.
+    avatarImg: { width: '100%', maxWidth: 720, aspectRatio: 1 },
     sidebar: { width: 300 },
     mineCenter: { flexGrow: 0, flexShrink: 1, flexBasis: 900, maxWidth: 900, width: '100%' },
     editorFull: { width: '100%' },

@@ -26,8 +26,9 @@ export default function Coach() {
   const shift = useContentShift();
   const { width } = useWindowDimensions();
   const wide = width >= 900;
-  // Avatar se přizpůsobí šířce okna – na velkých obrazovkách je větší.
-  const avatarSize = Math.round(Math.min(560, Math.max(300, width * 0.28)));
+  // Obsah zůstává na střed; avatar sedí v pravém volném pruhu vedle něj a
+  // ukáže se jen tam, kde je pruh dost široký (jinak by byl titěrný / tísnil se).
+  const showAvatar = width >= 1440;
 
   // Denní a týdenní přehled mají samostatný archiv i vybraný výstup (tab).
   const [tab, setTab] = useState<CoachKind>('daily');
@@ -185,11 +186,16 @@ export default function Coach() {
     </View>
   );
 
+  // heroAvatar = placeholder v obsahovém sloupci (střídmá velikost),
+  // gutterAvatar = výsledek v pravém pruhu (vyplní pruh, procenta/responzivní).
   const startAvatar = (
-    <Image source={AV_START} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+    <Image source={AV_START} style={s.heroAvatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
   );
   const resultAvatar = (
-    <Image source={AV_RESULT} style={{ width: avatarSize, height: avatarSize }} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+    <Image source={AV_RESULT} style={s.heroAvatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
+  );
+  const gutterAvatar = (
+    <Image source={AV_RESULT} style={s.gutterAvatarImg} contentFit="contain" priority="high" transition={0} cachePolicy="memory-disk" accessibilityLabel="" />
   );
 
   const archivePanel = (
@@ -245,7 +251,7 @@ export default function Coach() {
                   {error && <Text style={s.error}>{error}</Text>}
                   {selected ? summaryCard : <View style={s.startWrap}>{startAvatar}</View>}
                 </View>
-                <View style={s.sideRight}>{selected ? resultAvatar : null}</View>
+                <View style={s.sideRight}>{selected && showAvatar ? gutterAvatar : null}</View>
               </View>
             ) : (
               <View style={s.block960}>
@@ -290,13 +296,17 @@ const styles = (c: ThemeColors) =>
     aboutTitle: { color: c.text, fontSize: fontSize.subtitle, fontWeight: fontWeight.bold },
     aboutBody: { color: c.textMuted, fontSize: fontSize.body, lineHeight: fontSize.body * 1.5 },
 
-    // Výstup na 960 vycentrovaný spacery; archiv vlevo mimo, avatar vpravo mimo.
-    // flexGrow: řádek vyplní volnou výšku, aby se avatar (sideRight) svisle
-    // vycentroval i když je obsah kratší než obrázek.
+    // Obsah (max 960) je na střed viewportu díky symetrickým pruhům: vlevo
+    // archiv, vpravo avatar (oba flexGrow:1, stejně široké). Avatar má
+    // width:100 % svého pruhu (maxWidth 440), takže se drží ve volném pruhu a
+    // nikdy nepřekrývá obsah. flexGrow řádku vyplní výšku pro svislé vycentrování.
     wideRow: { flexGrow: 1, flexDirection: 'row', width: '100%', alignItems: 'flex-start', gap: spacing.lg },
     sideLeft: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignItems: 'flex-start' },
-    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, width: '100%', gap: spacing.md },
-    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'center' },
+    centerCol: { flexGrow: 0, flexShrink: 1, flexBasis: 960, maxWidth: 960, gap: spacing.md },
+    sideRight: { flexGrow: 1, flexShrink: 1, flexBasis: 0, alignSelf: 'stretch', alignItems: 'flex-start', justifyContent: 'center' },
+    // Placeholder v obsahu (střídmý) vs. výsledek v pravém pruhu (vyplní pruh).
+    heroAvatarImg: { width: '100%', maxWidth: 460, aspectRatio: 1 },
+    gutterAvatarImg: { width: '100%', maxWidth: 720, aspectRatio: 1 },
 
     // Archiv (vlevo)
     archive: { width: 240, gap: spacing.sm },
